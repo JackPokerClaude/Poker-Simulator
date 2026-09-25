@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs><radialGradient id="f" cx="50%" cy="42%" r="65%"><stop offset="0" stop-color="#1d7a4e"/><stop offset="1" stop-color="#083222"/></radialGradient></defs>
+  <rect width="512" height="512" fill="url(#f)"/>
+  <g transform="translate(256 262)">
+    <g transform="rotate(-12) translate(-70 0)">
+      <rect x="-78" y="-110" width="156" height="220" rx="18" fill="#fbfaf6" stroke="#0b2a1d" stroke-width="4"/>
+      <text x="0" y="-8" text-anchor="middle" font-family="Georgia, serif" font-weight="700" font-size="104" fill="#1b1b1b">A</text>
+      <text x="0" y="82" text-anchor="middle" font-family="Georgia, serif" font-size="80" fill="#1b1b1b">♠</text>
+    </g>
+    <g transform="rotate(12) translate(70 0)">
+      <rect x="-78" y="-110" width="156" height="220" rx="18" fill="#fbfaf6" stroke="#0b2a1d" stroke-width="4"/>
+      <text x="0" y="-8" text-anchor="middle" font-family="Georgia, serif" font-weight="700" font-size="104" fill="#d3323c">K</text>
+      <text x="0" y="82" text-anchor="middle" font-family="Georgia, serif" font-size="80" fill="#d3323c">♥</text>
+    </g>
+  </g>
+  <circle cx="400" cy="108" r="44" fill="#e9c25a" stroke="#fff3c9" stroke-width="6"/>
+  <text x="400" y="124" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="900" font-size="44" fill="#1a1405">D</text>
+</svg>
