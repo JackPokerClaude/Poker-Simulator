@@ -4,8 +4,11 @@ import { potTotal } from '../engine/game.js';
 
 export const clampTo = (la, to) => Math.max(la.minTo, Math.min(la.maxTo, Math.round(to)));
 
+// Preflop opening / isolating sizes in dollars, by big blind.
+const OPEN_SIZES = { 2: [10, 15, 20], 3: [15, 20, 25], 5: [15, 20, 25] };
+
 // Quick buttons for the current decision: [{ top, to, allIn }]
-//  - preflop, no raise yet (open / iso): 5x, 7.5x, 10x the big blind ($10 / $15 / $20 at $1/2)
+//  - preflop, no raise yet (open / iso): $10 / $15 / $20 at $1/2, $15 / $20 / $25 at $1/3 and $2/5
 //  - facing a bet or raise: 3x, 4x, 5x the bet
 //  - postflop, no bet yet: 33%, 50%, 75%, pot, all-in
 export function quickSizes(s, la) {
@@ -13,7 +16,8 @@ export function quickSizes(s, la) {
   const bb = s.stakes.bb;
   let raw;
   if (s.street === 'preflop' && s.raiseLevel === 1) {
-    raw = [[5, 5 * bb], [7.5, Math.ceil(7.5 * bb)], [10, 10 * bb]].map(([m, v]) => [`${m}x`, v]);
+    const sizes = OPEN_SIZES[bb] || [5, 7.5, 10].map((m) => Math.ceil(m * bb));
+    raw = sizes.map((v) => [`${+(v / bb).toFixed(1)}x`, v]);
   } else if (s.currentBet > 0) {
     raw = [3, 4, 5].map((m) => [`${m}x`, s.currentBet * m]);
   } else {

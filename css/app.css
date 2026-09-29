@@ -79,7 +79,7 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .board { display: flex; gap: 4px; min-height: 60px; }
 
 .seat {
-  position: absolute; transform: translate(-50%, -50%); width: 80px; text-align: center; color: var(--text);
+  position: absolute; transform: translate(-50%, -50%); width: 72px; text-align: center; color: var(--text);
   background: var(--white); border: 2px solid var(--line); border-radius: 12px; padding: 2px 4px 3px; line-height: 1.15;
   box-shadow: 0 2px 8px rgba(0,0,0,.35); transition: opacity .2s, border-color .2s, box-shadow .2s;
 }
@@ -292,8 +292,19 @@ pre.coach { white-space: pre-wrap; word-break: break-word; background: var(--tin
   .potbig b { font-size: 32px; }
 }
 @media (max-width: 360px) {
-  .seat { width: 70px; } .seat .stack { font-size: 13.5px; }
+  .seat { width: 68px; } .seat .stack { font-size: 13.5px; }
   .card { width: 38px; height: 54px; }
   .qbtn .qv { font-size: 15px; }
   .strip-btn { min-width: 70px; padding: 0 10px; }
 }
+
+/* ---------- Chips in front of opponents ---------- */
+.chip { position: absolute; transform: translate(-50%, -50%); z-index: 2; display: flex; align-items: center; gap: 3px; padding: 2px 6px 2px 3px; border-radius: 999px; background: rgba(10, 26, 51, .92); color: var(--white); border: 1.5px solid rgba(255, 255, 255, .85); box-shadow: 0 2px 6px rgba(0, 0, 0, .5); white-space: nowrap; pointer-events: none; }
+.chip b { font-size: 13.5px; font-weight: 900; font-variant-numeric: tabular-nums; line-height: 1; }
+.chip i { flex: none; width: 17px; height: 17px; border-radius: 50%; border: 2.5px dashed var(--white); box-shadow: inset 0 0 0 2px var(--chip), 0 1px 2px rgba(0, 0, 0, .5); background: var(--chip); }
+.chip.c1 { --chip: #dbe7ff; }
+.chip.c1 i { border-color: var(--blue); }
+.chip.c2 { --chip: var(--blue); }
+.chip.c3 { --chip: #e0343f; }
+.chip.pop { animation: chipIn .32s ease-out; }
+@keyframes chipIn { 0% { transform: translate(-50%, -50%) scale(.4); opacity: 0; } 70% { transform: translate(-50%, -50%) scale(1.15); opacity: 1; } 100% { transform: translate(-50%, -50%) scale(1); } }

@@ -3,6 +3,7 @@ import { legalActions, validateRaise, dealNextStreet, potTotal } from './engine/
 import { RANKS, SUITS, SUIT_SYMBOLS, rankOf, suitOf, cardsPretty } from './engine/cards.js';
 import { describeAction, buildRecord, winnerLine, isInvolved, statusOf } from './engine/coach.js';
 import { quickSizes, clampTo, sliderToAmount, amountToSlider, potPercent, SLIDER_MAX } from './ui/sizing.js';
+import { SEAT_XY, CHIP_XY } from './ui/layout.js';
 import { VILLAIN_CONFIG } from '../config/villains.js';
 import { loadHistory, addHand, clearHistory, computeStats, exportCSV, importCSV } from './storage/history.js';
 
@@ -35,23 +36,18 @@ function cardHTML(c, cls = '') {
 const backHTML = () => '<div class="card-back"></div>';
 
 // ---------- table rendering ----------
-const SEAT_XY = [[50, 93], [13, 77], [10, 48], [20, 17], [50, 10], [80, 17], [90, 48], [87, 77]];
-const CENTER = [50, 48];
-
 // After the hand, stacks show as they were before the payout, so no win/loss appears in the numbers.
 const shownStack = (p) => (hand.done ? p.stack - hand.result.won[p.i] : p.stack);
 
 function seatTag(p) {
   if (hand.done && hand.result.showdown && hand.result.showdown.hands[p.i]) return hand.result.showdown.hands[p.i].name;
   if (p.folded) return 'Fold';
-  const amt = p.committed > 0 && !hand.done ? ` $${p.committed}` : '';
-  if (p.allIn) return `All-in${amt}`;
+  if (p.allIn) return 'All-in';
   const last = [...hand.log].reverse().find((e) => e.i === p.i && e.street === hand.street && e.type !== 'uncalled');
   if (!last) return '';
   if (last.type === 'post') return last.added === hand.stakes.sb && p.pos === 'SB' ? 'SB' : 'BB';
-  if (last.type === 'call' && hand.street === 'preflop' && last.level === 1) return `Limp${amt}`;
-  const word = { check: 'Check', call: 'Call', bet: 'Bet', raise: 'Raise', fold: 'Fold' }[last.type] || '';
-  return last.type === 'check' || last.type === 'fold' ? word : `${word}${amt}`;
+  if (last.type === 'call' && hand.street === 'preflop' && last.level === 1) return 'Limp';
+  return { check: 'Check', call: 'Call', bet: 'Bet', raise: 'Raise', fold: 'Fold' }[last.type] || '';
 }
 
 // The pot is always visible above the table and follows every bet, call and raise.
@@ -66,6 +62,7 @@ function renderPot() {
 }
 
 function renderTable() {
+  renderTable.chipKey ||= {};
   const h = hand;
   $('stakes').textContent = h ? `$${h.stakes.sb}/$${h.stakes.bb}` : '—';
   $('drillName').textContent = DRILLS[settings.drill].name;
@@ -101,6 +98,18 @@ function renderTable() {
       <div class="mini-cards">${cards}</div>
       <div class="tag">${esc(seatTag(p))}</div>
     </button>`);
+    // Chips in front of the player for what they have put in this street (bet, raise or call).
+    if (p.committed > 0 && !p.folded && !h.done) {
+      const bb = h.stakes.bb;
+      const tier = p.committed >= 20 * bb ? 'c3' : p.committed >= 5 * bb ? 'c2' : 'c1';
+      const key = `${h.street}:${p.committed}`;
+      const pop = renderTable.chipKey[i] !== key ? ' pop' : '';
+      renderTable.chipKey[i] = key;
+      const [cx, cy] = CHIP_XY[k];
+      out.push(`<div class="chip ${tier}${pop}" style="left:${cx}%;top:${cy}%" data-chip="${i}"><i></i><b>$${p.committed}</b></div>`);
+    } else {
+      delete renderTable.chipKey[i];
+    }
   }
   const hero = h.players[heroIdx];
   $('seats').innerHTML = out.join('');
@@ -341,6 +350,7 @@ function newHand() {
     hand = createHand({ drill: 'random', ranges });
   }
   renderTable.shown = 0;
+  renderTable.chipKey = {};
   renderAll();
   runLoop();
 }
@@ -616,6 +626,8 @@ $('seats').addEventListener('click', (e) => {
   const seat = e.target.closest('.seat');
   if (seat) showReads(Number(seat.dataset.seat));
 });
+
+if (new URLSearchParams(location.search).has('debug')) window.__sim = { hand: () => hand, render: () => renderAll() };
 
 async function boot() {
   applySettings();

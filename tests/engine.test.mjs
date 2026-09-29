@@ -196,8 +196,8 @@ test('quick bet buttons: opens, facing a bet, postflop pot sizes, slider bounds'
   const mk = (sb, bb, label) => createGame({ stakes: { label, sb, bb }, players: Array.from({ length: 8 }, (_, i) => ({ stack: bb * 200, type: 'rec', cards: C(['2c3d', '4c5d', '6c7d', '8c9d', 'TcJd', '2h3h', '4h5h', '6h7h'][i]) })), runout: C('AsKsQsJs9h') });
   const tos = (s) => quickSizes(s, legalActions(s)).map((q) => q.to);
   assert.deepEqual(tos(mk(1, 2, '1/2')), [10, 15, 20]);
-  assert.deepEqual(tos(mk(1, 3, '1/3')), [15, 23, 30]);
-  assert.deepEqual(tos(mk(2, 5, '2/5')), [25, 38, 50]);
+  assert.deepEqual(tos(mk(1, 3, '1/3')), [15, 20, 25]);
+  assert.deepEqual(tos(mk(2, 5, '2/5')), [15, 20, 25]);
   const s = mk(1, 2, '1/2');
   applyAction(s, { type: 'raise', to: 15 });
   assert.deepEqual(quickSizes(s, legalActions(s)).map((q) => `${q.top} · $${q.to}`), ['3x · $45', '4x · $60', '5x · $75']);

@@ -23,6 +23,7 @@ const ASSETS = [
   'js/storage/csv.js',
   'js/storage/history.js',
   'js/ui/sizing.js',
+  'js/ui/layout.js',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/icon-maskable-512.png',
