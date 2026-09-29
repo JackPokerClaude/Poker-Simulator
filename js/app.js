@@ -3,7 +3,7 @@ import { legalActions, validateRaise, dealNextStreet, potTotal } from './engine/
 import { RANKS, SUITS, SUIT_SYMBOLS, rankOf, suitOf, cardsPretty } from './engine/cards.js';
 import { describeAction, buildRecord, winnerLine, isInvolved, statusOf } from './engine/coach.js';
 import { quickSizes, clampTo, sliderToAmount, amountToSlider, potPercent, SLIDER_MAX } from './ui/sizing.js';
-import { SEAT_XY, CHIP_XY } from './ui/layout.js';
+import { layoutFor, chipCenter } from './ui/layout.js';
 import { VILLAIN_CONFIG } from '../config/villains.js';
 import { loadHistory, addHand, clearHistory, computeStats, exportCSV, importCSV } from './storage/history.js';
 
@@ -26,7 +26,9 @@ let hand = null;
 let handToken = 0;
 let pendingTo = null;
 let lastRecord = null;
-let liveSheet = null; // 'reads' | 'log' while that sheet is open, so it updates as villains act
+let liveSheet = null; // 'reads' | 'log' while that drawer tab is open, so it updates as villains act
+let drawerTab = 'reads';
+let geo = layoutFor(380, 330); // current table layout + scale, updated on resize
 
 // ---------- cards ----------
 function cardHTML(c, cls = '') {
@@ -61,6 +63,24 @@ function renderPot() {
   if (changed) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
 }
 
+// Put each chip just in front of its seat, measured from the seat's real box on screen.
+function placeChips() {
+  const tw = $('tableWrap').getBoundingClientRect();
+  const gap = 4 * geo.k;
+  for (const chip of document.querySelectorAll('#seats .chip')) {
+    const seat = document.querySelector(`#seats .seat[data-seat="${chip.dataset.chip}"]`);
+    const rule = geo.chips[Number(chip.dataset.slot)];
+    if (!seat || !rule) continue;
+    const r = seat.getBoundingClientRect();
+    const s = { left: r.left - tw.left, right: r.right - tw.left, top: r.top - tw.top, bottom: r.bottom - tw.top };
+    const cw = chip.offsetWidth;
+    const [x, cy] = chipCenter(rule, s, cw, chip.offsetHeight, tw.width, gap);
+    const cx = Math.max(cw / 2 + 2, Math.min(tw.width - cw / 2 - 2, x)); // keep it on the table
+    chip.style.left = `${cx}px`;
+    chip.style.top = `${cy}px`;
+  }
+}
+
 function renderTable() {
   renderTable.chipKey ||= {};
   const h = hand;
@@ -85,7 +105,7 @@ function renderTable() {
   for (let k = 1; k < 8; k++) {
     const i = (heroIdx + k) % 8;
     const p = h.players[i];
-    const [x, y] = SEAT_XY[k];
+    const [x, y] = geo.seats[k];
     const showCards = h.done && isInvolved(h, i);
     const cards = showCards
       ? p.cards.map((c) => cardHTML(c, 'sm' + (p.folded ? ' dim' : ''))).join('')
@@ -105,14 +125,14 @@ function renderTable() {
       const key = `${h.street}:${p.committed}`;
       const pop = renderTable.chipKey[i] !== key ? ' pop' : '';
       renderTable.chipKey[i] = key;
-      const [cx, cy] = CHIP_XY[k];
-      out.push(`<div class="chip ${tier}${pop}" style="left:${cx}%;top:${cy}%" data-chip="${i}"><i></i><b>$${p.committed}</b></div>`);
+      out.push(`<div class="chip ${tier}${pop}" data-chip="${i}" data-slot="${k}"><i></i><b>$${p.committed}</b></div>`);
     } else {
       delete renderTable.chipKey[i];
     }
   }
   const hero = h.players[heroIdx];
   $('seats').innerHTML = out.join('');
+  placeChips();
 
   const bbs = Math.round(shownStack(hero) / h.stakes.bb);
   $('heroHand').className = `hero-hand${h.toAct === heroIdx ? ' acting' : ''}`;
@@ -335,6 +355,7 @@ function finishHand() {
   const saved = addHand(lastRecord);
   if (!saved) toast('Storage is full or blocked: this hand is only kept until you close the app.', true);
   renderAll(); // the feedback screen opens only when "See feedback" is tapped
+  if (drawerOpen() && (drawerTab === 'history' || drawerTab === 'stats')) renderDrawer();
 }
 
 function newHand() {
@@ -355,17 +376,18 @@ function newHand() {
   runLoop();
 }
 
-// ---------- sheets ----------
-function openSheet(html, { full = false, live = null } = {}) {
+// ---------- sheets (hand feedback) ----------
+function openSheet(html, { full = false } = {}) {
+  closeDrawer();
   const sh = $('sheet');
   sh.className = `sheet${full ? ' full' : ''}`;
   $('sheetBody').innerHTML = html;
   $('sheetBody').scrollTop = 0;
   $('scrim').classList.toggle('hidden', full);
-  liveSheet = live;
+  document.body.classList.add('sheet-open');
 }
 function closeSheet() {
-  liveSheet = null;
+  document.body.classList.remove('sheet-open');
   $('sheet').className = 'sheet hidden';
   $('sheetBody').innerHTML = '';
   $('scrim').classList.add('hidden');
@@ -373,28 +395,60 @@ function closeSheet() {
 $('scrim').onclick = closeSheet;
 $('sheetHandle').onclick = closeSheet;
 
+// ---------- menu drawer ----------
+// Every non-action control lives here: Reads, Log, Drill, History, Stats, Settings.
+const drawerOpen = () => $('drawer').classList.contains('open');
+function openDrawer(tab = drawerTab, arg) {
+  drawerTab = tab;
+  $('drawer').classList.add('open');
+  $('drawerScrim').classList.add('open');
+  $('drawer').setAttribute('aria-hidden', 'false');
+  $('menuToggle').setAttribute('aria-expanded', 'true');
+  $('menuToggle').classList.add('open');
+  renderDrawer(arg);
+}
+function closeDrawer() {
+  liveSheet = null;
+  $('drawer').classList.remove('open');
+  $('drawerScrim').classList.remove('open');
+  $('drawer').setAttribute('aria-hidden', 'true');
+  $('menuToggle').setAttribute('aria-expanded', 'false');
+  $('menuToggle').classList.remove('open');
+}
+// Render the current tab into the drawer body.
+function panel(html, { live = null } = {}) {
+  $('drawerBody').innerHTML = html;
+  $('drawerBody').scrollTop = 0;
+  liveSheet = live;
+  document.querySelectorAll('#drawerTabs [data-tab]').forEach((t) => {
+    const on = t.dataset.tab === drawerTab;
+    t.classList.toggle('on', on);
+    t.setAttribute('aria-selected', String(on));
+  });
+}
+const TABS = { reads: (a) => showReads(a), log: () => showLog(), drill: () => showDrills(), history: () => showHistory(), stats: () => showStats(), settings: () => showMenu() };
+function renderDrawer(arg) { (TABS[drawerTab] || TABS.reads)(arg); }
+
 // Reads and Log stay open while villains act, so keep them current.
 function refreshLive() {
   const box = $('live');
-  if (!liveSheet || !box) return;
-  const sb = $('sheetBody');
+  if (!liveSheet || !box || !drawerOpen()) return;
+  const sb = $('drawerBody');
   const atBottom = sb.scrollHeight - sb.scrollTop - sb.clientHeight < 60;
   box.innerHTML = liveSheet === 'reads' ? readsHTML() : logHTML();
   if (liveSheet === 'log' && atBottom) sb.scrollTop = sb.scrollHeight;
 }
 
 function showReads(flashSeat) {
-  openSheet(`<div class="sheet-top"><h2>Reads</h2><button class="close" id="closeBtn" aria-label="Close">✕</button></div>
-    <div id="live">${readsHTML(flashSeat)}</div>`, { full: true, live: 'reads' });
-  $('closeBtn').onclick = closeSheet;
+  drawerTab = 'reads';
+  panel(`<div id="live">${readsHTML(flashSeat)}</div>`, { live: 'reads' });
   if (flashSeat != null) $(`read-${flashSeat}`)?.scrollIntoView({ block: 'center' });
 }
 
 function showLog() {
-  openSheet(`<div class="sheet-top"><h2>Action log</h2><button class="close" id="closeBtn" aria-label="Close">✕</button></div>
-    <div id="live">${logHTML()}</div>`, { full: true, live: 'log' });
-  $('closeBtn').onclick = closeSheet;
-  $('sheetBody').scrollTop = $('sheetBody').scrollHeight;
+  drawerTab = 'log';
+  panel(`<div id="live">${logHTML()}</div>`, { live: 'log' });
+  $('drawerBody').scrollTop = $('drawerBody').scrollHeight;
 }
 
 const VERDICT_LABEL = { correct: '✓ Chart play', mixed: '≈ Mixed', wrong: '✗ Off chart', situational: '⚑ Situational', nochart: '— No chart' };
@@ -450,15 +504,16 @@ function showFeedback() {
 }
 
 function showDrills() {
-  openSheet(`<h2>Drill mode</h2>${Object.entries(DRILLS).map(([k, d]) => `
+  drawerTab = 'drill';
+  panel(`<h2>Drill mode</h2>${Object.entries(DRILLS).map(([k, d]) => `
     <button class="drill${settings.drill === k ? ' on' : ''}" data-drill="${k}"><b>${d.name}</b><span>${d.desc}</span></button>`).join('')}
     <div class="about">The new mode starts with the next hand.</div>`);
   document.querySelectorAll('.drill').forEach((b) => (b.onclick = () => {
     settings.drill = b.dataset.drill;
     saveSettings();
     renderTable();
-    if (!hand || hand.done) newHand();
-    else { closeSheet(); toast(`${DRILLS[settings.drill].name}: starts next hand`); }
+    if (!hand || hand.done) { closeDrawer(); newHand(); }
+    else { showDrills(); toast(`${DRILLS[settings.drill].name}: starts next hand`); }
   }));
 }
 
@@ -478,14 +533,14 @@ function histRowHTML(h, idx) {
 
 function showHistory() {
   const list = loadHistory();
-  openSheet(`
-    <div class="sheet-top"><h2>History <span class="count">${list.length} hands</span></h2><button class="close" id="closeBtn">✕</button></div>
+  drawerTab = 'history';
+  panel(`
+    <h2>History <span class="count">${list.length} hands</span></h2>
     <div class="toolbar">
       <button id="expBtn">Export CSV</button><button id="impBtn">Import CSV</button><button class="danger" id="clrBtn">Clear</button>
     </div>
     <div id="histList">${list.length ? list.slice(0, 300).map(histRowHTML).join('') : '<div class="empty">No hands yet. Play one!</div>'}</div>
-    ${list.length > 300 ? `<div class="about">Showing the latest 300. Export CSV to see them all.</div>` : ''}`, { full: true });
-  $('closeBtn').onclick = closeSheet;
+    ${list.length > 300 ? `<div class="about">Showing the latest 300. Export CSV to see them all.</div>` : ''}`);
   $('expBtn').onclick = () => doExport();
   $('impBtn').onclick = () => $('importFile').click();
   $('clrBtn').onclick = () => {
@@ -496,12 +551,12 @@ function showHistory() {
 }
 
 function showHandDetail(h) {
-  openSheet(`
-    <div class="sheet-top"><h2>${esc(h.heroPos)} · ${esc(h.heroCode)} · $${esc(h.stakes)}</h2><button class="close" id="backBtn">‹</button></div>
+  panel(`
+    <div class="sheet-top"><button class="close" id="backBtn" aria-label="Back to history">‹</button><h2>${esc(h.heroPos)} · ${esc(h.heroCode)} · $${esc(h.stakes)}</h2></div>
     <button class="btn primary" style="width:100%;margin-bottom:12px" id="copyHist">Copy for coach</button>
     <pre class="coach">${esc(h.coachText)}</pre>
     <h3>Preflop feedback</h3>
-    ${(h.decisions || []).map(gradeHTML).join('') || '<div class="empty">No preflop decision.</div>'}`, { full: true });
+    ${(h.decisions || []).map(gradeHTML).join('') || '<div class="empty">No preflop decision.</div>'}`);
   $('backBtn').onclick = showHistory;
   $('copyHist').onclick = () => copyText(h.coachText);
 }
@@ -515,8 +570,9 @@ function showStats() {
   const missed = st.topMissed.map((m) => `<div class="miss"><div class="n">${m.count}×</div><div class="d">
       <b>${m.code === 'sizing' ? esc(m.chart) : `${esc(m.code)}: ${esc(m.action)}`}</b>
       <span>${esc(m.spot)}${m.code === 'sizing' ? '' : ` · ${esc(m.chart)}`}</span><br><span>${esc(m.example)}</span></div></div>`).join('');
-  openSheet(`
-    <div class="sheet-top"><h2>Stats</h2><button class="close" id="closeBtn">✕</button></div>
+  drawerTab = 'stats';
+  panel(`
+    <h2>Stats</h2>
     <div class="kpis">
       <div class="kpi"><div class="v">${st.hands}</div><div class="l">Hands</div></div>
       <div class="kpi"><div class="v">${st.pct == null ? '—' : `${st.pct}%`}</div><div class="l">Preflop accuracy</div></div>
@@ -526,13 +582,13 @@ function showStats() {
     ${kinds || '<div class="empty">Play some hands first.</div>'}
     <h3>Most-missed spots</h3>
     ${missed || '<div class="empty">Nothing missed yet. Nice.</div>'}
-    <div class="about" style="margin-top:12px">Mixed-frequency plays count as correct. Situational hands (Mark's rule) are not counted either way.</div>`, { full: true });
-  $('closeBtn').onclick = closeSheet;
+    <div class="about" style="margin-top:12px">Mixed-frequency plays count as correct. Situational hands (Mark's rule) are not counted either way.</div>`);
 }
 
 function showMenu() {
   const seg = (key, opts) => `<div class="seg">${opts.map(([v, l]) => `<button data-k="${key}" data-v="${v}" class="${String(settings[key]) === String(v) ? 'on' : ''}">${l}</button>`).join('')}</div>`;
-  openSheet(`
+  drawerTab = 'settings';
+  panel(`
     <h2>Settings</h2>
     <div class="setting"><b>Villain speed</b>${seg('speed', [['normal', 'Normal'], ['fast', 'Fast'], ['instant', 'Instant']])}</div>
     <div class="setting"><b>Deck</b>${seg('fourColor', [['true', '4-color'], ['false', '2-color']])}</div>
@@ -616,21 +672,44 @@ $('importFile').onchange = async (e) => {
 };
 
 // ---------- wiring ----------
-$('drillBtn').onclick = showDrills;
-$('historyBtn').onclick = showHistory;
-$('statsBtn').onclick = showStats;
-$('menuBtn').onclick = showMenu;
-$('readsBtn').onclick = () => showReads();
-$('logBtn').onclick = showLog;
+$('menuToggle').onclick = () => (drawerOpen() ? closeDrawer() : openDrawer());
+$('drawerClose').onclick = closeDrawer;
+$('drawerScrim').onclick = closeDrawer;
+$('drawerTabs').addEventListener('click', (e) => {
+  const t = e.target.closest('[data-tab]');
+  if (t) { drawerTab = t.dataset.tab; renderDrawer(); }
+});
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  if (drawerOpen()) closeDrawer();
+  else if (!$('sheet').classList.contains('hidden')) closeSheet();
+});
 $('seats').addEventListener('click', (e) => {
   const seat = e.target.closest('.seat');
-  if (seat) showReads(Number(seat.dataset.seat));
+  if (seat) openDrawer('reads', Number(seat.dataset.seat));
 });
 
-if (new URLSearchParams(location.search).has('debug')) window.__sim = { hand: () => hand, render: () => renderAll() };
+// Scale seats, cards and chips with the table, and switch between the wide and tall layouts.
+function fitTable() {
+  const el = $('tableWrap');
+  const r = el.getBoundingClientRect();
+  if (!r.width || !r.height) return;
+  const next = layoutFor(r.width, r.height);
+  const changed = next.kind !== geo.kind || next.k !== geo.k;
+  geo = next;
+  el.style.setProperty('--k', String(geo.k));
+  el.style.setProperty('--by', String(geo.boardY));
+  el.dataset.layout = geo.kind;
+  if (changed && hand) renderTable();
+  else placeChips();
+}
+new ResizeObserver(fitTable).observe($('tableWrap'));
+
+if (new URLSearchParams(location.search).has('debug')) window.__sim = { hand: () => hand, render: () => renderAll(), geo: () => geo };
 
 async function boot() {
   applySettings();
+  fitTable();
   try {
     const res = await fetch('data/ranges.json');
     ranges = await res.json();

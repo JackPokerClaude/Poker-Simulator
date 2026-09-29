@@ -17,32 +17,13 @@
 </head>
 <body>
   <div id="app">
-    <header class="topbar">
-      <button class="pill" id="drillBtn" aria-label="Choose drill"><span id="drillName">Random</span> ▾</button>
-      <div class="stakes" id="stakes">—</div>
-      <nav class="top-actions">
-        <button class="icon-btn" id="historyBtn" aria-label="History">
-          <svg viewBox="0 0 24 24"><path d="M12 7v5l3 2M3.5 12a8.5 8.5 0 1 0 2.5-6M3 4v4h4" /></svg>
-        </button>
-        <button class="icon-btn" id="statsBtn" aria-label="Stats">
-          <svg viewBox="0 0 24 24"><path d="M5 20V11M12 20V4M19 20v-6" /></svg>
-        </button>
-        <button class="icon-btn" id="menuBtn" aria-label="Settings">
-          <svg viewBox="0 0 24 24"><circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/></svg>
-        </button>
-      </nav>
-    </header>
-
-    <div class="strip">
-      <button class="strip-btn" id="readsBtn">Reads</button>
-      <div class="potbig" id="pot" aria-live="polite"><span class="lbl">Pot</span><b>$0</b></div>
-      <button class="strip-btn" id="logBtn">Log</button>
-    </div>
+    <div class="infotag" id="infotag" aria-live="polite"><b id="stakes">—</b><span id="drillName">Random</span></div>
 
     <main class="main">
-      <section class="table-wrap">
+      <section class="table-wrap" id="tableWrap">
         <div class="felt" id="felt">
           <div class="board-area">
+            <div class="potbig" id="pot" aria-live="polite"><span class="lbl">Pot</span><b>$0</b></div>
             <div class="board" id="board"></div>
           </div>
         </div>
@@ -53,6 +34,26 @@
 
     <footer class="actionbar" id="actionbar"></footer>
   </div>
+
+  <button class="hamburger" id="menuToggle" aria-label="Menu" aria-expanded="false" aria-controls="drawer">
+    <span></span><span></span><span></span>
+  </button>
+  <div class="drawer-scrim" id="drawerScrim"></div>
+  <aside class="drawer" id="drawer" aria-label="Menu" aria-hidden="true">
+    <div class="drawer-head">
+      <b>Menu</b>
+      <button class="drawer-close" id="drawerClose" aria-label="Close menu">✕</button>
+    </div>
+    <nav class="drawer-tabs" id="drawerTabs" role="tablist">
+      <button role="tab" data-tab="reads">Reads</button>
+      <button role="tab" data-tab="log">Log</button>
+      <button role="tab" data-tab="drill">Drill</button>
+      <button role="tab" data-tab="history">History</button>
+      <button role="tab" data-tab="stats">Stats</button>
+      <button role="tab" data-tab="settings">Settings</button>
+    </nav>
+    <div class="drawer-body" id="drawerBody"></div>
+  </aside>
 
   <div class="scrim hidden" id="scrim"></div>
   <div class="sheet hidden" id="sheet" role="dialog" aria-modal="true">
