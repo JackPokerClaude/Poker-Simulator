@@ -2,6 +2,7 @@ import { createHand, heroAct, villainAct, DRILLS } from './engine/dealer.js';
 import { legalActions, validateRaise, dealNextStreet, potTotal } from './engine/game.js';
 import { RANKS, SUITS, SUIT_SYMBOLS, rankOf, suitOf, cardsPretty } from './engine/cards.js';
 import { describeAction, buildRecord, resultText } from './engine/coach.js';
+import { quickSizes, clampTo, sliderToAmount, amountToSlider, potPercent, SLIDER_MAX } from './ui/sizing.js';
 import { VILLAIN_CONFIG } from '../config/villains.js';
 import { loadHistory, addHand, clearHistory, computeStats, exportCSV, importCSV } from './storage/history.js';
 
@@ -23,7 +24,6 @@ let ranges = null;
 let hand = null;
 let handToken = 0;
 let pendingTo = null;
-let customOpen = false;
 let lastRecord = null;
 let tab = 'log';
 
@@ -90,13 +90,12 @@ function renderTable() {
     }
   }
   const hero = h.players[heroIdx];
-  if (hero.committed > 0 && !h.done) out.push(`<div class="bet-chip" style="left:50%;top:64%">$${hero.committed}</div>`);
   $('seats').innerHTML = out.join('');
 
   const bbs = Math.round(hero.stack / h.stakes.bb);
   $('heroHand').className = `hero-hand${h.toAct === heroIdx ? ' acting' : ''}`;
   $('heroHand').innerHTML = `<div class="cards">${hero.cards.map((c) => cardHTML(c, 'big')).join('')}</div>
-    <div class="meta"><span class="pos">${hero.pos === 'BTN' ? 'BTN (D)' : hero.pos}</span>$${hero.stack} · ${bbs}bb${hero.folded ? ' · folded' : ''}</div>`;
+    <div class="meta"><span class="pos">${hero.pos === 'BTN' ? 'BTN (D)' : hero.pos}</span>$${hero.stack} · ${bbs}bb${hero.folded ? ' · folded' : ''}${hero.committed > 0 && !h.done ? `<span class="mybet">bet $${hero.committed}</span>` : ''}</div>`;
 }
 
 function renderLog() {
@@ -129,7 +128,7 @@ function renderReads(flashSeat) {
   for (let k = 1; k < 8; k++) {
     const i = (h.heroIdx + k) % 8;
     const p = h.players[i];
-    const typeReveal = h.done ? ` · <span style="color:var(--gold)">${esc(VILLAIN_CONFIG.types[p.type].label)}</span>` : '';
+    const typeReveal = h.done ? ` · <span class="type">${esc(VILLAIN_CONFIG.types[p.type].label)}</span>` : '';
     rows.push(`<div class="read${p.folded ? ' out' : ''}${flashSeat === i ? ' flash' : ''}" id="read-${i}">
       <div class="who">${p.pos}<span class="st">$${p.stack} · ${Math.round(p.stack / h.stakes.bb)}bb${typeReveal}</span></div>
       <div class="txt">${p.reads.map(esc).join(' · ')}</div></div>`);
@@ -139,12 +138,7 @@ function renderReads(flashSeat) {
 }
 
 // ---------- action bar ----------
-function presetTo(la, f) {
-  const pot = potTotal(hand);
-  const to = la.isBet ? f * pot : hand.currentBet + f * (pot + la.toCall);
-  return clampTo(la, Math.round(to));
-}
-const clampTo = (la, to) => Math.max(la.minTo, Math.min(la.maxTo, to));
+const raiseWord = (la, to) => (to === la.maxTo ? 'All-in' : la.isBet ? 'Bet' : 'Raise to');
 
 function renderActionBar() {
   const bar = $('actionbar');
@@ -152,7 +146,7 @@ function renderActionBar() {
   if (!h) { bar.innerHTML = '<div class="status">Dealing…</div>'; return; }
   if (h.done) {
     bar.innerHTML = `<div class="two-btns">
-      <button class="btn ghost" id="copyBtn">Copy for coach</button>
+      <button class="btn secondary" id="copyBtn">Copy for coach</button>
       <button class="btn primary" id="nextBtn">Next hand ▶</button></div>`;
     $('copyBtn').onclick = () => copyText(lastRecord?.coachText);
     $('nextBtn').onclick = () => newHand();
@@ -164,71 +158,59 @@ function renderActionBar() {
     return;
   }
   const la = legalActions(h);
-  const bb = h.stakes.bb;
-  let multiples = [];
-  let sizes = [];
-  if (la.canRaise) {
-    if (h.street === 'preflop') {
-      multiples = h.raiseLevel === 1
-        ? [3, 4, 5, 6, 7, 8].map((m) => [`${m}bb`, clampTo(la, m * bb)])
-        : [2.5, 3, 3.5, 4, 5].map((m) => [`${m}x`, clampTo(la, Math.round(h.currentBet * m))]);
-    }
-    sizes = [['33%', presetTo(la, 0.33)], ['50%', presetTo(la, 0.5)], ['75%', presetTo(la, 0.75)], ['Pot', presetTo(la, 1)], ['All-in', la.maxTo]];
-  }
-  const chip = ([l, v]) => `<button class="size${pendingTo === v ? ' on' : ''}" data-to="${v}">${l}</button>`;
-  const allIn = pendingTo === la.maxTo;
-  const raiseWord = la.isBet ? 'Bet' : 'Raise to';
-  const raiseLabel = pendingTo ? (allIn ? `All-in<small>$${la.maxTo}</small>` : `${raiseWord}<small>$${pendingTo}</small>`) : (la.isBet ? 'Bet' : 'Raise');
+  if (la.canRaise && pendingTo == null) pendingTo = la.minTo;
+  const quick = quickSizes(h, la);
+  const sliderOn = la.canRaise && la.maxTo > la.minTo;
   const callLabel = la.canCheck ? 'Check' : la.callIsAllIn ? `All-in<small>call $${la.toCall}</small>` : `Call<small>$${la.toCall}</small>`;
   bar.innerHTML = `
-    ${multiples.length ? `<div class="sizes">${multiples.map(chip).join('')}</div>` : ''}
-    ${la.canRaise ? `<div class="sizes">${sizes.map(chip).join('')}
-      <button class="size${customOpen ? ' on' : ''}" id="customBtn">$</button></div>` : ''}
-    ${la.canRaise && customOpen ? `<div class="custom">
-      <button class="step" data-step="-1">−</button>
-      <input id="customInput" type="number" inputmode="numeric" pattern="[0-9]*" placeholder="min $${la.minTo}" value="${pendingTo ?? ''}">
-      <button class="step" data-step="1">+</button></div>` : ''}
+    ${quick.length ? `<div class="quick">${quick.map((q) => `<button class="qbtn" data-to="${q.to}">
+      <span class="qt">${q.top}</span><span class="qv">${q.allIn && q.top !== 'All-in' ? 'All-in' : `$${q.to}`}</span></button>`).join('')}</div>` : ''}
+    ${la.canRaise ? `<div class="sizer">
+      <div class="amount"><b id="amtVal"></b><span id="amtPct"></span></div>
+      <div class="slider-row">
+        <button class="nudge" data-step="-1" aria-label="Minus one big blind">−</button>
+        <input id="slider" class="slider" type="range" min="0" max="${SLIDER_MAX}" step="1" aria-label="Bet size" ${sliderOn ? '' : 'disabled'}>
+        <button class="nudge" data-step="1" aria-label="Plus one big blind">+</button>
+      </div></div>` : ''}
     <div class="main-btns">
       <button class="btn fold" id="foldBtn" ${la.canFold ? '' : 'disabled'}>Fold</button>
       <button class="btn call" id="callBtn">${callLabel}</button>
-      <button class="btn raise" id="raiseBtn" ${la.canRaise ? '' : 'disabled'}>${raiseLabel}</button>
+      <button class="btn raise" id="raiseBtn" ${la.canRaise ? '' : 'disabled'}>${la.isBet ? 'Bet' : 'Raise'}</button>
     </div>`;
 
-  bar.querySelectorAll('.size[data-to]').forEach((b) => (b.onclick = () => { pendingTo = Number(b.dataset.to); renderActionBar(); }));
-  $('customBtn') && ($('customBtn').onclick = () => { customOpen = !customOpen; renderActionBar(); if (customOpen) $('customInput')?.focus(); });
-  const inp = $('customInput');
-  if (inp) {
-    inp.oninput = () => { const v = parseInt(inp.value, 10); pendingTo = Number.isFinite(v) ? v : null; updateRaiseLabel(la); };
-    inp.onkeydown = (e) => { if (e.key === 'Enter') doRaise(); };
-  }
-  bar.querySelectorAll('.step').forEach((b) => (b.onclick = () => {
-    const base = pendingTo ?? la.minTo - bb * Number(b.dataset.step);
-    pendingTo = clampTo(la, base + bb * Number(b.dataset.step));
-    renderActionBar();
+  bar.querySelectorAll('.qbtn').forEach((b) => (b.onclick = () => { pendingTo = Number(b.dataset.to); syncSizer(la); }));
+  const slider = $('slider');
+  if (slider) slider.oninput = () => { pendingTo = sliderToAmount(la, Number(slider.value)); syncSizer(la, true); };
+  bar.querySelectorAll('.nudge').forEach((b) => (b.onclick = () => {
+    pendingTo = clampTo(la, (pendingTo ?? la.minTo) + h.stakes.bb * Number(b.dataset.step));
+    syncSizer(la);
   }));
   $('foldBtn').onclick = () => act({ type: 'fold' });
   $('callBtn').onclick = () => act(la.canCheck ? { type: 'check' } : { type: 'call' });
   $('raiseBtn').onclick = doRaise;
+  if (la.canRaise) syncSizer(la);
 }
 
-function updateRaiseLabel(la) {
-  const b = $('raiseBtn');
-  if (!b) return;
-  const word = la.isBet ? 'Bet' : 'Raise to';
-  b.innerHTML = pendingTo ? (pendingTo === la.maxTo ? `All-in<small>$${la.maxTo}</small>` : `${word}<small>$${pendingTo}</small>`) : (la.isBet ? 'Bet' : 'Raise');
-  document.querySelectorAll('.size[data-to]').forEach((s) => s.classList.toggle('on', Number(s.dataset.to) === pendingTo));
+// Update amount readout, slider fill, confirm label and the active quick button.
+function syncSizer(la, fromSlider = false) {
+  const to = pendingTo;
+  const slider = $('slider');
+  if (slider) {
+    if (!fromSlider) slider.value = amountToSlider(la, to);
+    slider.style.setProperty('--fill', `${(Number(slider.value) / SLIDER_MAX) * 100}%`);
+  }
+  $('amtVal').textContent = `$${to}`;
+  $('amtPct').textContent = to === la.maxTo ? 'All-in' : `${potPercent(hand, to)}% pot`;
+  $('raiseBtn').innerHTML = `${raiseWord(la, to)}<small>$${to}</small>`;
+  document.querySelectorAll('.qbtn').forEach((b) => b.classList.toggle('on', Number(b.dataset.to) === to));
+  document.querySelectorAll('.nudge').forEach((b) => {
+    b.disabled = Number(b.dataset.step) < 0 ? to <= la.minTo : to >= la.maxTo;
+  });
 }
 
 function doRaise() {
   const la = legalActions(hand);
-  if (!la) return;
-  if (pendingTo == null) {
-    customOpen = true;
-    renderActionBar();
-    $('customInput')?.focus();
-    toast('Pick a size or enter a custom amount.');
-    return;
-  }
+  if (!la || pendingTo == null) return;
   const err = validateRaise(hand, pendingTo);
   if (err) { toast(err, true); return; }
   act({ type: la.isBet ? 'bet' : 'raise', to: pendingTo });
@@ -242,7 +224,6 @@ function act(action) {
     return;
   }
   pendingTo = null;
-  customOpen = false;
   renderAll();
   runLoop();
 }
@@ -288,7 +269,6 @@ function newHand() {
   closeSheet();
   handToken++;
   pendingTo = null;
-  customOpen = false;
   lastRecord = null;
   try {
     hand = createHand({ drill: settings.drill, ranges });
@@ -363,15 +343,15 @@ function showResult() {
     const type = p.isHero ? 'You' : VILLAIN_CONFIG.types[p.type].label;
     return `<div class="hand-row${win ? ' win' : ''}${p.folded ? ' fold' : ''}">
       <div class="cs">${p.cards.map((c) => cardHTML(c, 'sm')).join('')}</div>
-      <div class="who">${p.pos}${win ? ` +$${r.won[i]}` : ''}<span class="ty">${esc(type)}</span><span class="hd">${sd ? esc(sd.name) : p.folded ? 'folded' : ''}</span></div>
+      <div class="who">${p.pos}${win ? ` <span class="money">+$${r.won[i]}</span>` : ''}<span class="ty">${esc(type)}</span><span class="hd">${sd ? esc(sd.name) : p.folded ? 'folded' : ''}</span></div>
     </div>`;
   }).join('');
   const grades = h.heroDecisions.length ? h.heroDecisions.map(gradeHTML).join('') : '<div class="empty">No preflop decision this hand.</div>';
   openSheet(`
     <div class="peek-keep peek-bar">
-      <div class="grow"><span class="net ${netCls}">${netStr}</span> <span style="color:var(--muted);font-weight:700">${(net / bb).toFixed(1)}bb</span></div>
+      <div class="grow"><span class="net ${netCls}">${netStr}</span> <span class="bbnet">${(net / bb).toFixed(1)}bb</span></div>
       <button class="link" id="expandBtn">Feedback ▴</button>
-      <button class="btn primary" style="height:46px;padding:0 18px" id="peekNext">Next ▶</button>
+      <button class="btn primary" id="peekNext">Next ▶</button>
     </div>
     <div class="result-head"><h2>${net > 0 ? 'You won' : net < 0 ? 'You lost' : 'Break even'}</h2><button class="link" id="seeTable">See table ▾</button></div>
     <div class="result-text">${esc(resultText(h))}</div>
@@ -381,7 +361,7 @@ function showResult() {
     ${grades}
     <div class="about" style="margin-top:6px">Postflop isn't graded here. Send it to your coach.</div>
     <div class="sheet-actions">
-      <button class="btn ghost" id="copyBtn2">Copy for coach</button>
+      <button class="btn secondary" id="copyBtn2">Copy for coach</button>
       <button class="btn primary" id="nextBtn2">Next hand ▶</button>
     </div>`);
   $('copyBtn2').onclick = () => copyText(lastRecord.coachText);
@@ -410,7 +390,7 @@ function histRowHTML(h, idx) {
   const worst = (h.decisions || []).some((d) => d.verdict === 'wrong') ? 'wrong' : first?.verdict || 'nochart';
   const date = new Date(h.ts);
   const when = `${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })} ${date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
-  const net = h.net > 0 ? `+$${h.net}` : h.net < 0 ? `−$${-h.net}` : '$0';
+  const net = h.net > 0 ? `<span class="money">+$${h.net}</span>` : h.net < 0 ? `<span class="loss">−$${-h.net}</span>` : '$0';
   return `<button class="hist" data-idx="${idx}">
     <div class="cs">${cards}</div>
     <div class="mid"><div class="t1">${esc(h.heroPos)} · $${esc(h.stakes)} · ${esc(first?.label || h.spot?.kind || '')}</div>
@@ -421,7 +401,7 @@ function histRowHTML(h, idx) {
 function showHistory() {
   const list = loadHistory();
   openSheet(`
-    <div class="sheet-top"><h2>History <span style="color:var(--muted);font-size:15px">${list.length} hands</span></h2><button class="close" id="closeBtn">✕</button></div>
+    <div class="sheet-top"><h2>History <span class="count">${list.length} hands</span></h2><button class="close" id="closeBtn">✕</button></div>
     <div class="toolbar">
       <button id="expBtn">Export CSV</button><button id="impBtn">Import CSV</button><button class="danger" id="clrBtn">Clear</button>
     </div>
@@ -453,7 +433,7 @@ function showStats() {
   const kinds = st.kinds.map((k) => `<div class="bar-row">
       <div class="lab">${esc(k.label)} <span>· ${k.total} decisions${k.situational ? `, ${k.situational} situational` : ''}</span></div>
       <div class="pc">${k.pct == null ? '—' : `${k.pct}%`}</div>
-      <div class="bar"><i style="width:${k.pct ?? 0}%;background:${k.pct >= 80 ? 'var(--ok)' : k.pct >= 60 ? 'var(--warn)' : 'var(--bad)'}"></i></div></div>`).join('');
+      <div class="bar"><i style="width:${k.pct ?? 0}%;background:${k.pct >= 80 ? 'var(--blue)' : k.pct >= 60 ? 'var(--amber)' : 'var(--red)'}"></i></div></div>`).join('');
   const missed = st.topMissed.map((m) => `<div class="miss"><div class="n">${m.count}×</div><div class="d">
       <b>${m.code === 'sizing' ? esc(m.chart) : `${esc(m.code)}: ${esc(m.action)}`}</b>
       <span>${esc(m.spot)}${m.code === 'sizing' ? '' : ` · ${esc(m.chart)}`}</span><br><span>${esc(m.example)}</span></div></div>`).join('');

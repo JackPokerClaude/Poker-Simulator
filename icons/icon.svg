@@ -13,6 +13,6 @@
       <text x="0" y="82" text-anchor="middle" font-family="Georgia, serif" font-size="80" fill="#d3323c">♥</text>
     </g>
   </g>
-  <circle cx="400" cy="108" r="44" fill="#e9c25a" stroke="#fff3c9" stroke-width="6"/>
-  <text x="400" y="124" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="900" font-size="44" fill="#1a1405">D</text>
+  <circle cx="400" cy="108" r="44" fill="#ffffff" stroke="#1459d9" stroke-width="6"/>
+  <text x="400" y="124" text-anchor="middle" font-family="Helvetica, Arial, sans-serif" font-weight="900" font-size="44" fill="#0a1a33">D</text>
 </svg>

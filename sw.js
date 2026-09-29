@@ -22,6 +22,7 @@ const ASSETS = [
   'js/grading/grade.js',
   'js/storage/csv.js',
   'js/storage/history.js',
+  'js/ui/sizing.js',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/icon-maskable-512.png',

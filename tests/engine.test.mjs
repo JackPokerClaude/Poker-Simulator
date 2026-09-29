@@ -190,3 +190,26 @@ test('CSV round trip keeps records and handles quotes/newlines', () => {
   const st = computeStats(JSON.parse(store['hhp-sim-history-v1']));
   assert.equal(st.hands, 5);
 });
+
+test('quick bet buttons: opens, facing a bet, postflop pot sizes, slider bounds', async () => {
+  const { quickSizes, sliderToAmount, amountToSlider, SLIDER_MAX, potPercent } = await import('../js/ui/sizing.js');
+  const mk = (sb, bb, label) => createGame({ stakes: { label, sb, bb }, players: Array.from({ length: 8 }, (_, i) => ({ stack: bb * 200, type: 'rec', cards: C(['2c3d', '4c5d', '6c7d', '8c9d', 'TcJd', '2h3h', '4h5h', '6h7h'][i]) })), runout: C('AsKsQsJs9h') });
+  const tos = (s) => quickSizes(s, legalActions(s)).map((q) => q.to);
+  assert.deepEqual(tos(mk(1, 2, '1/2')), [10, 15, 20]);
+  assert.deepEqual(tos(mk(1, 3, '1/3')), [15, 23, 30]);
+  assert.deepEqual(tos(mk(2, 5, '2/5')), [25, 38, 50]);
+  const s = mk(1, 2, '1/2');
+  applyAction(s, { type: 'raise', to: 15 });
+  assert.deepEqual(quickSizes(s, legalActions(s)).map((q) => `${q.top} · $${q.to}`), ['3x · $45', '4x · $60', '5x · $75']);
+  // Postflop, checked to hero: 33/50/75/pot/all-in
+  for (let k = 0; k < 6; k++) applyAction(s, { type: 'fold' });
+  applyAction(s, { type: 'call' }); // BB calls 15, plus SB's dead $1 = pot $31
+  dealNextStreet(s);
+  const la = legalActions(s);
+  assert.deepEqual(quickSizes(s, la).map((q) => q.top), ['33%', '50%', '75%', 'Pot', 'All-in']);
+  assert.deepEqual(quickSizes(s, la).map((q) => q.to), [10, 16, 23, 31, la.maxTo]);
+  assert.equal(potPercent(s, 31), 100);
+  assert.equal(sliderToAmount(la, 0), la.minTo);
+  assert.equal(sliderToAmount(la, SLIDER_MAX), la.maxTo);
+  for (const to of [la.minTo, 17, 100, la.maxTo]) assert.ok(Math.abs(sliderToAmount(la, amountToSlider(la, to)) - to) <= 1);
+});
