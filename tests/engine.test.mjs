@@ -1,12 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ranges } from './setup.mjs';
-import { parseCard, shuffledDeck, handCode, cardStr, HAND_PCT, expandRange } from '../js/engine/cards.js';
+import { parseCard, shuffledDeck, handCode, cardStr, cardsPretty, HAND_PCT, expandRange } from '../js/engine/cards.js';
 import { evaluate } from '../js/engine/eval.js';
 import { createGame, applyAction, legalActions, validateRaise, buildPots, dealNextStreet, potTotal } from '../js/engine/game.js';
 import { createHand, DRILLS } from '../js/engine/dealer.js';
 import { gradeDecision, checkIsoSize, checkFourBetSize, chartRow } from '../js/grading/grade.js';
-import { coachText, buildRecord } from '../js/engine/coach.js';
+import { coachText, buildRecord, isInvolved, statusOf, winnerLine } from '../js/engine/coach.js';
 import { exportCSV, importCSV, computeStats } from '../js/storage/history.js';
 import { parseCSV, toCSV } from '../js/storage/csv.js';
 import { playOut } from './sim.mjs';
@@ -212,4 +212,94 @@ test('quick bet buttons: opens, facing a bet, postflop pot sizes, slider bounds'
   assert.equal(sliderToAmount(la, 0), la.minTo);
   assert.equal(sliderToAmount(la, SLIDER_MAX), la.maxTo);
   for (const to of [la.minTo, 17, 100, la.maxTo]) assert.ok(Math.abs(sliderToAmount(la, amountToSlider(la, to)) - to) <= 1);
+});
+
+// ---- End-of-hand reveal rules and dollar-free results ----
+const HOLE = ['2c3d', '4c5d', '6c7d', '8c9d', 'TcJd', '2h3h', '4h5h', '6h7h']; // seat 0..7
+const heroGame = (heroIdx, cardsList, runout) => {
+  const s = game([400, 400, 400, 400, 400, 400, 400, 400], cardsList, runout);
+  s.heroIdx = heroIdx;
+  return s;
+};
+const resultLine = (s) => coachText(s).split('\n').find((l) => l.startsWith('Result:'));
+const folds = (s, n) => { for (let k = 0; k < n; k++) applyAction(s, { type: 'fold' }); };
+
+test('villain opens and folds to hero 3-bet: opener shown, other preflop folders hidden', () => {
+  const s = heroGame(7);
+  folds(s, 5); // UTG..CO
+  applyAction(s, { type: 'raise', to: 10 }); // BTN opens
+  folds(s, 1); // SB
+  applyAction(s, { type: 'raise', to: 35 }); // hero BB 3-bets
+  folds(s, 1); // BTN folds to the 3-bet
+  assert.ok(s.done);
+  assert.deepEqual(s.players.filter((p) => isInvolved(s, p.i)).map((p) => p.pos), ['BTN', 'BB']);
+  assert.equal(statusOf(s, 5), 'folded to a re-raise');
+  const line = resultLine(s);
+  assert.ok(!line.includes('$'), line);
+  assert.match(line, /Hero \(BB\) wins \(no showdown\)/);
+  assert.ok(line.includes(`BTN ${cardsPretty(C(HOLE[5]))} (folded to a re-raise)`), line);
+  for (const seat of [0, 1, 2, 3, 4, 6]) assert.ok(!line.includes(cardsPretty(C(HOLE[seat]))), `seat ${seat} leaked: ${line}`);
+});
+
+test('limp or call then fold preflop is not shown; hero always is', () => {
+  const s = heroGame(7);
+  applyAction(s, { type: 'call' }); // UTG limps
+  folds(s, 4); // UTG+1..CO
+  applyAction(s, { type: 'raise', to: 12 }); // BTN iso-raises
+  folds(s, 1); // SB
+  folds(s, 1); // hero BB folds
+  applyAction(s, { type: 'fold' }); // UTG folds to the raise
+  assert.ok(s.done);
+  assert.equal(isInvolved(s, 0), false);
+  assert.equal(isInvolved(s, 7), true);
+  const line = resultLine(s);
+  assert.ok(!line.includes('$'), line);
+  assert.match(line, /BTN wins \(no showdown\)\. Hero folded preflop\./);
+  assert.ok(!line.includes(cardsPretty(C(HOLE[0]))), line);
+  assert.ok(line.includes(cardsPretty(C(HOLE[5]))), line);
+});
+
+test('players who saw the flop are shown even if they fold postflop', () => {
+  const s = heroGame(7);
+  folds(s, 5);
+  applyAction(s, { type: 'raise', to: 10 }); // BTN
+  applyAction(s, { type: 'call' }); // SB
+  applyAction(s, { type: 'call' }); // hero BB
+  dealNextStreet(s);
+  applyAction(s, { type: 'bet', to: 10 }); // SB bets the flop
+  folds(s, 2); // hero, BTN
+  assert.ok(s.done);
+  assert.deepEqual(s.players.filter((p) => isInvolved(s, p.i)).map((p) => p.pos), ['BTN', 'SB', 'BB']);
+  assert.equal(statusOf(s, 5), 'folded on the flop');
+  const line = resultLine(s);
+  assert.ok(!line.includes('$'), line);
+  assert.match(line, /SB wins \(no showdown\)\. Hero folded on the flop\./);
+  assert.ok(line.includes(`BTN ${cardsPretty(C(HOLE[5]))} (folded on the flop)`), line);
+  assert.ok(!line.includes(cardsPretty(C(HOLE[0]))), line);
+});
+
+test('showdown result names the winner and hand with no dollar amounts', () => {
+  const s = heroGame(0, ['AhAd', null, null, null, null, null, 'KhKd', 'QhQd'], '2c7d9sTh3c');
+  applyAction(s, { type: 'raise', to: 100 });
+  folds(s, 5);
+  applyAction(s, { type: 'call' });
+  applyAction(s, { type: 'call' });
+  while (!s.done) { if (s.awaitingDeal) dealNextStreet(s); else applyAction(s, { type: 'check' }); }
+  const line = resultLine(s);
+  assert.ok(!line.includes('$'), line);
+  assert.match(line, /^Result: Showdown: .*Hero \(UTG\) A.* A.* \(Pair, A's\) vs SB .* vs BB .*\. Hero \(UTG\) wins with Pair, A's\.$/);
+  assert.equal(winnerLine(s, true), "You win with Pair, A's.");
+  assert.equal(winnerLine(s, false), "Hero (UTG) wins with Pair, A's.");
+});
+
+test('coach text keeps its exact section order and other $ amounts', () => {
+  const s = heroGame(7);
+  folds(s, 5);
+  applyAction(s, { type: 'raise', to: 10 });
+  folds(s, 1);
+  applyAction(s, { type: 'raise', to: 35 });
+  folds(s, 1);
+  const lines = coachText(s).split('\n');
+  ['Stakes / venue:', 'Effective stack ($):', 'Hero seat + cards:', 'Villain(s):', 'Preflop:', 'Flop', 'Turn', 'River', 'Result:', 'My question:'].forEach((l, k) => assert.ok(lines[k].startsWith(l), lines[k]));
+  assert.match(lines[4], /BTN opens to \$10.*Hero \(BB\) 3-bets to \$35/);
 });

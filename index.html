@@ -33,25 +33,21 @@
       </nav>
     </header>
 
+    <div class="strip">
+      <button class="strip-btn" id="readsBtn">Reads</button>
+      <div class="potbig" id="pot" aria-live="polite"><span class="lbl">Pot</span><b>$0</b></div>
+      <button class="strip-btn" id="logBtn">Log</button>
+    </div>
+
     <main class="main">
       <section class="table-wrap">
         <div class="felt" id="felt">
           <div class="board-area">
             <div class="board" id="board"></div>
-            <div class="pot" id="pot"></div>
           </div>
         </div>
         <div id="seats"></div>
         <div class="hero-hand" id="heroHand"></div>
-      </section>
-
-      <section class="info">
-        <div class="tabs" role="tablist">
-          <button class="tab active" data-tab="log" role="tab">Action</button>
-          <button class="tab" data-tab="reads" role="tab">Reads</button>
-        </div>
-        <div class="tab-body" id="logPanel"></div>
-        <div class="tab-body hidden" id="readsPanel"></div>
       </section>
     </main>
 

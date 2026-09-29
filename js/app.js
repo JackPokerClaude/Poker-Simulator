@@ -1,7 +1,7 @@
 import { createHand, heroAct, villainAct, DRILLS } from './engine/dealer.js';
 import { legalActions, validateRaise, dealNextStreet, potTotal } from './engine/game.js';
 import { RANKS, SUITS, SUIT_SYMBOLS, rankOf, suitOf, cardsPretty } from './engine/cards.js';
-import { describeAction, buildRecord, resultText } from './engine/coach.js';
+import { describeAction, buildRecord, winnerLine, isInvolved, statusOf } from './engine/coach.js';
 import { quickSizes, clampTo, sliderToAmount, amountToSlider, potPercent, SLIDER_MAX } from './ui/sizing.js';
 import { VILLAIN_CONFIG } from '../config/villains.js';
 import { loadHistory, addHand, clearHistory, computeStats, exportCSV, importCSV } from './storage/history.js';
@@ -25,7 +25,7 @@ let hand = null;
 let handToken = 0;
 let pendingTo = null;
 let lastRecord = null;
-let tab = 'log';
+let liveSheet = null; // 'reads' | 'log' while that sheet is open, so it updates as villains act
 
 // ---------- cards ----------
 function cardHTML(c, cls = '') {
@@ -38,26 +38,43 @@ const backHTML = () => '<div class="card-back"></div>';
 const SEAT_XY = [[50, 93], [13, 77], [10, 48], [20, 17], [50, 10], [80, 17], [90, 48], [87, 77]];
 const CENTER = [50, 48];
 
+// After the hand, stacks show as they were before the payout, so no win/loss appears in the numbers.
+const shownStack = (p) => (hand.done ? p.stack - hand.result.won[p.i] : p.stack);
+
 function seatTag(p) {
   if (hand.done && hand.result.showdown && hand.result.showdown.hands[p.i]) return hand.result.showdown.hands[p.i].name;
   if (p.folded) return 'Fold';
-  if (p.allIn) return 'All-in';
+  const amt = p.committed > 0 && !hand.done ? ` $${p.committed}` : '';
+  if (p.allIn) return `All-in${amt}`;
   const last = [...hand.log].reverse().find((e) => e.i === p.i && e.street === hand.street && e.type !== 'uncalled');
   if (!last) return '';
   if (last.type === 'post') return last.added === hand.stakes.sb && p.pos === 'SB' ? 'SB' : 'BB';
-  if (last.type === 'call' && hand.street === 'preflop' && last.level === 1) return 'Limp';
-  return { check: 'Check', call: 'Call', bet: 'Bet', raise: 'Raise', fold: 'Fold' }[last.type] || '';
+  if (last.type === 'call' && hand.street === 'preflop' && last.level === 1) return `Limp${amt}`;
+  const word = { check: 'Check', call: 'Call', bet: 'Bet', raise: 'Raise', fold: 'Fold' }[last.type] || '';
+  return last.type === 'check' || last.type === 'fold' ? word : `${word}${amt}`;
+}
+
+// The pot is always visible above the table and follows every bet, call and raise.
+function renderPot() {
+  const h = hand;
+  const pot = h ? (h.done ? h.result.finalPot : potTotal(h)) : 0;
+  const el = $('pot');
+  const changed = el.dataset.v !== undefined && el.dataset.v !== String(pot);
+  el.dataset.v = String(pot);
+  el.innerHTML = `<span class="lbl">Pot</span><b>$${pot}</b>`;
+  if (changed) { el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
 }
 
 function renderTable() {
   const h = hand;
   $('stakes').textContent = h ? `$${h.stakes.sb}/$${h.stakes.bb}` : '—';
   $('drillName').textContent = DRILLS[settings.drill].name;
+  renderPot();
   if (!h) return;
   const heroIdx = h.heroIdx;
   const winners = h.done ? new Set(Object.entries(h.result.won).filter(([, v]) => v > 0).map(([i]) => Number(i))) : new Set();
 
-  // Board + pot
+  // Board
   const slots = [];
   for (let k = 0; k < 5; k++) {
     const c = h.board[k];
@@ -65,42 +82,39 @@ function renderTable() {
   }
   renderTable.shown = h.board.length;
   $('board').innerHTML = slots.join('');
-  const pot = h.done ? h.result.finalPot : potTotal(h);
-  $('pot').innerHTML = `Pot $${pot}${!h.done && h.toAct === heroIdx ? '' : ''}`;
 
-  // Seats
+  // Seats. At the end of the hand only involved players' cards are turned face up.
   const out = [];
   for (let k = 1; k < 8; k++) {
     const i = (heroIdx + k) % 8;
     const p = h.players[i];
     const [x, y] = SEAT_XY[k];
-    const reveal = h.done;
-    const cards = reveal ? p.cards.map((c) => cardHTML(c, 'sm' + (p.folded ? ' dim' : ''))).join('') : (p.folded ? '' : backHTML() + backHTML());
-    const cls = ['seat', p.folded && !reveal ? 'folded' : '', h.toAct === i ? 'acting' : '', winners.has(i) ? 'winner' : ''].join(' ');
+    const showCards = h.done && isInvolved(h, i);
+    const cards = showCards
+      ? p.cards.map((c) => cardHTML(c, 'sm' + (p.folded ? ' dim' : ''))).join('')
+      : (!h.done && !p.folded ? backHTML() + backHTML() : '');
+    const cls = ['seat', p.folded && !showCards ? 'folded' : '', h.toAct === i ? 'acting' : '', winners.has(i) ? 'winner' : ''].join(' ');
     out.push(`<button class="${cls}" style="left:${x}%;top:${y}%" data-seat="${i}">
       ${p.pos === 'BTN' ? '<span class="dealer">D</span>' : ''}
       <div class="pos">${p.pos}</div>
-      <div class="stack">$${p.stack}</div>
+      <div class="stack">$${shownStack(p)}</div>
       <div class="mini-cards">${cards}</div>
       <div class="tag">${esc(seatTag(p))}</div>
     </button>`);
-    if (p.committed > 0 && !h.done) {
-      const bx = x + (CENTER[0] - x) * 0.45, by = y + (CENTER[1] - y) * 0.45;
-      out.push(`<div class="bet-chip" style="left:${bx}%;top:${by}%">$${p.committed}</div>`);
-    }
   }
   const hero = h.players[heroIdx];
   $('seats').innerHTML = out.join('');
 
-  const bbs = Math.round(hero.stack / h.stakes.bb);
+  const bbs = Math.round(shownStack(hero) / h.stakes.bb);
   $('heroHand').className = `hero-hand${h.toAct === heroIdx ? ' acting' : ''}`;
   $('heroHand').innerHTML = `<div class="cards">${hero.cards.map((c) => cardHTML(c, 'big')).join('')}</div>
-    <div class="meta"><span class="pos">${hero.pos === 'BTN' ? 'BTN (D)' : hero.pos}</span>$${hero.stack} · ${bbs}bb${hero.folded ? ' · folded' : ''}${hero.committed > 0 && !h.done ? `<span class="mybet">bet $${hero.committed}</span>` : ''}</div>`;
+    <div class="meta"><span class="pos">${hero.pos === 'BTN' ? 'BTN (D)' : hero.pos}</span>$${shownStack(hero)} · ${bbs}bb${hero.folded ? ' · folded' : ''}${hero.committed > 0 && !h.done ? `<span class="mybet">bet $${hero.committed}</span>` : ''}</div>`;
 }
 
-function renderLog() {
+// Action log (shown in the Log sheet).
+function logHTML() {
   const h = hand;
-  if (!h) { $('logPanel').innerHTML = ''; return; }
+  if (!h) return '';
   const lines = [`<div class="log-street">Preflop <span class="b">blinds $${h.stakes.sb}/$${h.stakes.bb}</span></div>`];
   for (const e of h.log) {
     if (e.type === 'post') continue;
@@ -115,80 +129,131 @@ function renderLog() {
     const cls = e.i === h.heroIdx ? 'hero' : e.type === 'fold' ? 'fold' : '';
     lines.push(`<div class="log-line ${cls}">${esc(txt)}</div>`);
   }
-  if (h.done) lines.push(`<div class="log-street">Result</div><div class="log-line">${esc(resultText(h))}</div>`);
-  const el = $('logPanel');
-  el.innerHTML = lines.join('');
-  el.scrollTop = el.scrollHeight;
+  if (h.done) lines.push(`<div class="log-street">Result</div><div class="log-line hero">${esc(winnerLine(h, true))}</div>`);
+  return lines.join('');
 }
 
-function renderReads(flashSeat) {
+// One full-width card per villain (Reads sheet): players still in the hand first.
+function readsHTML(flashSeat) {
   const h = hand;
-  if (!h) return;
-  const rows = [];
-  for (let k = 1; k < 8; k++) {
-    const i = (h.heroIdx + k) % 8;
-    const p = h.players[i];
-    const typeReveal = h.done ? ` · <span class="type">${esc(VILLAIN_CONFIG.types[p.type].label)}</span>` : '';
-    rows.push(`<div class="read${p.folded ? ' out' : ''}${flashSeat === i ? ' flash' : ''}" id="read-${i}">
-      <div class="who">${p.pos}<span class="st">$${p.stack} · ${Math.round(p.stack / h.stakes.bb)}bb${typeReveal}</span></div>
-      <div class="txt">${p.reads.map(esc).join(' · ')}</div></div>`);
-  }
-  $('readsPanel').innerHTML = rows.join('');
-  if (flashSeat != null) $(`read-${flashSeat}`)?.scrollIntoView({ block: 'nearest' });
+  if (!h) return '';
+  const seats = [1, 2, 3, 4, 5, 6, 7].map((k) => h.players[(h.heroIdx + k) % 8]);
+  const ordered = [...seats.filter((p) => !p.folded), ...seats.filter((p) => p.folded)];
+  return ordered.map((p) => {
+    const status = p.folded ? 'Folded' : p.allIn ? 'All-in' : 'In hand';
+    const type = h.done ? `<div class="rc-type">${esc(VILLAIN_CONFIG.types[p.type].label)}</div>` : '';
+    return `<div class="read-card${p.folded ? ' out' : ''}${flashSeat === p.i ? ' flash' : ''}" id="read-${p.i}">
+      <div class="rc-top"><span class="rc-pos">${p.pos}</span><span class="rc-stack">$${shownStack(p)} · ${Math.round(shownStack(p) / h.stakes.bb)}bb</span><span class="rc-status">${status}</span></div>
+      ${type}
+      <div class="rc-read">${p.reads.map(esc).join('<br>')}</div>
+    </div>`;
+  }).join('');
 }
 
 // ---------- action bar ----------
 const raiseWord = (la, to) => (to === la.maxTo ? 'All-in' : la.isBet ? 'Bet' : 'Raise to');
 
+// Most recent bet or raise on the current street (null if there has been none).
+function lastAggression(h) {
+  for (let k = h.log.length - 1; k >= 0; k--) {
+    const e = h.log[k];
+    if (e.type === 'deal') return null;
+    if (e.street === h.street && (e.type === 'bet' || e.type === 'raise')) return e;
+  }
+  return null;
+}
+
+// One row above the hero's actions: Pot before -> villain bet -> Pot now, then what it costs to call.
+function potLineHTML(h, la) {
+  const pot = potTotal(h);
+  const agg = la.toCall > 0 ? lastAggression(h) : null;
+  const seg = (label, val, cls = '') => `<div class="pl ${cls}"><i>${label}</i><b>$${val}</b></div>`;
+  const call = la.toCall > 0
+    ? `<div class="tocall"><i>To call:</i><b>$${la.toCall}</b></div>`
+    : '<div class="tocall none"><i>No bet</i><b>Check or bet</b></div>';
+  if (agg && agg.i !== h.heroIdx) {
+    const verb = agg.type === 'bet' ? 'bets' : agg.street === 'preflop' && agg.level === 1 ? 'opens' : 'raises';
+    return `<div class="potline">${seg('Pot before:', agg.potBefore)}<span class="arr">→</span>${seg(`${esc(agg.pos)} ${verb}`, agg.to, 'hot')}<span class="arr">→</span>${seg('Pot now:', pot)}${call}</div>`;
+  }
+  return `<div class="potline">${seg('Pot now:', pot)}${call}</div>`;
+}
+
 function renderActionBar() {
   const bar = $('actionbar');
   const h = hand;
-  if (!h) { bar.innerHTML = '<div class="status">Dealing…</div>'; return; }
+  bar.classList.toggle('done', !!h?.done);
+  if (!h) { bar.innerHTML = '<div class="status"><b>Dealing…</b></div>'; return; }
   if (h.done) {
-    bar.innerHTML = `<div class="two-btns">
-      <button class="btn secondary" id="copyBtn">Copy for coach</button>
-      <button class="btn primary" id="nextBtn">Next hand ▶</button></div>`;
-    $('copyBtn').onclick = () => copyText(lastRecord?.coachText);
+    bar.innerHTML = `
+      <div class="resultline">${esc(winnerLine(h, true))}</div>
+      <div class="main-btns">
+        <button class="btn secondary" id="fbBtn">See feedback</button>
+        <button class="btn primary" id="nextBtn">Next hand ▶</button>
+        <button class="btn secondary wide" id="copyBtn">Copy for coach</button>
+      </div>`;
+    $('fbBtn').onclick = showFeedback;
     $('nextBtn').onclick = () => newHand();
+    $('copyBtn').onclick = () => copyText(lastRecord?.coachText);
     return;
   }
   if (h.toAct !== h.heroIdx) {
-    const who = h.toAct >= 0 ? `${h.players[h.toAct].pos} is thinking…` : 'Dealing…';
-    bar.innerHTML = `<div class="status">${who}</div>`;
+    const acting = h.toAct >= 0 ? `${h.players[h.toAct].pos} is thinking…` : 'Dealing…';
+    const last = [...h.log].reverse().find((e) => !['post', 'deal', 'uncalled'].includes(e.type));
+    bar.innerHTML = `<div class="status"><b>${esc(acting)}</b>${last ? `<span>${esc(describeAction(h, last))}</span>` : ''}</div>`;
     return;
   }
   const la = legalActions(h);
-  if (la.canRaise && pendingTo == null) pendingTo = la.minTo;
+  if (la.canRaise) pendingTo = pendingTo == null ? la.minTo : clampTo(la, pendingTo);
   const quick = quickSizes(h, la);
   const sliderOn = la.canRaise && la.maxTo > la.minTo;
-  const callLabel = la.canCheck ? 'Check' : la.callIsAllIn ? `All-in<small>call $${la.toCall}</small>` : `Call<small>$${la.toCall}</small>`;
+  const callLabel = la.canCheck ? 'Check' : la.callIsAllIn ? `Call all-in $${la.toCall}` : `Call $${la.toCall}`;
   bar.innerHTML = `
+    ${potLineHTML(h, la)}
     ${quick.length ? `<div class="quick">${quick.map((q) => `<button class="qbtn" data-to="${q.to}">
       <span class="qt">${q.top}</span><span class="qv">${q.allIn && q.top !== 'All-in' ? 'All-in' : `$${q.to}`}</span></button>`).join('')}</div>` : ''}
     ${la.canRaise ? `<div class="sizer">
       <div class="amount"><b id="amtVal"></b><span id="amtPct"></span></div>
       <div class="slider-row">
-        <button class="nudge" data-step="-1" aria-label="Minus one big blind">−</button>
+        <button class="nudge" data-step="-1" aria-label="Minus one dollar">−</button>
         <input id="slider" class="slider" type="range" min="0" max="${SLIDER_MAX}" step="1" aria-label="Bet size" ${sliderOn ? '' : 'disabled'}>
-        <button class="nudge" data-step="1" aria-label="Plus one big blind">+</button>
+        <button class="nudge" data-step="1" aria-label="Plus one dollar">+</button>
       </div></div>` : ''}
     <div class="main-btns">
       <button class="btn fold" id="foldBtn" ${la.canFold ? '' : 'disabled'}>Fold</button>
       <button class="btn call" id="callBtn">${callLabel}</button>
-      <button class="btn raise" id="raiseBtn" ${la.canRaise ? '' : 'disabled'}>${la.isBet ? 'Bet' : 'Raise'}</button>
+      ${la.canRaise ? '<button class="btn raise wide" id="raiseBtn"></button>' : ''}
     </div>`;
 
   bar.querySelectorAll('.qbtn').forEach((b) => (b.onclick = () => { pendingTo = Number(b.dataset.to); syncSizer(la); }));
   const slider = $('slider');
   if (slider) slider.oninput = () => { pendingTo = sliderToAmount(la, Number(slider.value)); syncSizer(la, true); };
-  bar.querySelectorAll('.nudge').forEach((b) => (b.onclick = () => {
-    pendingTo = clampTo(la, (pendingTo ?? la.minTo) + h.stakes.bb * Number(b.dataset.step));
-    syncSizer(la);
-  }));
+  bar.querySelectorAll('.nudge').forEach((b) => bindNudge(b, la));
   $('foldBtn').onclick = () => act({ type: 'fold' });
   $('callBtn').onclick = () => act(la.canCheck ? { type: 'check' } : { type: 'call' });
-  $('raiseBtn').onclick = doRaise;
+  if ($('raiseBtn')) $('raiseBtn').onclick = doRaise;
   if (la.canRaise) syncSizer(la);
+}
+
+// The − and + buttons move the amount by exactly $1; hold to repeat.
+function bindNudge(btn, la) {
+  const step = Number(btn.dataset.step);
+  let delay = null, timer = null;
+  const stop = () => { clearTimeout(delay); clearInterval(timer); delay = timer = null; };
+  const apply = () => {
+    const next = clampTo(la, (pendingTo ?? la.minTo) + step);
+    if (!document.body.contains(btn) || next === pendingTo) { stop(); return; }
+    pendingTo = next;
+    syncSizer(la);
+  };
+  btn.onpointerdown = (e) => {
+    if (btn.disabled) return;
+    e.preventDefault();
+    apply();
+    delay = setTimeout(() => { timer = setInterval(apply, 70); }, 400);
+  };
+  btn.onpointerup = btn.onpointercancel = btn.onpointerleave = stop;
+  btn.onclick = (e) => { if (e.detail === 0) apply(); }; // keyboard activation only; pointer input is handled above
+  btn.oncontextmenu = (e) => e.preventDefault();
 }
 
 // Update amount readout, slider fill, confirm label and the active quick button.
@@ -200,8 +265,8 @@ function syncSizer(la, fromSlider = false) {
     slider.style.setProperty('--fill', `${(Number(slider.value) / SLIDER_MAX) * 100}%`);
   }
   $('amtVal').textContent = `$${to}`;
-  $('amtPct').textContent = to === la.maxTo ? 'All-in' : `${potPercent(hand, to)}% pot`;
-  $('raiseBtn').innerHTML = `${raiseWord(la, to)}<small>$${to}</small>`;
+  $('amtPct').textContent = to === la.maxTo ? 'All-in' : `${potPercent(hand, to)}% of pot`;
+  $('raiseBtn').textContent = `${raiseWord(la, to)} $${to}`;
   document.querySelectorAll('.qbtn').forEach((b) => b.classList.toggle('on', Number(b.dataset.to) === to));
   document.querySelectorAll('.nudge').forEach((b) => {
     b.disabled = Number(b.dataset.step) < 0 ? to <= la.minTo : to >= la.maxTo;
@@ -231,9 +296,8 @@ function act(action) {
 // ---------- game loop ----------
 function renderAll() {
   renderTable();
-  renderLog();
-  renderReads();
   renderActionBar();
+  refreshLive();
 }
 
 async function runLoop() {
@@ -261,8 +325,7 @@ function finishHand() {
   lastRecord = buildRecord(hand);
   const saved = addHand(lastRecord);
   if (!saved) toast('Storage is full or blocked: this hand is only kept until you close the app.', true);
-  renderAll();
-  showResult();
+  renderAll(); // the feedback screen opens only when "See feedback" is tapped
 }
 
 function newHand() {
@@ -283,31 +346,45 @@ function newHand() {
 }
 
 // ---------- sheets ----------
-function openSheet(html, { full = false } = {}) {
+function openSheet(html, { full = false, live = null } = {}) {
   const sh = $('sheet');
   sh.className = `sheet${full ? ' full' : ''}`;
   $('sheetBody').innerHTML = html;
   $('sheetBody').scrollTop = 0;
   $('scrim').classList.toggle('hidden', full);
+  liveSheet = live;
 }
 function closeSheet() {
+  liveSheet = null;
   $('sheet').className = 'sheet hidden';
   $('sheetBody').innerHTML = '';
   $('scrim').classList.add('hidden');
 }
-$('scrim').onclick = () => {
-  if (hand?.done && !$('sheet').classList.contains('hidden')) peekResult();
-  else closeSheet();
-};
-$('sheetHandle').onclick = () => {
-  const sh = $('sheet');
-  if (sh.classList.contains('peek')) { sh.classList.remove('peek'); $('scrim').classList.remove('hidden'); }
-  else if (hand?.done && $('sheetBody').querySelector('.peek-keep')) peekResult();
-  else closeSheet();
-};
-function peekResult() {
-  $('sheet').classList.add('peek');
-  $('scrim').classList.add('hidden');
+$('scrim').onclick = closeSheet;
+$('sheetHandle').onclick = closeSheet;
+
+// Reads and Log stay open while villains act, so keep them current.
+function refreshLive() {
+  const box = $('live');
+  if (!liveSheet || !box) return;
+  const sb = $('sheetBody');
+  const atBottom = sb.scrollHeight - sb.scrollTop - sb.clientHeight < 60;
+  box.innerHTML = liveSheet === 'reads' ? readsHTML() : logHTML();
+  if (liveSheet === 'log' && atBottom) sb.scrollTop = sb.scrollHeight;
+}
+
+function showReads(flashSeat) {
+  openSheet(`<div class="sheet-top"><h2>Reads</h2><button class="close" id="closeBtn" aria-label="Close">✕</button></div>
+    <div id="live">${readsHTML(flashSeat)}</div>`, { full: true, live: 'reads' });
+  $('closeBtn').onclick = closeSheet;
+  if (flashSeat != null) $(`read-${flashSeat}`)?.scrollIntoView({ block: 'center' });
+}
+
+function showLog() {
+  openSheet(`<div class="sheet-top"><h2>Action log</h2><button class="close" id="closeBtn" aria-label="Close">✕</button></div>
+    <div id="live">${logHTML()}</div>`, { full: true, live: 'log' });
+  $('closeBtn').onclick = closeSheet;
+  $('sheetBody').scrollTop = $('sheetBody').scrollHeight;
 }
 
 const VERDICT_LABEL = { correct: '✓ Chart play', mixed: '≈ Mixed', wrong: '✗ Off chart', situational: '⚑ Situational', nochart: '— No chart' };
@@ -328,34 +405,27 @@ function gradeHTML(d) {
   </div>`;
 }
 
-function showResult() {
+// Feedback screen: opens only when "See feedback" is tapped. No won/lost amounts, and only
+// involved players' cards.
+function showFeedback() {
   const h = hand;
+  if (!h || !h.done) return;
   const r = h.result;
-  const net = r.net[h.heroIdx];
-  const bb = h.stakes.bb;
-  const netCls = net > 0 ? 'pos' : net < 0 ? 'neg' : 'zero';
-  const netStr = `${net > 0 ? '+' : net < 0 ? '−' : ''}$${Math.abs(net)}`;
-  const order = [...Array(8).keys()].map((k) => (h.heroIdx + k) % 8);
+  const order = [...Array(8).keys()].map((k) => (h.heroIdx + k) % 8).filter((i) => isInvolved(h, i));
   const handsHTML = order.map((i) => {
     const p = h.players[i];
-    const sd = r.showdown?.hands[i];
     const win = r.won[i] > 0;
     const type = p.isHero ? 'You' : VILLAIN_CONFIG.types[p.type].label;
     return `<div class="hand-row${win ? ' win' : ''}${p.folded ? ' fold' : ''}">
       <div class="cs">${p.cards.map((c) => cardHTML(c, 'sm')).join('')}</div>
-      <div class="who">${p.pos}${win ? ` <span class="money">+$${r.won[i]}</span>` : ''}<span class="ty">${esc(type)}</span><span class="hd">${sd ? esc(sd.name) : p.folded ? 'folded' : ''}</span></div>
+      <div class="who">${p.pos}${win ? ' · Won' : ''}<span class="ty">${esc(type)}</span><span class="hd">${esc(statusOf(h, i).replace(/^won, /, ''))}</span></div>
     </div>`;
   }).join('');
   const grades = h.heroDecisions.length ? h.heroDecisions.map(gradeHTML).join('') : '<div class="empty">No preflop decision this hand.</div>';
   openSheet(`
-    <div class="peek-keep peek-bar">
-      <div class="grow"><span class="net ${netCls}">${netStr}</span> <span class="bbnet">${(net / bb).toFixed(1)}bb</span></div>
-      <button class="link" id="expandBtn">Feedback ▴</button>
-      <button class="btn primary" id="peekNext">Next ▶</button>
-    </div>
-    <div class="result-head"><h2>${net > 0 ? 'You won' : net < 0 ? 'You lost' : 'Break even'}</h2><button class="link" id="seeTable">See table ▾</button></div>
-    <div class="result-text">${esc(resultText(h))}</div>
-    <h3>All hands</h3>
+    <div class="sheet-top"><h2>Hand feedback</h2><button class="close" id="closeBtn" aria-label="Close">✕</button></div>
+    <div class="resultbox">${esc(winnerLine(h, true))}</div>
+    <h3>Hands</h3>
     <div class="hands-grid">${handsHTML}</div>
     <h3>Preflop feedback</h3>
     ${grades}
@@ -363,12 +433,10 @@ function showResult() {
     <div class="sheet-actions">
       <button class="btn secondary" id="copyBtn2">Copy for coach</button>
       <button class="btn primary" id="nextBtn2">Next hand ▶</button>
-    </div>`);
+    </div>`, { full: true });
+  $('closeBtn').onclick = closeSheet;
   $('copyBtn2').onclick = () => copyText(lastRecord.coachText);
   $('nextBtn2').onclick = () => newHand();
-  $('peekNext').onclick = () => newHand();
-  $('seeTable').onclick = peekResult;
-  $('expandBtn').onclick = () => { $('sheet').classList.remove('peek'); $('scrim').classList.remove('hidden'); };
 }
 
 function showDrills() {
@@ -542,17 +610,11 @@ $('drillBtn').onclick = showDrills;
 $('historyBtn').onclick = showHistory;
 $('statsBtn').onclick = showStats;
 $('menuBtn').onclick = showMenu;
-document.querySelectorAll('.tab').forEach((b) => (b.onclick = () => {
-  tab = b.dataset.tab;
-  document.querySelectorAll('.tab').forEach((x) => x.classList.toggle('active', x === b));
-  $('logPanel').classList.toggle('hidden', tab !== 'log');
-  $('readsPanel').classList.toggle('hidden', tab !== 'reads');
-}));
+$('readsBtn').onclick = () => showReads();
+$('logBtn').onclick = showLog;
 $('seats').addEventListener('click', (e) => {
   const seat = e.target.closest('.seat');
-  if (!seat) return;
-  document.querySelector('.tab[data-tab="reads"]').click();
-  renderReads(Number(seat.dataset.seat));
+  if (seat) showReads(Number(seat.dataset.seat));
 });
 
 async function boot() {

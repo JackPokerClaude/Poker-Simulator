@@ -64,19 +64,62 @@ export function effectiveStack(s) {
   return Math.min(hero.startStack, biggest);
 }
 
+// Who may have their hole cards shown at the end of the hand: the hero, anyone who saw the
+// flop or later (even if they folded postflop), and anyone who made a preflop raise
+// (open, iso, 3-bet, 4-bet, 5-bet) even if they folded preflop to a re-raise.
+export function isInvolved(s, i) {
+  if (i === s.heroIdx) return true;
+  const sawFlop = s.log.some((e) => e.type === 'deal' && e.street === 'flop') && !foldedPreflop(s, i);
+  const raisedPreflop = s.log.some((e) => e.street === 'preflop' && e.i === i && e.type === 'raise');
+  return sawFlop || raisedPreflop;
+}
+
+// Short status for an involved player at the end of the hand (no dollar amounts).
+export function statusOf(s, i) {
+  const sd = s.result?.showdown?.hands[i];
+  if (sd) return sd.name;
+  const fold = s.log.find((e) => e.i === i && e.type === 'fold');
+  if (fold) {
+    const raised = s.log.some((e) => e.street === 'preflop' && e.i === i && e.type === 'raise');
+    if (fold.street === 'preflop') return raised ? 'folded to a re-raise' : 'folded';
+    return `folded on the ${fold.street}`;
+  }
+  return s.result?.won[i] > 0 ? 'won, no showdown' : '';
+}
+
+const nameOf = (s, i, you) => (i === s.heroIdx ? (you ? 'You' : `Hero (${s.players[i].pos})`) : s.players[i].pos);
+
+// Who won and with what hand. No dollar amounts.
+export function winnerLine(s, you = false) {
+  const r = s.result;
+  const winners = Object.keys(r.won).map(Number).filter((i) => r.won[i] > 0);
+  const verb = (i) => (i === s.heroIdx && you ? 'win' : 'wins');
+  if (!r.showdown) {
+    const names = winners.map((i) => nameOf(s, i, you));
+    const plural = winners.length > 1 || (winners[0] === s.heroIdx && you);
+    return `${names.join(' and ')} ${plural ? 'win' : 'wins'} (no showdown).`;
+  }
+  return `${winners.map((i) => `${nameOf(s, i, you)} ${verb(i)} with ${r.showdown.hands[i].descr}`).join('; ')}.`;
+}
+
+// Coach "Result": showdown hands, who won, and the cards of other involved players. No dollar amounts.
 export function resultText(s) {
   const r = s.result;
-  const hero = s.players[s.heroIdx];
-  const net = r.net[s.heroIdx];
-  const netStr = `${net >= 0 ? '+' : '-'}$${Math.abs(net)}`;
-  const winners = Object.entries(r.won).filter(([, v]) => v > 0).map(([i, v]) => `${who(s, Number(i))} wins $${v}`);
+  const parts = [];
+  if (r.showdown) {
+    const shown = Object.entries(r.showdown.hands).map(([i, h]) => `${nameOf(s, Number(i), false)} ${cardsPretty(s.players[i].cards)} (${h.descr})`);
+    parts.push(`Showdown: ${shown.join(' vs ')}.`);
+  }
+  parts.push(winnerLine(s, false));
   if (!r.showdown) {
     const heroFold = s.log.find((e) => e.i === s.heroIdx && e.type === 'fold');
-    const tail = heroFold ? ` Hero folded ${heroFold.street === 'preflop' ? 'preflop' : `on the ${heroFold.street}`}.` : '';
-    return `${winners.join(', ')} (no showdown).${tail} Hero net ${netStr}.`;
+    if (heroFold) parts.push(`Hero folded ${heroFold.street === 'preflop' ? 'preflop' : `on the ${heroFold.street}`}.`);
   }
-  const shown = Object.entries(r.showdown.hands).map(([i, h]) => `${who(s, Number(i))} ${cardsPretty(s.players[i].cards)} (${h.descr})`);
-  return `Showdown: ${shown.join(' vs ')}. ${winners.join(', ')}. Hero net ${netStr}${hero.stack === 0 ? ' (stacked)' : ''}.`;
+  const others = s.players
+    .filter((p) => !p.isHero && isInvolved(s, p.i) && !r.showdown?.hands[p.i])
+    .map((p) => `${p.pos} ${cardsPretty(p.cards)} (${statusOf(s, p.i)})`);
+  if (others.length) parts.push(`Also shown: ${others.join(', ')}.`);
+  return parts.join(' ');
 }
 
 export function coachText(s) {
