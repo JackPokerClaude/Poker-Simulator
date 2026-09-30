@@ -424,3 +424,5 @@ div.tag { display: block; margin-top: 4px; }
 .fb-nums { margin: 3px 0 4px; font-size: 12.5px; }
 .fb-nums summary { cursor: pointer; color: var(--blue); font-weight: 700; }
 .fb-num { margin: 3px 0 3px 8px; line-height: 1.4; }
+details.coach-d { margin-bottom: 12px; }
+details.coach-d > summary { cursor: pointer; font-weight: 600; color: var(--blue); padding: 8px 0; }

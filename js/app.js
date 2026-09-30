@@ -11,6 +11,8 @@ import { CHARTS_USED } from './engine/scenario.js';
 import { buildFeedback } from './feedback/engine.js';
 import { feedbackHTML } from './feedback/render.js';
 import { rebuildHand } from './feedback/replay.js';
+import { preflopMark } from './feedback/marks.js';
+import { coachReport } from './feedback/coach-report.js';
 import { clearGrids, gridDetail, gridClassInfo } from './ui/grid.js';
 
 const $ = (id) => document.getElementById(id);
@@ -374,7 +376,15 @@ function finishHand() {
   const h = hand, token = handToken, rec = lastRecord;
   setTimeout(() => {
     if (token !== handToken) return;
-    try { const fb = feedbackFor(h, token); rec.leaks = fb.leaks; updateHand(rec.id, { leaks: fb.leaks }); } catch (e) { console.warn('feedback', e); }
+    try {
+      const fb = feedbackFor(h, token);
+      rec.leaks = fb.leaks;
+      // The full review replaces the short hand history for Copy for coach; the short one is
+      // kept so hands past the replay limit can drop the long text (storage).
+      rec.coachShort = rec.coachText;
+      rec.coachText = coachReport(h, fb);
+      updateHand(rec.id, { leaks: fb.leaks, coachText: rec.coachText, coachShort: rec.coachShort });
+    } catch (e) { console.warn('feedback', e); }
   }, 30);
   renderAll(); // the feedback screen opens only when "See feedback" is tapped
   if (drawerOpen() && (drawerTab === 'history' || drawerTab === 'stats')) renderDrawer();
@@ -477,21 +487,6 @@ const VERDICT_LABEL = { correct: '✓ Chart play', mixed: '≈ Mixed', wrong: '�
 const OUTSIDE_LABEL = { correct: '✓ Good', mixed: '≈ Borderline', wrong: '✗ Mistake', situational: '⚑ Situational', nochart: '— No chart' };
 
 // ✅/⚠️/❌ and a one-line reason for a preflop grade ("Chart 3-bets J9s 100% here").
-const VERB = { raise: 'raises', '3-bet': '3-bets', '4-bet': '4-bets', '5-bet': '5-bets', 'iso-raise': 'iso-raises', squeeze: 'squeezes', call: 'calls', fold: 'folds', overlimp: 'overlimps', limp: 'limps' };
-function preflopMark(d) {
-  const parts = String(d.freq || '').split(' · ').map((x) => /^(.*) (\d+)%$/.exec(x)).filter(Boolean).map((m) => ({ act: m[1], p: Number(m[2]) }));
-  const top = parts.sort((a, b) => b.p - a.p)[0];
-  const chartSays = top ? `Chart ${VERB[top.act.toLowerCase()] || top.act.toLowerCase()} ${d.code} ${top.p}% here` : '';
-  if (d.rule) return { mark: d.verdict === 'wrong' ? '❌' : '✅', reason: d.message };
-  switch (d.verdict) {
-    case 'correct': return { mark: '✅', reason: d.source === 'OUTSIDE' ? d.message.replace(/^No HHP chart covers this open \([^)]*\)\.\s*/, '') : `${chartSays}${chartSays ? ': you did too.' : 'Matches the chart.'}` };
-    case 'mixed': return d.source === 'OUTSIDE' ? { mark: '⚠️', reason: 'Borderline: one bracket chart plays it, the other folds it.' } : { mark: '✅', reason: `Mixed cell: the chart plays ${d.freq}. Your play is part of the mix.` };
-    case 'situational': return { mark: '⚠️', reason: 'Situational hand: Mark\'s rule decides (below).' };
-    case 'wrong': return { mark: '❌', reason: chartSays || d.message };
-    default: return { mark: '—', reason: d.message || 'No chart for this spot.' };
-  }
-}
-
 function gradeHTML(d) {
   const sizing = (d.sizing || []).map((z) => `<div class="sizing ${z.ok ? 'ok' : 'bad'}"><span class="ic">${z.ok ? '✓' : '✗'}</span><span><b>${esc(z.rule)}:</b> ${esc(z.message)}</span></div>`).join('');
   const chartLine = d.sourceTag
@@ -558,16 +553,17 @@ function feedbackFor(h, token = handToken) {
 // involved players' cards.
 function showFeedback(h = hand, { fromHistory = null } = {}) {
   if (!h || !h.done) return;
-  let body;
+  let body, fb = null;
   clearGrids();
   try {
-    const fb = fromHistory ? buildFeedback(h, { model, brain, history: loadHistory().filter((x) => x.id !== fromHistory.id).slice(0, 50) }) : feedbackFor(h);
+    fb = fromHistory ? buildFeedback(h, { model, brain, history: loadHistory().filter((x) => x.id !== fromHistory.id).slice(0, 50) }) : feedbackFor(h);
     body = feedbackHTML(h, fb, { resultLine: winnerLine(h, true), handsHTML: handsGridHTML(h), gradeHTML });
   } catch (e) {
     console.error(e);
     body = `<div class="resultbox">${esc(winnerLine(h, true))}</div><div class="bnote">The feedback engine hit an error on this hand: ${esc(e.message)}. The preflop grades are below.</div>${(h.heroDecisions || []).map(gradeHTML).join('')}`;
   }
-  const coach = fromHistory ? fromHistory.coachText : lastRecord?.coachText;
+  let coach = fromHistory ? fromHistory.coachText : lastRecord?.coachText;
+  try { if (fb) coach = coachReport(h, fb); } catch (e) { console.warn('coach text', e); }
   openSheet(`
     <div class="sheet-top"><h2>Hand feedback</h2><button class="close" id="closeBtn" aria-label="Close">✕</button></div>
     ${body}
@@ -631,7 +627,7 @@ function showHandDetail(h) {
   panel(`
     <div class="sheet-top"><button class="close" id="backBtn" aria-label="Back to history">‹</button><h2>${esc(h.heroPos)} · ${esc(h.heroCode)} · $${esc(h.stakes)}</h2></div>
     <button class="btn primary" style="width:100%;margin-bottom:12px" id="copyHist">Copy for coach</button>
-    <pre class="coach">${esc(h.coachText)}</pre>
+    <details class="coach-d"><summary>Show the coach text</summary><pre class="coach">${esc(h.coachText)}</pre></details>
     ${h.replay ? '<button class="btn secondary" style="width:100%;margin-bottom:12px" id="fullFb">See full feedback</button>' : ''}
     ${h.leaks?.length ? `<div class="fb-line"><b>Leak tags:</b> ${h.leaks.map((t) => `<span class="leak">${esc(t)}</span>`).join('')}</div>` : ''}
     <h3>Preflop feedback</h3>

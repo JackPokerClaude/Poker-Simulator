@@ -19,12 +19,16 @@ export function saveHistory(list) {
   catch { memory = list; return false; }
 }
 
-// Only the newest hands keep their replay data (it's the big part of a record).
+// Only the newest hands keep their replay data and full coach review (the big parts of a record).
 export const REPLAY_KEEP = 50;
 export function addHand(rec) {
   const list = loadHistory();
   list.unshift(rec);
-  for (let k = REPLAY_KEEP; k < list.length; k++) if (list[k].replay) delete list[k].replay;
+  for (let k = REPLAY_KEEP; k < list.length; k++) {
+    if (list[k].replay) delete list[k].replay;
+    // The full coach review goes with the replay; the short hand history stays.
+    if (list[k].coachShort) { list[k].coachText = list[k].coachShort; delete list[k].coachShort; }
+  }
   return saveHistory(list);
 }
 

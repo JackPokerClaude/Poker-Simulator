@@ -6,6 +6,7 @@ import { playOut } from './sim.mjs';
 import { createHand } from '../js/engine/dealer.js';
 import { buildFeedback } from '../js/feedback/engine.js';
 import { feedbackHTML } from '../js/feedback/render.js';
+import { coachReport } from '../js/feedback/coach-report.js';
 import { equityVsRange } from '../js/feedback/equity.js';
 import { whenMatches } from '../js/feedback/match.js';
 import { packReplay, rebuildHand } from '../js/feedback/replay.js';
@@ -165,4 +166,24 @@ test('[HHP] tags only sit on brain content', () => {
     }
   }
   assert.ok(tags > 50, `only ${tags} tags checked`);
+});
+
+test('Copy for coach follows the feedback: range, options, action, verdict, leaks per decision', () => {
+  const allowed = new Set(brain.leakTags);
+  for (const { s, fb } of hands) {
+    const t = coachReport(s, fb);
+    assert.ok(t.startsWith('Stakes / venue:'));
+    assert.ok(t.includes('PREFLOP') && t.includes('Takeaway: ') && t.includes('Result: '));
+    for (const st of fb.streets) {
+      const at = t.indexOf(`\n${st.street.toUpperCase()} `);
+      assert.ok(at > 0, `${st.street} missing`);
+      const block = t.slice(at, t.indexOf('\n\n', at + 1) >>> 0);
+      for (const pt of st.points) {
+        if (!pt.analysis) continue;
+        for (const re of [/His range/, /Options weighed/, /Your action: /, /Verdict: /, /Leak tags: /]) assert.match(block, re, `${st.street}: ${re}`);
+        assert.ok(block.includes(pt.analysis.verdict.source), 'verdict carries its source');
+      }
+    }
+    for (const m of t.matchAll(/Leak tags(?: \(hand\))?: (.+)/g)) if (m[1] !== 'none') for (const tag of m[1].split(', ')) assert.ok(allowed.has(tag.replace(/ \(\d+x in last 50\)$/, '')), tag);
+  }
 });

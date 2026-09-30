@@ -32,7 +32,7 @@ export function describeAction(s, e) {
 }
 
 // Collapse runs of folds: "UTG, UTG+1, LJ fold".
-function streetLine(s, street) {
+export function streetLine(s, street) {
   const es = s.log.filter((e) => e.street === street && !['post', 'deal'].includes(e.type));
   const parts = [];
   let folds = [];
@@ -123,13 +123,23 @@ export function resultText(s) {
   return parts.join(' ');
 }
 
-export function coachText(s) {
+// The hand facts a coach needs before any review: stakes, stacks, seats, villains.
+export function handFacts(s) {
   const hero = s.players[s.heroIdx];
   const bb = s.stakes.bb;
   const eff = effectiveStack(s);
-  const villains = involvedVillains(s).map((p) => {
-    return `${p.pos}, $${p.startStack} (${Math.round(p.startStack / bb)}bb), ${villainLabel(p)}, reads: ${p.reads.join('; ') || 'none'}`;
-  });
+  const villains = involvedVillains(s).map((p) => `${p.pos}, $${p.startStack} (${Math.round(p.startStack / bb)}bb), ${villainLabel(p)}, reads: ${p.reads.join('; ') || 'none'}`);
+  return [
+    `Stakes / venue: $${s.stakes.sb}/$${s.stakes.bb} NLHE, Simulator`,
+    `Effective stack ($): $${eff} (${Math.round(eff / bb)}bb)`,
+    `Hero seat + cards: ${hero.pos}, ${cardsPretty(hero.cards)} ($${hero.startStack})`,
+    `Villain(s): ${villains.length ? villains.join(' | ') : 'none (everyone folded)'}`,
+  ];
+}
+
+// The short hand history (no review). Replaced by the full review once the feedback engine has
+// run (feedback/coach-report.js); kept as the fallback and for hands too old to rebuild.
+export function coachText(s) {
   const street = (name, n) => {
     const deal = s.log.find((e) => e.type === 'deal' && e.street === name);
     const label = name[0].toUpperCase() + name.slice(1);
@@ -139,10 +149,7 @@ export function coachText(s) {
     return `${label} [${cards}] (pot $${deal.pot}): ${line || 'no betting (all-in)'}`;
   };
   return [
-    `Stakes / venue: $${s.stakes.sb}/$${s.stakes.bb} NLHE, Simulator`,
-    `Effective stack ($): $${eff} (${Math.round(eff / bb)}bb)`,
-    `Hero seat + cards: ${hero.pos}, ${cardsPretty(hero.cards)} ($${hero.startStack})`,
-    `Villain(s): ${villains.length ? villains.join(' | ') : 'none (everyone folded)'}`,
+    ...handFacts(s),
     `Preflop: ${streetLine(s, 'preflop')}`,
     street('flop', 0),
     street('turn', 3),
