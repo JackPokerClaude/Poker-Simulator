@@ -15,12 +15,12 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 | 7 | Known leak line: second person, [YOUR LOG] | Done | c62a145 | 53 pass |
 | 8 | Range paragraphs: HHP base vs seat widening, sources for every number | Done | 843d35a | 54 pass |
 | 9 | Copy for coach rebuilt around the new format | Done | 2275870 | 55 pass |
-| 10 | "Also from the brain" matcher coverage, in batches | batch 0 02d8446 (13/74), batch 1 b79a031 (24/74), batch 2 6cae08f (43/74), batch 3 4da00db (59/74; the other 15 listed with reasons) | Done | 57 pass |
+| 10 | "Also from the brain" matcher coverage, in batches (59/74 topics; the other 15 listed with reasons) | Done | 02d8446 (13/74), b79a031 (24/74), 6cae08f (43/74), 4da00db (59/74) | 57 pass |
 | 11 | Reg/pro villain type, 2024 PRO charts, 1/3 and 2/5 mix | Done | 9ef2998 | 59 pass |
 | 12 | 100bb LJ chart when effective stacks are closer to 100bb | Done | 0d7f722 | 60 pass |
 | 13 | What-ifs look one street ahead | Done | 5f25535 | 61 pass |
 | 14 | Step 6: the rulings screen | Done | 5d28b60 | 63 pass |
-| Final | 40 hands at phone size | Done | (this commit) | 63 pass |
+| Final | 40 hands at phone size | Done | da97898 (+ test fix b0dcb7a) | 63 pass |
 
 ## Notes and open issues
 
