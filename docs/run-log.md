@@ -18,7 +18,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 | 10 | "Also from the brain" matcher coverage, in batches | batch 0 02d8446 (13/74), batch 1 b79a031 (24/74), batch 2 6cae08f (43/74), batch 3 4da00db (59/74; the other 15 listed with reasons) | Done | 57 pass |
 | 11 | Reg/pro villain type, 2024 PRO charts, 1/3 and 2/5 mix | Done | 9ef2998 | 59 pass |
 | 12 | 100bb LJ chart when effective stacks are closer to 100bb | Done | 0d7f722 | 60 pass |
-| 13 | What-ifs look one street ahead | Done | (this commit) | 61 pass |
+| 13 | What-ifs look one street ahead | Done | 5f25535 | 61 pass |
+| 14 | Step 6: the rulings screen | Done | (this commit) | 63 pass |
 
 ## Notes and open issues
 
@@ -50,6 +51,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 
 - Item 13: every heads-up what-if that goes to the next street (your call, a check-through, his check-back, his call of your bet) now deals the card that actually came and shows what his continuing range does there (his real strategy on that card: bet %, what his bets are made of) and what you'd do next (bet for value, check, call or fold his bet by pot odds, raise for value). It's in the expanded option and one line per option in Copy for coach. Multiway pots and river options have no lookahead. A full sample of every possible next card was about 1 second per decision in the test runner (several seconds on a phone), so it uses the one real card; feedback still builds in about 70ms per hand on average (worst about 320ms) in tests and 150-500ms in the phone-size browser run.
 
+- Item 14: new Menu → Rulings tab with every ⚖ conflict (43) and ♣ open question (3) the brain parser finds. It opens with a summary line (how many ruled vs undecided), then each item collapsed: title, file › section · dates, one button per view (View A / View B / ... read from the conflict's own title; open questions use their (a)/(b)/(c) options), Both stand (All stand for 3+ views) and Undecided, plus the full brain text. The default is Undecided. Rulings are saved on the device and survive a reload. "Copy rulings for your brain session" gives a paste-ready list. The feedback screen and Copy for coach show "Your ruling: …" on a matching conflict, but nothing is applied or graded: the grading code never reads rulings (a test checks it).
+
 ## Decisions for Joan
 
 (defaults picked while you were away; each is [OUTSIDE SOURCE] or "default, Joan to review")
@@ -80,3 +83,5 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 24. "Fish behind" (for the BTN vs CO pro conflict) = a rec, passive player or whale still to act after you preflop. Default, Joan to review.
 25. Effective stack for choosing the LJ chart = your stack vs the biggest stack still to act behind you; under 150bb uses the 100bb chart. Default, Joan to review. (Your own stack stays 190-210bb, so short-stack LJ spots are rare; say if you want a short-stack drill.)
 26. Lookahead plan rule: with 65%+ equity vs his range on the next card, the plan is "bet for value" (or "raise for value" vs his bet); below that, check, and call his bet only with the pot odds. [OUTSIDE SOURCE] in config/outside-source.js, default, Joan to review. The lookahead uses the one card that actually came, not an average over all cards.
+27. Rulings are records, not switches: a ruling made on the phone doesn't change grading or ranges. It shows on the conflict box and goes to your brain session via Copy rulings; once the brain itself is updated, the app follows the brain. Default, Joan to review (the alternative is to apply rulings on the device right away).
+28. View labels on the rulings screen come from each conflict's title ("X vs Y", "A, or B"); where the title doesn't split, the buttons say "View A: the first view in the text" and so on. Default, Joan to review.

@@ -31,7 +31,7 @@ function optionLine(o) {
   return `${o.title}: ${what ? `${what}, ` : ''}EV ${ev(o.ev)}`;
 }
 
-function decisionLines(pt, h, k, out) {
+function decisionLines(pt, h, k, out, ruled) {
   const a = pt.analysis;
   const pos = h.players[pt.vi].pos;
   out.push(`${k === 0 ? 'Decision' : 'Then'}${a ? `: you ${a.actual.title.toLowerCase()}` : ' (no decision for you)'} (vs ${pos})`);
@@ -53,11 +53,12 @@ function decisionLines(pt, h, k, out) {
   if (a.verdict.size) out.push(`  Size: his range is ${a.verdict.size.why}. "${a.verdict.size.quote}" ${a.verdict.size.tag}`);
   if (a.verdict.split) out.push(`  Brain lines disagree here (no ⚖), so the math decides: ${a.verdict.split.map((x) => `${x.title} → ${x.line.toLowerCase()} ${x.tag}`).join('; ')}.`);
   if (a.verdict.math) out.push(`  ${a.verdict.math}`);
-  for (const c of a.also?.conflicts || []) out.push(`  ${c.kind === 'open' ? '♣ Open question' : '⚖ Conflict'} (not graded): ${c.title}`);
+  for (const c of a.also?.conflicts || []) out.push(`  ${c.kind === 'open' ? '♣ Open question' : '⚖ Conflict'} (not graded): ${c.title}${ruled(c)}`);
   out.push(`  Leak tags: ${a.leaks.length ? a.leaks.join(', ') : 'none'}`);
 }
 
-export function coachReport(h, fb) {
+export function coachReport(h, fb, rulings = {}) {
+  const ruled = (c) => { const r = rulings[c.block?.id] || rulings[c.open?.id]; return r ? ` (your ruling: ${r}; not applied)` : ''; };
   const out = [...handFacts(h), ''];
   const pre = fb.preflop;
   out.push(`PREFLOP${pre.villain != null ? ` (vs ${h.players[pre.villain].pos})` : ''}`);
@@ -78,7 +79,7 @@ export function coachReport(h, fb) {
       for (const z of g.sizing || []) out.push(`  Sizing (${z.rule}): ${z.ok ? 'OK' : 'Off'}. ${z.message}`);
     }
   });
-  if (pre.conflicted) out.push('  ⚖ Not graded: this spot is an open conflict in your playbook.');
+  if (pre.conflicted) for (const c of pre.also?.conflicts || []) out.push(`  ${c.kind === 'open' ? '♣ Open question' : '⚖ Conflict'} (not graded): ${c.title}${ruled(c)}`);
   out.push(`Leak tags: ${pre.leaks.length ? pre.leaks.join(', ') : 'none'}`);
 
   const streetsSeen = new Set(fb.streets.map((s) => s.street));
@@ -86,7 +87,7 @@ export function coachReport(h, fb) {
     const deal = h.log.find((e) => e.type === 'deal' && e.street === s.street);
     out.push('', `${s.street.toUpperCase()} ${cardsPretty(s.board)}${deal ? ` (pot $${deal.pot})` : ''}`);
     out.push(`Action: ${streetLine(h, s.street) || 'no betting (all-in)'}`);
-    s.points.forEach((pt, k) => decisionLines(pt, h, k, out));
+    s.points.forEach((pt, k) => decisionLines(pt, h, k, out, ruled));
   }
   const unreached = [];
   for (const st of ['flop', 'turn', 'river']) {

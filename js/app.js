@@ -9,7 +9,9 @@ import { loadHistory, addHand, updateHand, clearHistory, computeStats, exportCSV
 import { loadBrain, browserFetchText, browserLastGood, missingCharts } from './brain/loader.js';
 import { CHARTS_USED } from './engine/scenario.js';
 import { buildFeedback } from './feedback/engine.js';
-import { feedbackHTML } from './feedback/render.js';
+import { feedbackHTML, mdHTML } from './feedback/render.js';
+import { viewsOf, optionsOf, LETTER } from './brain/views.js';
+import { loadRulings, setRuling, UNDECIDED } from './storage/rulings.js';
 import { rebuildHand } from './feedback/replay.js';
 import { preflopMark } from './feedback/marks.js';
 import { matcherCoverage } from './brain/coverage.js';
@@ -384,7 +386,7 @@ function finishHand() {
       // The full review replaces the short hand history for Copy for coach; the short one is
       // kept so hands past the replay limit can drop the long text (storage).
       rec.coachShort = rec.coachText;
-      rec.coachText = coachReport(h, fb);
+      rec.coachText = coachReport(h, fb, rulingNotes());
       updateHand(rec.id, { leaks: fb.leaks, coachText: rec.coachText, coachShort: rec.coachShort });
     } catch (e) { console.warn('feedback', e); }
   }, 30);
@@ -460,7 +462,7 @@ function panel(html, { live = null } = {}) {
     t.setAttribute('aria-selected', String(on));
   });
 }
-const TABS = { reads: (a) => showReads(a), log: () => showLog(), drill: () => showDrills(), history: () => showHistory(), stats: () => showStats(), settings: () => showMenu() };
+const TABS = { reads: (a) => showReads(a), log: () => showLog(), drill: () => showDrills(), history: () => showHistory(), stats: () => showStats(), rulings: () => showRulings(), settings: () => showMenu() };
 function renderDrawer(arg) { (TABS[drawerTab] || TABS.reads)(arg); }
 
 // Reads and Log stay open while villains act, so keep them current.
@@ -559,13 +561,13 @@ function showFeedback(h = hand, { fromHistory = null } = {}) {
   clearGrids();
   try {
     fb = fromHistory ? buildFeedback(h, { model, brain, history: loadHistory().filter((x) => x.id !== fromHistory.id).slice(0, 50) }) : feedbackFor(h);
-    body = feedbackHTML(h, fb, { resultLine: winnerLine(h, true), handsHTML: handsGridHTML(h), gradeHTML });
+    body = feedbackHTML(h, fb, { resultLine: winnerLine(h, true), handsHTML: handsGridHTML(h), gradeHTML, rulings: rulingNotes() });
   } catch (e) {
     console.error(e);
     body = `<div class="resultbox">${esc(winnerLine(h, true))}</div><div class="bnote">The feedback engine hit an error on this hand: ${esc(e.message)}. The preflop grades are below.</div>${(h.heroDecisions || []).map(gradeHTML).join('')}`;
   }
   let coach = fromHistory ? fromHistory.coachText : lastRecord?.coachText;
-  try { if (fb) coach = coachReport(h, fb); } catch (e) { console.warn('coach text', e); }
+  try { if (fb) coach = coachReport(h, fb, rulingNotes()); } catch (e) { console.warn('coach text', e); }
   openSheet(`
     <div class="sheet-top"><h2>Hand feedback</h2><button class="close" id="closeBtn" aria-label="Close">✕</button></div>
     ${body}
@@ -703,6 +705,81 @@ function compiledStatusHTML() {
     ${stale.length ? `<div class="bnote">${stale.length} compiled value${stale.length > 1 ? 's are' : ' is'} stale: the playbook text ${stale.length > 1 ? 'they quote' : 'it quotes'} changed, so ${stale.length > 1 ? 'they use' : 'it uses'} [OUTSIDE SOURCE] defaults. Open a session and say "recompile brain".</div>
       <div class="bfiles">${stale.slice(0, 12).map((x) => `<div class="bfile fallback"><div class="bn"><b>${esc(x.key)}</b></div><div class="bc">${esc(x.file)}: "${esc(x.quote)}"</div></div>`).join('')}</div>` : '<div class="about">Nothing stale.</div>'}`;
 }
+
+// ---------------------------------------------------------------- rulings (step 6)
+// Rule on each ⚖ conflict and ♣ open question. Default Undecided. A ruling is recorded on this
+// device for your brain session; the app never applies it (conflicts stay ungraded until the
+// brain itself changes).
+function rulingItems() {
+  if (!brain) return [];
+  const items = brain.conflicts.filter((c) => !c.summary).map((c) => ({ id: c.id, kind: 'conflict', title: c.title, file: c.file, section: c.section, dates: c.dates, text: c.text, views: viewsOf(c) }));
+  for (const q of brain.openQuestions) items.push({ id: q.id, kind: 'open', title: `♣ OPEN #${q.number}: ${q.title}`, file: q.file, section: (q.heading || []).slice(1).join(' › '), dates: q.dates, text: q.text, views: optionsOf(q) });
+  return items;
+}
+function rulingLabel(value, it) {
+  if (!value || value === UNDECIDED) return 'Undecided';
+  if (value === 'all') return it.views.length > 2 ? 'All stand' : 'Both stand';
+  const k = Number(String(value).split(':')[1]);
+  return `${it.kind === 'open' ? 'Option' : 'View'} ${it.kind === 'open' ? String.fromCharCode(97 + k) : LETTER(k)}: ${it.views[k] ?? ''}`;
+}
+// { brain conflict/open id: "View A: ..." } for the rulings you've made, for the feedback screen.
+function rulingNotes() {
+  const R = loadRulings();
+  const out = {};
+  for (const it of rulingItems()) if (R[it.id]) out[it.id] = rulingLabel(R[it.id].value, it);
+  return out;
+}
+function rulingsText() {
+  const R = loadRulings();
+  const items = rulingItems();
+  const ruled = items.filter((it) => R[it.id]);
+  const day = new Date().toISOString().slice(0, 10);
+  const lines = [`Rulings from the simulator app (Joan, ${day}). ${ruled.length} ruled, ${items.length - ruled.length} still undecided (not listed).`];
+  for (const it of ruled) lines.push(`- ${it.kind === 'open' ? '' : '⚖ '}${it.title} [${it.file}${it.section ? ` › ${it.section}` : ''}]: ${rulingLabel(R[it.id].value, it)}`);
+  return lines.join('\n');
+}
+function showRulings() {
+  drawerTab = 'rulings';
+  if (!brain) { panel('<h2>Rulings</h2><div class="empty">Brain not loaded.</div>'); return; }
+  const R = loadRulings();
+  const items = rulingItems();
+  const nc = items.filter((i) => i.kind === 'conflict').length;
+  const ruled = items.filter((i) => R[i.id]).length;
+  const row = (it) => {
+    const v = R[it.id]?.value || UNDECIDED;
+    const opts = [...it.views.map((_, k) => `view:${k}`), 'all', UNDECIDED];
+    return `<details class="rl" data-id="${esc(it.id)}"><summary><span class="rl-t">${it.kind === 'open' ? '' : '⚖ '}${esc(it.title)}</span><span class="rl-s${v !== UNDECIDED ? ' set' : ''}">${esc(v === UNDECIDED ? 'Undecided' : v === 'all' ? (it.views.length > 2 ? 'All stand' : 'Both stand') : `${it.kind === 'open' ? 'Option' : 'View'} ${it.kind === 'open' ? String.fromCharCode(97 + Number(v.split(':')[1])) : LETTER(Number(v.split(':')[1]))}`)}</span></summary>
+      <div class="rl-src">${esc(it.file)}${it.section ? ` › ${esc(it.section)}` : ''}${it.dates?.length ? ` · ${esc(it.dates.join(', '))}` : ''}</div>
+      <div class="rl-btns">${opts.map((o) => `<button type="button" data-v="${o}" class="${o === v ? 'on' : ''}">${esc(rulingLabel(o, it))}</button>`).join('')}</div>
+      <details class="fb-conflict"><summary>Full text from the brain</summary>${mdHTML(it.text)}</details></details>`;
+  };
+  const und = items.filter((i) => !R[i.id]);
+  const done = items.filter((i) => R[i.id]);
+  panel(`<h2>Rulings</h2>
+    <div class="about">${nc} conflicts and ${items.length - nc} open questions. <b id="rlCount">${ruled} ruled, ${items.length - ruled} undecided.</b> Default is Undecided. Your ruling is saved on this device for your brain session. The app doesn't apply it: every conflict stays shown both ways and ungraded until the brain itself is updated.</div>
+    <button class="btn primary" style="width:100%;margin:8px 0" id="copyRulings">Copy rulings for your brain session</button>
+    <h3 class="rl-h">Undecided (${und.length})</h3>${und.map(row).join('') || '<div class="empty">Nothing left undecided.</div>'}
+    ${done.length ? `<h3 class="rl-h">Ruled (${done.length})</h3>${done.map(row).join('')}` : ''}`);
+  $('copyRulings').onclick = () => copyText(rulingsText());
+}
+// Buttons update in place, so the open item stays open.
+$('drawerBody').addEventListener('click', (e) => {
+  const b = e.target.closest('.rl-btns button');
+  if (!b) return;
+  const box = b.closest('.rl');
+  const it = rulingItems().find((x) => x.id === box.dataset.id);
+  if (!it) return;
+  const v = b.dataset.v;
+  setRuling(it.id, v, { title: it.title, file: it.file, kind: it.kind });
+  box.querySelectorAll('.rl-btns button').forEach((x) => x.classList.toggle('on', x === b));
+  const tag = box.querySelector('.rl-s');
+  tag.textContent = v === UNDECIDED ? 'Undecided' : rulingLabel(v, it).split(':')[0];
+  tag.classList.toggle('set', v !== UNDECIDED);
+  const R = loadRulings();
+  const all = rulingItems();
+  const n = all.filter((x) => R[x.id]).length;
+  if ($('rlCount')) $('rlCount').textContent = `${n} ruled, ${all.length - n} undecided.`;
+});
 
 function showMenu() {
   const seg = (key, opts) => `<div class="seg">${opts.map(([v, l]) => `<button data-k="${key}" data-v="${v}" class="${String(settings[key]) === String(v) ? 'on' : ''}">${l}</button>`).join('')}</div>`;

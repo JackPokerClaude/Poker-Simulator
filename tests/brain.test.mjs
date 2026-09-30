@@ -179,3 +179,26 @@ test('matcher coverage: every postflop topic is covered or has a reason', async 
   for (const t of c.uncovered) assert.ok(t.reason, `no rule and no reason: ${t.file} › ${t.title}`);
   console.log(`# matcher coverage ${c.covered}/${c.total}`);
 });
+
+test('rulings: every conflict and open question has views to rule on; default Undecided; never read by grading', async () => {
+  const { viewsOf, optionsOf } = await import('../js/brain/views.js');
+  const { loadRulings, setRuling, rulingOf, UNDECIDED } = await import('../js/storage/rulings.js');
+  const brain = await loadBrain({ manifest, fetchText: readBrain, lastGood: memoryLastGood() });
+  const cs = brain.conflicts.filter((c) => !c.summary);
+  assert.ok(cs.length >= 40 && brain.openQuestions.length >= 3);
+  for (const c of cs) assert.ok(viewsOf(c).length >= 2, c.title);
+  for (const q of brain.openQuestions) assert.ok(optionsOf(q).length >= 2, q.title);
+  assert.equal(new Set(cs.map((c) => c.id)).size, cs.length, 'conflict ids are unique');
+  // Default Undecided, set and clear.
+  const id = cs[0].id;
+  assert.equal(rulingOf(id), UNDECIDED);
+  setRuling(id, 'view:1', { title: cs[0].title });
+  assert.equal(rulingOf(id), 'view:1');
+  setRuling(id, UNDECIDED);
+  assert.equal(rulingOf(id), UNDECIDED);
+  assert.deepEqual(loadRulings(), {});
+  // The grading side never reads rulings: they are records for the brain session only.
+  for (const f of ['js/feedback/engine.js', 'js/feedback/match.js', 'js/grading/grade.js', 'js/engine/scenario.js']) {
+    assert.ok(!/rulings/.test(readFileSync(new URL(f, root), 'utf8')), `${f} must not read rulings`);
+  }
+});

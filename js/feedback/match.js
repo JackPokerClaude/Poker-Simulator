@@ -30,8 +30,8 @@ export function matchBrain(model, f, brain) {
       return {
         key: r.key, title: r.v.title, tag: sourceTag(r),
         kind: o && !c ? 'open' : 'conflict',
-        block: c ? { file: c.file, section: c.section, dates: c.dates, title: c.title, text: c.text } : null,
-        open: o ? { file: o.file, title: o.title, text: o.text, number: o.number, dates: o.dates } : null,
+        block: c ? { id: c.id, file: c.file, section: c.section, dates: c.dates, title: c.title, text: c.text } : null,
+        open: o ? { id: o.id, file: o.file, title: o.title, text: o.text, number: o.number, dates: o.dates } : null,
       };
     });
   return { rules, conflicts };

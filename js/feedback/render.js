@@ -34,6 +34,13 @@ export function mdHTML(text) {
 
 const step = (n, title, body) => `<div class="fb-step"><div class="fb-n">${n}</div><div class="fb-b"><div class="fb-t">${title}</div>${body}</div></div>`;
 
+// Your rulings (from the Rulings tab), shown on the conflict boxes. Never applied here.
+let RULINGS = {};
+const rulingNote = (c) => {
+  const r = RULINGS[c.block?.id] || RULINGS[c.open?.id];
+  return r ? `<div class="fb-line"><b>Your ruling:</b> ${esc(r)}. Recorded for your brain session; not applied or graded until the brain says so.</div>` : '';
+};
+
 function alsoHTML(also) {
   const items = [];
   for (const r of also?.rules || []) items.push(`<div class="fb-also"><b>${esc(r.title)}:</b> “${esc(r.quote)}” <span class="tag">${esc(r.tag)}</span></div>`);
@@ -41,7 +48,7 @@ function alsoHTML(also) {
   for (const c of also?.conflicts || []) {
     const body = c.block ? mdHTML(c.block.text) : c.open ? mdHTML(c.open.text) : '';
     const src = c.block ? `[HHP] ${c.block.file} › ${c.block.section}${c.block.dates?.length ? ` · ${c.block.dates.join(', ')}` : ''}` : c.open ? `[HHP] ${c.open.file} · ♣ OPEN #${c.open.number}` : c.tag;
-    items.push(`<details class="fb-conflict"><summary>${c.kind === 'open' ? '♣ OPEN QUESTION' : '⚖ CONFLICT'} (not graded, both views): ${esc(c.title)}</summary>${body}<div class="tag">${esc(src)}</div></details>`);
+    items.push(`<details class="fb-conflict"><summary>${c.kind === 'open' ? '♣ OPEN QUESTION' : '⚖ CONFLICT'} (not graded, both views): ${esc(c.title)}</summary>${rulingNote(c)}${body}<div class="tag">${esc(src)}</div></details>`);
   }
   return items.join('') || '<div class="fb-line muted">Nothing else in the brain covers this spot.</div>';
 }
@@ -121,7 +128,8 @@ function decisionHTML(pt, h, k) {
     ${step(5, 'Also from the brain', alsoHTML(a.also))}</div>`;
 }
 
-export function feedbackHTML(h, fb, { resultLine = '', handsHTML = '', gradeHTML = () => '' } = {}) {
+export function feedbackHTML(h, fb, { resultLine = '', handsHTML = '', gradeHTML = () => '', rulings = {} } = {}) {
+  RULINGS = rulings || {};
   const pre = fb.preflop;
   const qs = pre.questions;
   const qHTML = `<ol class="fb-q">${qs.list.map((x) => `<li><b>${esc(x.q)}</b> ${esc(x.a || '')}</li>`).join('')}</ol><div class="tag">${esc(qs.tag)}</div>${qs.extra.map((x) => `<div class="fb-line"><b>${esc(x.q)}</b> ${esc(x.a)} <span class="tag">${esc(x.tag)}</span></div>`).join('')}`;

@@ -45,6 +45,8 @@ const ASSETS = [
   'js/feedback/coach-report.js',
   'js/feedback/marks.js',
   'js/brain/coverage.js',
+  'js/brain/views.js',
+  'js/storage/rulings.js',
   'config/matcher-uncovered.js',
   'js/engine/dealer.js',
   'js/engine/eval.js',

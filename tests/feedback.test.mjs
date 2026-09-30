@@ -241,3 +241,15 @@ test('what-ifs look one street ahead on the card that came, heads-up', () => {
   }
   assert.ok(n > 5, `only ${n} lookaheads`);
 });
+
+test('a ruling shows on its conflict box but changes no grade', () => {
+  const hit = hands.find(({ fb }) => points(fb).some((pt) => pt.analysis?.also.conflicts.some((c) => c.block?.id || c.open?.id)));
+  assert.ok(hit, 'a hand with a conflict');
+  const c = points(hit.fb).flatMap((pt) => pt.analysis?.also.conflicts || []).find((x) => x.block?.id || x.open?.id);
+  const id = c.block?.id || c.open?.id;
+  const before = feedbackHTML(hit.s, hit.fb, {});
+  const after = feedbackHTML(hit.s, hit.fb, { rulings: { [id]: 'View A: test' } });
+  assert.ok(!before.includes('Your ruling') && after.includes('Your ruling:</b> View A: test'));
+  assert.equal(before.replace(/<div class="fb-line"><b>Your ruling:.*?<\/div>/g, '').replace(/data-grid="g\d+"/g, ''), after.replace(/<div class="fb-line"><b>Your ruling:.*?<\/div>/g, '').replace(/data-grid="g\d+"/g, ''));
+  assert.match(coachReport(hit.s, hit.fb, { [id]: 'View A: test' }), /your ruling: View A: test; not applied/);
+});
