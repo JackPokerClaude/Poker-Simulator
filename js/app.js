@@ -12,6 +12,8 @@ import { buildFeedback } from './feedback/engine.js';
 import { feedbackHTML } from './feedback/render.js';
 import { rebuildHand } from './feedback/replay.js';
 import { preflopMark } from './feedback/marks.js';
+import { matcherCoverage } from './brain/coverage.js';
+import { UNCOVERED_REASONS } from '../config/matcher-uncovered.js';
 import { coachReport } from './feedback/coach-report.js';
 import { clearGrids, gridDetail, gridClassInfo } from './ui/grid.js';
 
@@ -678,7 +680,18 @@ function brainStatusHTML() {
     <div class="about">Loaded ${esc(new Date(brain.loadedAt).toLocaleString())}. ${full} conflicts and ${brain.openQuestions.length} open questions, all Undecided: never applied, never graded.</div>
     ${notes.map((n) => `<div class="bnote">${esc(n)}</div>`).join('')}
     <div class="bfiles">${rows}</div>
-    ${compiledStatusHTML()}`;
+    ${compiledStatusHTML()}
+    ${coverageHTML()}`;
+}
+
+// Which postflop playbook topics the "Also from the brain" matcher covers, and why the rest aren't.
+function coverageHTML() {
+  if (!model || !brain?.texts) return '';
+  const c = matcherCoverage(brain.texts, model.resolved, UNCOVERED_REASONS);
+  const row = (t) => `<div class="bfile ${t.reason ? 'ok' : 'fallback'}"><div class="bn"><b>${esc(t.title)}</b></div><div class="bc">${esc(t.file)} › ${esc(t.section)}</div><div class="bc">${t.reason ? `Why not: ${esc(t.reason)}` : 'No rule yet and no reason logged.'}</div></div>`;
+  return `<h3>“Also from the brain” coverage</h3>
+    <div class="about">${c.covered} of ${c.total} postflop playbook topics have at least one matching brain entry. ${c.uncovered.length} ${c.uncovered.length === 1 ? 'isn\'t' : 'aren\'t'} covered; the reasons are the app builder's (default, Joan to review).</div>
+    ${c.uncovered.length ? `<details class="coach-d"><summary>Uncovered topics (${c.uncovered.length})</summary><div class="bfiles">${c.uncovered.map(row).join('')}</div></details>` : ''}`;
 }
 
 function compiledStatusHTML() {

@@ -14,7 +14,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 | 6 | Preflop card: ✅/⚠️/❌ + one-line reason | Done | 906fca6 | 52 pass |
 | 7 | Known leak line: second person, [YOUR LOG] | Done | c62a145 | 53 pass |
 | 8 | Range paragraphs: HHP base vs seat widening, sources for every number | Done | 843d35a | 54 pass |
-| 9 | Copy for coach rebuilt around the new format | Done | (this commit) | 55 pass |
+| 9 | Copy for coach rebuilt around the new format | Done | 2275870 | 55 pass |
+| 10 | "Also from the brain" matcher coverage, in batches | In progress: batch 0 (coverage count + uncovered list) | (this commit) | 55 pass |
 
 ## Notes and open issues
 
@@ -30,6 +31,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 - Item 8: every "Why" line now splits the HHP base number (e.g. "HHP base: he opens about 14% of hands") from the seat widening (a separate line tagged [OUTSIDE SOURCE] config/table-settings.js). Under each change and each what-if option, "Where the numbers come from" lists every strategy number used (fold/continue thresholds, bet and raise frequencies) with its own tag: [HHP] file › section · date plus the quote, or [OUTSIDE SOURCE]. Fixed along the way: a 3-bet from someone who never limped was quoting the brain's limp-reraise line; that quote now only shows after an actual limp. New test: every [HHP] tag on screen names a real brain file and section, and any quote next to it is in that file.
 
 - Item 9: "Copy for coach" is now built from the same feedback object as the screen (js/feedback/coach-report.js): hand facts, then per street the action line, and per decision his class % at the start of the street, each of his actions (combos and class % before → after, plus any unresolved brain-vs-strategy check), his range now, you vs his range, the options weighed with EVs, your action with its ✅/⚠️/❌ and reason, the verdict with its source tag, conflicts (not graded) and leak tags; then result, takeaway, hand leak tags (repeats flagged) and your known leak. Typical length 3-5k characters. New test checks each decision in the text has range, options, action, verdict (with its source) and leak tags, and only your 18 tags. In History, the text sits behind "Show the coach text" so the screen isn't a wall of monospace.
+
+- Item 10, batch 0: Settings › Brain now shows how many postflop playbook topics the matcher covers and lists the rest. Coverage before any new rules: 13 of 74 topics.
 
 ## Decisions for Joan
 
@@ -50,3 +53,4 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 13. Known-leak line: sentences addressed to a coach (mentioning "she", "Bring this up", "Treat...", "keep tracking") are dropped; the rest is rewritten to "you". It still shows only on 1/3 and 2/5 hands that had a leak or an off-chart preflop play. Default, Joan to review.
 14. Seat widening multipliers (how much wider than HHP's base open % he plays from each seat) are [OUTSIDE SOURCE] in config/table-settings.js and are shown as their own line, never folded into the HHP number. Default, Joan to review.
 15. Storage: the full coach review is kept for the same last 50 hands that keep replay data; older hands fall back to the short hand history (stakes, seats, action, result). "See full feedback" from History rebuilds the full text anyway while the replay exists. Default, Joan to review.
+16. Coverage unit for item 10: a "topic" is one bold-headed paragraph in a numbered section of the three postflop playbooks, plus the bullets under it (or a section's bullets before its first bold paragraph): 74 topics. A topic counts as covered when a matcher entry (a rule or a conflict/open-question pointer) quotes a line inside it. Default, Joan to review.
