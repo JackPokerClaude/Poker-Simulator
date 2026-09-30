@@ -266,6 +266,7 @@ export function parseInstructions(text) {
 
   let knownLeaks = [];
   const kl = find(/^Known leaks\b/i);
+  const knownLeaksFrom = kl >= 0 ? (/\(([^)]*)\)/.exec(lines[kl]) || [])[1] || '' : '';
   const fw = find(/^How to think through/i);
   if (kl < 0) warnings.push('project-instructions.md: no "Known leaks" line found.');
   else {
@@ -276,5 +277,5 @@ export function parseInstructions(text) {
 
   const openCharts = (lines.find((l) => /^Open charts:/i.test(l)) || '').trim();
   const seatMapping = (lines.find((l) => /^Seat mapping/i.test(l)) || '').trim();
-  return { leakTags, knownLeaks, openCharts, seatMapping, warnings };
+  return { leakTags, knownLeaks, knownLeaksFrom, openCharts, seatMapping, warnings };
 }

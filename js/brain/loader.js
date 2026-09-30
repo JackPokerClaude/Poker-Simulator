@@ -114,6 +114,7 @@ export async function loadBrain({ manifest, fetchText, lastGood }) {
     openQuestions: playbooks.flatMap((p) => p.openQuestions),
     leakTags: instr.leakTags,
     knownLeaks: instr.knownLeaks,
+    knownLeaksFrom: instr.knownLeaksFrom || '',
     openCharts: instr.openCharts,
     seatMapping: instr.seatMapping,
   };

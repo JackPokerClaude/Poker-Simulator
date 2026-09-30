@@ -684,7 +684,7 @@ export function buildFeedback(h, { model, brain, history = [] }) {
   const known = [];
   if (h.stakes.label !== '1/2' && (leaks.length || preWrong)) {
     const kl = (brain?.knownLeaks || []).find((k) => /loses above it/i.test(k.title));
-    if (kl) known.push({ title: kl.title, text: kl.text, tag: '[HHP] project-instructions.md › Known leaks' });
+    if (kl) known.push(knownLeakForYou(kl, brain.knownLeaksFrom));
   }
   const whole = [];
   const lastSec = out.streets[out.streets.length - 1];
@@ -698,6 +698,18 @@ export function buildFeedback(h, { model, brain, history = [] }) {
   out.involved = involved;
   out.comboList = comboList;
   return out;
+}
+
+// Your known leak, written to you: second person, without the coach-facing notes, tagged as
+// coming from your own session log (not from HHP).
+export function knownLeakForYou(kl, from = '') {
+  const you = (t) => t.replace(/\b(Wins|wins)\b/g, 'win').replace(/\b(Loses|loses)\b/g, 'lose').replace(/\b(Tops|tops)\b/g, 'top').replace(/\bHer\b/g, 'Your').replace(/\bher\b/g, 'your');
+  const title = you(kl.title);
+  const text = kl.text.split(/(?<=\.)\s+/)
+    .map((x) => x.trim())
+    .filter((x) => !/\b(she|Bring this up|Treat|keep tracking)\b/i.test(x))
+    .map(you).join(' ');
+  return { title: /^(win|top|lose)\b/.test(title) ? `you ${title}` : title.toLowerCase(), text, tag: `[YOUR LOG] project-instructions.md › Known leaks${from ? ` (${from})` : ''}` };
 }
 
 function takeawayText({ worst, preWrong, h }) {

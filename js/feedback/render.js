@@ -134,7 +134,7 @@ export function feedbackHTML(h, fb, { resultLine = '', handsHTML = '', gradeHTML
   const endSection = `<section class="fb-sec fb-end"><h3>End of hand</h3>
     <div class="fb-take">${esc(e.takeaway)}</div>
     <div class="fb-line"><b>Leak tags:</b> ${leakHTML}</div>
-    ${e.known.map((k) => `<div class="fb-line"><b>Known leak: ${esc(k.title)}.</b> ${esc(k.text)} <span class="tag">${esc(k.tag)}</span></div>`).join('')}
+    ${e.known.map((k) => `<div class="fb-line"><b>Your known leak: ${esc(k.title)}.</b> ${esc(k.text)} <span class="tag">${esc(k.tag)}</span></div>`).join('')}
     ${e.whole.map((x) => `<details class="fb-more"><summary><b>For the whole hand:</b> ${esc(x.title)}</summary>${x.fields.map((f) => `<div class="fb-line"><b>${esc(f.name)}:</b> ${esc(f.text)}</div>`).join('')}<div class="tag">${esc(x.tag)}</div></details>`).join('')}
   </section>`;
 

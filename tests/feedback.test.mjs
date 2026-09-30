@@ -135,3 +135,14 @@ test('out of position before the river, math-only EVs use the realization factor
   }
   assert.ok(seen > 0);
 });
+
+test('your known leak is written to you and tagged [YOUR LOG]', async () => {
+  const { knownLeakForYou } = await import('../js/feedback/engine.js');
+  const kl = brain.knownLeaks.find((k) => /loses above it/i.test(k.title));
+  assert.ok(kl);
+  const k = knownLeakForYou(kl, brain.knownLeaksFrom);
+  assert.equal(k.title, 'you win at 1/2, lose above it');
+  assert.doesNotMatch(k.text, /Bring this up|\bshe\b/);
+  assert.match(k.text, /\$1\/2: \+\$5,493/);
+  assert.match(k.tag, /^\[YOUR LOG\] project-instructions\.md › Known leaks \(Jul 3/);
+});

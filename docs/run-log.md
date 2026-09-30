@@ -11,7 +11,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 | 3 | HHP's seven hand classes | Done | b72b81e | 51 pass |
 | 4 | Every decision in the five-step order | Done | 6a551cc | 51 pass |
 | 5 | OOP realization factor, math-only close calls | Done | b8ea613 | 52 pass |
-| 6 | Preflop card: ✅/⚠️/❌ + one-line reason | Done | (this commit) | 52 pass |
+| 6 | Preflop card: ✅/⚠️/❌ + one-line reason | Done | 906fca6 | 52 pass |
+| 7 | Known leak line: second person, [YOUR LOG] | Done | (this commit) | 53 pass |
 
 ## Notes and open issues
 
@@ -40,3 +41,4 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 10. Out-of-position equity realization = 80% on the flop and turn, not applied on the river (no later street to lose equity on). Applied to every EV in the math, whether or not a brain rule decides the verdict. [OUTSIDE SOURCE] in config/outside-source.js.
 11. "Math only, close" = the math-best line beats your action by less than 5% of the pot, when no brain rule or sizing rule decided the verdict. [OUTSIDE SOURCE] in config/outside-source.js.
 12. Preflop card marks: chart play ✅; a mixed (non-situational) chart cell where you picked one of the mixed actions ✅ (it counts as correct in your stats too); situational cell ⚠️ (Mark's rule decides, not graded either way); off chart ❌; [OUTSIDE SOURCE] bracket opens: good ✅, borderline ⚠️, mistake ❌. Default, Joan to review.
+13. Known-leak line: sentences addressed to a coach (mentioning "she", "Bring this up", "Treat...", "keep tracking") are dropped; the rest is rewritten to "you". It still shows only on 1/3 and 2/5 hands that had a leak or an off-chart preflop play. Default, Joan to review.
