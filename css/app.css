@@ -353,15 +353,32 @@ pre.coach { white-space: pre-wrap; word-break: break-word; background: var(--tin
 .bnote { background: var(--amber-soft); color: var(--amber); border-radius: 10px; padding: 8px 10px; font-size: 13px; font-weight: 600; margin: 6px 0; }
 .rc-read .rc-src { display: block; font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
 
-/* 13x13 range grid */
+/* 13x13 range grid: bar width = frequency, corner n/m = card removal, hatched = all blocked */
 :root { --g-raise: #1459d9; --g-call: #e3a21a; --g-fold: #dfe4ec; --g-strong: #0f2f73; --g-medium: #5b95f5; --g-draws: #e3a21a; --g-air: #d85a61; --g-gone: #c9ced8; }
 .hgrid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; max-width: 520px; }
-.hgrid .gc { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: clamp(7px, 2.1vw, 11px); font-weight: 700; color: #7b869a; background-color: var(--white); letter-spacing: -0.3px; }
-.hgrid .gc.in { color: #fff; text-shadow: 0 0 2px rgba(0, 0, 0, 0.7); }
-.hgrid .gc.hl { outline: 2px solid var(--text); outline-offset: -2px; }
-.glegend { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 6px 0 10px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
-.glegend .gl { display: inline-flex; align-items: center; gap: 5px; }
+.hgrid .gc { position: relative; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 0; font: inherit; font-size: clamp(7px, 2.1vw, 11px); font-weight: 700; color: #6b7589; background-color: var(--white); letter-spacing: -0.3px; cursor: pointer; }
+.hgrid .gc.in { color: #fff; text-shadow: 0 0 2px rgba(0, 0, 0, 0.75); }
+.hgrid .gc.sel { outline: 2px solid var(--text); outline-offset: -2px; z-index: 1; }
+.hgrid .gc.blk { background-color: #eef1f5; background-image: repeating-linear-gradient(45deg, transparent 0 3px, #c9ced8 3px 4px) !important; color: #9aa3b2; }
+.hgrid .gc .cr { position: absolute; right: 1px; bottom: 0; font-size: clamp(5.5px, 1.5vw, 8px); font-weight: 800; color: var(--text); background: rgba(255, 255, 255, 0.85); border-radius: 2px; padding: 0 1px; line-height: 1.1; text-shadow: none; }
+.glegend { display: flex; flex-wrap: wrap; gap: 4px 10px; margin: 6px 0 4px; font-size: 12.5px; color: var(--muted); font-weight: 600; }
+.glegend .gl { display: inline-flex; align-items: center; gap: 5px; background: none; border: 0; padding: 2px 0; font: inherit; color: inherit; cursor: pointer; }
+.glegend .gl:disabled { cursor: default; }
+.glegend .gl b { color: var(--text); }
+.gcount { font-size: 13px; font-weight: 800; color: var(--text); margin: 0 0 4px; }
 .glegend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid var(--line); }
+.gkey { font-size: 11.5px; color: var(--muted); line-height: 1.4; margin: 0 0 6px; max-width: 520px; }
+.gdetail { position: relative; border: 1px solid var(--line); border-radius: 10px; padding: 8px 30px 8px 10px; margin: 4px 0 8px; background: var(--white); max-width: 520px; font-size: 13px; }
+.gd-x { position: absolute; right: 4px; top: 4px; border: 0; background: var(--tint); border-radius: 6px; width: 24px; height: 24px; }
+.gd-t { border-collapse: collapse; width: 100%; margin-top: 4px; }
+.gd-t td { padding: 2px 4px; border-bottom: 1px solid var(--line); }
+.fb-dec { border-left: 3px solid var(--blue-soft); padding-left: 8px; margin: 10px 0 14px; }
+.fb-dh { font-weight: 800; font-size: 14.5px; margin: 2px 0 4px; color: var(--blue); }
+.fb-sub2 { font-weight: 800; font-size: 13px; margin: 4px 0 2px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.3px; }
+.chg { font-size: 13.5px; line-height: 1.45; margin: 4px 0 8px; }
+.chg-why { color: var(--muted); }
+.chg-ok { color: var(--muted); font-size: 12.5px; }
+.chg-bad { background: var(--purple-soft); color: var(--purple); border-radius: 8px; padding: 4px 8px; margin-top: 3px; font-size: 13px; }
 
 
 /* Feedback screen (Joan's format) */

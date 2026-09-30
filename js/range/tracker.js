@@ -7,7 +7,7 @@
 import { handCode, ALL_CODES, combosOf, rankOf, suitOf } from '../engine/cards.js';
 import { createGame, applyAction, dealNextStreet } from '../engine/game.js';
 import { villainPolicy, probOf, threeBetRangeHas } from '../engine/policy.js';
-import { boardTable, features, bucketOf } from '../engine/strength.js';
+import { boardTable } from '../engine/strength.js';
 
 // ---------- combos ----------
 export const COMBOS = [];
@@ -97,52 +97,7 @@ export function trackHand(hand, { stopAt = hand.log.length, onDecision } = {}) {
 }
 
 // ---------- summaries ----------
-export const BUCKETS = ['strong', 'medium', 'draws', 'air'];
-
-// Bucket of every live combo on this board.
-export function comboBuckets(board, street) {
-  const table = boardTable(board);
-  const dead = new Set(board);
-  const out = new Array(COMBOS.length).fill(null);
-  COMBOS.forEach((c, k) => { if (!dead.has(c[0]) && !dead.has(c[1])) out[k] = bucketOf(features(c, board, table), street); });
-  return out;
-}
-
-// Share of the range in each bucket (0-1).
-export function bucketShares(w, buckets) {
-  const sums = { strong: 0, medium: 0, draws: 0, air: 0 };
-  let t = 0;
-  for (let k = 0; k < w.length; k++) if (w[k] > 0 && buckets[k]) { sums[buckets[k]] += w[k]; t += w[k]; }
-  for (const b of BUCKETS) sums[b] = t ? sums[b] / t : 0;
-  return sums;
-}
-
-// Per-code cell data for the 13x13 grid.
-//   postflop: segments by bucket for what's left, plus "gone" (in prev but dropped now)
-//   preflop:  segments by action (raise / call / fold) at his last preflop decision
-export function gridCells({ w, prev, buckets, actionMix }) {
-  return ALL_CODES.map((code) => {
-    const ks = COMBOS_BY_CODE[code];
-    const n = combosOf(code);
-    const cell = { code, segs: {} };
-    if (actionMix) {
-      const m = actionMix[code];
-      if (m) for (const [a, p] of Object.entries(m.p)) cell.segs[a] = (p * m.w) / n;
-      cell.weight = m ? m.w / n : 0;
-      return cell;
-    }
-    let now = 0, before = 0;
-    for (const k of ks) {
-      before += prev ? prev[k] : w[k];
-      now += w[k];
-      if (w[k] > 0 && buckets?.[k]) cell.segs[buckets[k]] = (cell.segs[buckets[k]] || 0) + w[k] / n;
-    }
-    const gone = Math.max(0, before - now);
-    if (gone > 1e-9) cell.segs.gone = gone / n;
-    cell.weight = now / n;
-    return cell;
-  });
-}
+// (Postflop hand classes live in classes.js; grid cells in ui/grid.js.)
 
 // His preflop action mix per code at one decision: { code: { w: prior weight, p: {raise, call, fold} } }.
 export function preflopActionMix(act) {

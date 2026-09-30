@@ -1,7 +1,6 @@
 // HTML for the feedback screen, in Joan's order. Pure string building (no DOM access).
-import { gridHTML } from '../ui/grid.js';
-const BUCKETS = ['strong', 'medium', 'draws', 'air'];
-const BUCKET_LABEL = { strong: 'Strong', medium: 'Medium', draws: 'Draws', air: 'Air' };
+import { gridHTML, comboList } from '../ui/grid.js';
+import { CLASSES, CLASS_KEYS, CLASS_LABEL, CLASS_INFO } from '../range/classes.js';
 import { cardsPretty } from '../engine/cards.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -49,16 +48,16 @@ function alsoHTML(also) {
 
 function optionHTML(o) {
   const mix = o.mix ? Object.entries(o.mix).filter(([, p]) => p > 0.005).map(([r, p]) => `${RESP[r] || r} ${pct(p)}`).join(' · ') : '';
-  const rows = o.byBucket ? BUCKETS.filter((b) => o.byBucket[b]).map((b) => {
-    const x = o.byBucket[b];
+  const rows = o.byClass ? CLASSES.filter((c) => o.byClass[c.key]).map((c) => {
+    const x = o.byClass[c.key];
     const cells = ['fold', 'call', 'raise', 'check', 'bet'].filter((r) => x[r] > 0.005).map((r) => `${RESP[r]} ${pct(x[r])}`).join(', ');
-    return `<tr><td><i class="dot ${b}"></i>${BUCKET_LABEL[b]} <span class="muted">${pct(x.share)}</span></td><td>${cells}</td></tr>`;
+    return `<tr><td><i class="dot" style="background:${c.color}"></i>${esc(c.label)} <span class="muted">${pct(x.share)}</span></td><td>${cells}</td></tr>`;
   }).join('') : '';
   return `<details class="fb-opt"${o.open ? ' open' : ''}><summary><b>${esc(o.title)}</b><span class="ev">EV ${esc(evText(o.ev))}</span></summary>
     ${mix ? `<div class="fb-line">His answer: ${esc(mix)}</div>` : ''}
     ${rows ? `<table class="fb-bt">${rows}</table>` : ''}
     ${o.wantCalls ? `<div class="fb-line"><b>Do you want the calls?</b> ${esc(o.wantCalls)}</div>` : ''}
-    ${o.callShares ? `<div class="fb-line"><b>Later streets:</b> his calls are ${BUCKETS.map((b) => `${pct(o.callShares[b])} ${BUCKET_LABEL[b]}`).join(', ')}.</div>` : ''}
+    ${o.callShares ? `<div class="fb-line"><b>Later streets:</b> his calls are ${CLASS_KEYS.filter((k) => o.callShares[k] > 0.005).map((k) => `${pct(o.callShares[k])} ${CLASS_LABEL[k].toLowerCase()}`).join(', ')}.</div>` : ''}
     ${o.pros?.length ? `<div class="fb-line"><b>Pros:</b> ${o.pros.map(esc).join(' ')}</div>` : ''}
     ${o.cons?.length ? `<div class="fb-line"><b>Cons:</b> ${o.cons.map(esc).join(' ')}</div>` : ''}
     <div class="fb-math">${o.lines.map((l) => `<div>${esc(l)}</div>`).join('')}</div>
@@ -67,39 +66,64 @@ function optionHTML(o) {
 const ord = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'}`;
 const evText = (x) => (Math.abs(x) < 0.05 ? '$0' : `${x < 0 ? '−' : '+'}$${Math.abs(x).toFixed(Math.abs(x) < 10 ? 1 : 0)}`);
 
-function decisionHTML(a, first) {
-  const order = a.opts;
-  const wIf = order.map((o) => optionHTML({ ...o, open: false })).join('');
-  const actualExtra = order.includes(a.actual) ? '' : optionHTML({ ...a.actual, title: `What you did: ${a.actual.title}` });
+// ---- his range at a decision: what he did, the grid, the numbers, why
+function changeHTML(c) {
+  const moved = c.before ? CLASS_KEYS.filter((k) => Math.abs((c.after[k] || 0) - (c.before[k] || 0)) >= 0.02) : [];
+  const shift = moved.length ? `${moved.map((k) => `${CLASS_LABEL[k]} ${pct(c.before[k])} → ${pct(c.after[k])}`).join(', ')}. ` : '';
+  const claims = (c.claims || []).map((x) => (x.ok
+    ? `<div class="chg-ok">Matches the brain: “${esc(x.quote)}” <span class="tag">${esc(x.tag)}</span></div>`
+    : `<div class="chg-bad">⚖ Brain vs his strategy (not resolved): the brain says “${esc(x.quote)}” <span class="tag">${esc(x.tag)}</span>; his strategy gives ${esc(x.got)}.</div>`)).join('');
+  return `<div class="chg"><div><b>${esc(c.what)}.</b> ${esc(shift)}${Math.round(c.combos[0])} → ${Math.round(c.combos[1])} combos (${pct(c.pctStart)} of his starting range).</div>
+    <div class="chg-why">Why: ${esc(c.reason.text)}${c.reason.quote ? ` The brain: “${esc(c.reason.quote)}”` : ''} <span class="tag">${esc(c.reason.tag)}</span></div>${claims}${c.note ? `<div class="muted">${esc(c.note)}</div>` : ''}</div>`;
+}
+
+function classInfoHTML(key) {
+  const info = CLASS_INFO[key];
+  if (!info) return `<div class="gd-h"><b>${esc(CLASS_LABEL[key] || key)}</b></div>`;
+  return `<div class="gd-h"><b>${esc(info.label)}</b></div><div class="fb-line">${esc(info.rule)}</div>${info.quote ? `<div class="fb-line">“${esc(info.quote)}” <span class="tag">${esc(info.tag)}</span></div>` : ''}`;
+}
+
+function rangeStepHTML(pt, pos) {
+  const g = pt.grid;
+  const changes = (pt.changes || []).map(changeHTML).join('');
+  const grid = g ? gridHTML(g.cells, { mode: g.mode, shares: g.shares, combosLeft: g.combos, detail: (code) => comboList(code, g.detail), classInfo: classInfoHTML }) : '';
+  const vs = pt.versus ? `<div class="fb-line"><b>Your hand vs his range right now:</b> you beat ${pct(pt.versus.beat)}, lose to ${pct(pt.versus.lose)}, chop ${pct(pt.versus.chop)}.</div>` : '';
+  return `${changes ? `<div class="fb-sub2">How ${esc(pos)}'s range changed</div>${changes}` : ''}${grid}${vs}<div class="fb-p">${esc(pt.paragraph || '')}</div>`;
+}
+
+function decisionHTML(pt, h, k) {
+  const a = pt.analysis;
+  const pos = h.players[pt.vi].pos;
+  const head = k === 0 ? `Your decision${a ? `: you ${esc(a.actual.title.toLowerCase())}` : ''}` : `Then${a ? `: you ${esc(a.actual.title.toLowerCase())}` : ''}`;
+  if (!a) return `<div class="fb-dec"><div class="fb-dh">No decision for you on this street</div>${step(1, `What is ${esc(pos)}'s range?`, rangeStepHTML(pt, pos))}</div>`;
+  const wIf = a.opts.map((o) => optionHTML({ ...o, open: false })).join('');
+  const actualExtra = a.opts.includes(a.actual) ? '' : optionHTML({ ...a.actual, title: `What you did: ${a.actual.title}` });
   const verdictSize = a.verdict.size ? `<div class="fb-line"><b>Size:</b> his range is ${esc(a.verdict.size.why)}. “${esc(a.verdict.size.quote)}” <span class="tag">${esc(a.verdict.size.tag)}</span></div>` : '';
-  return `${first ? '' : `<div class="fb-sub">Then: ${esc(a.actual.title)}</div>`}
-    ${step(2, 'What happens if…?', `${a.multiway ? '<div class="fb-line muted">Multiway: his answers treat him as next to act.</div>' : ''}<div class="fb-line">Your equity vs his real range: <b>${pct(a.eq.total)}</b> (${a.eq.combos} combos, ${a.eq.exact ? 'exact' : `${a.eq.runouts} sampled runouts`}).</div>${wIf}${actualExtra}`)}
+  return `<div class="fb-dec"><div class="fb-dh">${head}</div>
+    ${step(1, `What is ${esc(pos)}'s range?`, rangeStepHTML(pt, pos))}
+    ${step(2, 'What happens if…?', `${a.multiway ? '<div class="fb-line muted">Multiway: his answers treat him as next to act.</div>' : ''}<div class="fb-line">Your equity vs this range: <b>${pct(a.eq.total)}</b> (${a.eq.combos} combos, ${a.eq.exact ? 'exact' : `${a.eq.runouts} sampled runouts`}).</div>${wIf}${actualExtra}`)}
     ${step(3, 'Your action', `<div class="fb-line">${a.grade.mark} <b>You: ${esc(a.actual.title)}.</b> ${esc(a.grade.text)}</div>`)}
     ${step(4, 'Verdict', `<div class="fb-line"><b>${esc(a.verdict.title)}.</b> ${esc(a.verdict.why)} <span class="tag">${esc(a.verdict.source)}</span></div>${verdictSize}${a.verdict.math ? `<div class="fb-line muted">${esc(a.verdict.math)}</div>` : ''}`)}
-    ${step(5, 'Also from the brain', alsoHTML(a.also))}`;
+    ${step(5, 'Also from the brain', alsoHTML(a.also))}</div>`;
 }
 
 export function feedbackHTML(h, fb, { resultLine = '', handsHTML = '', gradeHTML = () => '' } = {}) {
   const pre = fb.preflop;
-  const pv = pre.villain;
-  const preGrid = pv != null && pre.grids[pv] ? `${gridHTML(pre.grids[pv].cells, { mode: 'action' })}<div class="fb-p">${esc(pre.grids[pv].paragraph)}</div>` : '<div class="fb-line muted">Nobody else played a hand.</div>';
   const qs = pre.questions;
   const qHTML = `<ol class="fb-q">${qs.list.map((x) => `<li><b>${esc(x.q)}</b> ${esc(x.a || '')}</li>`).join('')}</ol><div class="tag">${esc(qs.tag)}</div>${qs.extra.map((x) => `<div class="fb-line"><b>${esc(x.q)}</b> ${esc(x.a)} <span class="tag">${esc(x.tag)}</span></div>`).join('')}`;
-  const preAction = pre.actions.length ? pre.actions.map((d) => gradeHTML(d)).join('') : '<div class="fb-line muted">No preflop decision.</div>';
-  const others = fb.involved.filter((i) => i !== pv && pre.grids[i]);
-  const preSection = `<section class="fb-sec"><h3>Preflop${pv != null ? ` · vs ${esc(h.players[pv].pos)}` : ''}</h3>
-    ${step(1, "Opponent's range", preGrid + (others.length ? `<details class="fb-more"><summary>Also in the hand: ${others.map((i) => esc(h.players[i].pos)).join(', ')}</summary>${others.map((i) => `<div class="fb-sub">${esc(h.players[i].pos)}</div>${gridHTML(pre.grids[i].cells, { mode: 'action' })}<div class="fb-p">${esc(pre.grids[i].paragraph)}</div>`).join('')}</details>` : ''))}
-    ${step(2, 'The questions to ask here', qHTML)}
-    ${step(3, 'Your action', `${pre.conflicted ? '<div class="fb-line"><b>⚖ Not graded:</b> this spot is an open conflict in your playbook (below). The chart grade is shown for reference only.</div>' : ''}${preAction}`)}
-    ${step(4, 'Also from the brain', alsoHTML(pre.also))}</section>`;
+  const prePoints = pre.points.map((pt, k) => {
+    const pos = pt.vi != null ? h.players[pt.vi].pos : null;
+    const range = pos ? rangeStepHTML(pt, pos) : `<div class="fb-line muted">${esc(pt.paragraph)}</div>`;
+    const conflictNote = pre.conflicted ? '<div class="fb-line"><b>⚖ Not graded:</b> this spot is an open conflict in your playbook (below). The chart grade is shown for reference only.</div>' : '';
+    return `<div class="fb-dec"><div class="fb-dh">${k === 0 ? 'Your decision' : 'Then'}${pt.grade ? `: you ${esc(String(pt.grade.heroAction || pt.grade.action).toLowerCase())}` : ''}</div>
+      ${step(1, pos ? `What is ${esc(pos)}'s range?` : 'Who is in?', range)}
+      ${k === 0 ? step(2, 'The questions to ask here', qHTML) : ''}
+      ${step(k === 0 ? 3 : 2, 'Your action', `${conflictNote}${pt.grade ? gradeHTML(pt.grade) : '<div class="fb-line muted">No chart grade for this decision.</div>'}`)}
+      ${k === 0 ? step(4, 'Also from the brain', alsoHTML(pre.also)) : ''}</div>`;
+  }).join('') || '<div class="fb-line muted">No preflop decision.</div>';
+  const preSection = `<section class="fb-sec"><h3>Preflop${pre.villain != null ? ` · vs ${esc(h.players[pre.villain].pos)}` : ''}</h3>${prePoints}</section>`;
 
-  const streets = fb.streets.map((s) => {
-    const title = `${cap(s.street)} ${cardsPretty(s.board)} · vs ${h.players[s.villain].pos}`;
-    const decs = s.decisions.length ? s.decisions.map((a, k) => decisionHTML(a, k === 0)).join('') : `${step(2, 'What happens if…?', '<div class="fb-line muted">You had no decision on this street.</div>')}`;
-    return `<section class="fb-sec"><h3>${esc(title)}</h3>
-      ${step(1, 'What is my opponent\'s range?', `${gridHTML(s.grid.cells, { mode: 'bucket', shares: s.grid.shares })}<div class="fb-p">${esc(s.paragraph)}</div>`)}
-      ${decs}</section>`;
-  }).join('');
+  const streets = fb.streets.map((s) => `<section class="fb-sec"><h3>${esc(`${cap(s.street)} ${cardsPretty(s.board)}`)}</h3>${s.points.map((pt, k) => decisionHTML(pt, h, k)).join('')}</section>`).join('');
 
   const e = fb.end;
   const leakHTML = e.leaks.length ? e.leaks.map((l) => `<span class="leak">${esc(l.tag)}${l.repeats ? ` <b>🔁 ${ord(l.repeats + 1)} time in your last 50 hands</b>` : ''}</span>`).join('') : '<span class="muted">No leaks this hand.</span>';

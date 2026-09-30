@@ -14,12 +14,16 @@
 import { legalActions, applyAction, potTotal, activePlayers } from '../engine/game.js';
 import { villainPolicy } from '../engine/policy.js';
 import { boardTable } from '../engine/strength.js';
-import { handCode, cardsPretty } from '../engine/cards.js';
-import { trackHand, COMBOS, CODE_OF, total, comboBuckets, bucketShares, BUCKETS, preflopActionMix, gridCells } from '../range/tracker.js';
+import { handCode, cardsPretty, cardPretty } from '../engine/cards.js';
+import { evaluate } from '../engine/eval.js';
+import { trackHand, COMBOS, CODE_OF, total, preflopActionMix } from '../range/tracker.js';
+import { CLASSES, CLASS_KEYS, CLASS_LABEL, comboClasses, classShares, groupShare, GROUP_OF } from '../range/classes.js';
+import { rangeCells, actionCells, comboList } from '../ui/grid.js';
+import { TABLE_SETTINGS } from '../../config/table-settings.js';
 import { heroOption, RESPONSE } from '../range/whatif.js';
 import { equityVsRange, equityOver } from './equity.js';
 import { spotFeatures, betSizeClass } from './spot.js';
-import { matchBrain } from './match.js';
+import { matchBrain, whenMatches } from './match.js';
 import { sourceTag, val } from '../brain/compiled.js';
 import { villainLabel, typeLabel, styleLabel } from '../villains/model.js';
 import { isInvolved } from '../engine/coach.js';
@@ -31,7 +35,6 @@ const usd = (x) => {
   return `${x < 0 ? '−' : ''}$${body}`;
 };
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
-const BUCKET_NAME = { strong: 'Strong', medium: 'Medium', draws: 'Draws', air: 'Air' };
 
 // ---------------------------------------------------------------- his response, per combo
 function responseMatrix(st, heroIdx, action, vi, w) {
@@ -64,7 +67,7 @@ const mul = (w, p) => { const out = new Float64Array(w.length); for (let k = 0; 
 
 // ---------------------------------------------------------------- one option's EV, with the math
 function evalOption(ctx, kind, action) {
-  const { st, heroIdx, vi, w, eq, buckets } = ctx;
+  const { st, heroIdx, vi, w, eq, classes } = ctx;
   const hero = st.players[heroIdx];
   const P = potTotal(st);
   const W = wsum(w);
@@ -99,14 +102,14 @@ function evalOption(ctx, kind, action) {
   const mix = {};
   for (const [r, p] of Object.entries(m.P)) mix[r] = wsum(w, p) / W;
   opt.mix = mix;
-  opt.byBucket = {};
-  for (const b of BUCKETS) {
+  opt.byClass = {};
+  for (const c of CLASS_KEYS) {
     const wb = new Float64Array(w.length);
-    for (let k = 0; k < w.length; k++) if (w[k] > 0 && buckets[k] === b) wb[k] = w[k];
+    for (let k = 0; k < w.length; k++) if (w[k] > 0 && classes[k] === c) wb[k] = w[k];
     const tb = wsum(wb);
     if (tb <= 0) continue;
-    opt.byBucket[b] = { share: tb / W };
-    for (const [r, p] of Object.entries(m.P)) opt.byBucket[b][r] = wsum(wb, p) / tb;
+    opt.byClass[c] = { share: tb / W };
+    for (const [r, p] of Object.entries(m.P)) opt.byClass[c][r] = wsum(wb, p) / tb;
   }
   const add = action.type === 'check' ? 0 : action.to - hero.committed;
   if (action.type === 'check') {
@@ -144,7 +147,7 @@ function evalOption(ctx, kind, action) {
     const each = e * T - add;
     ev += pc * each;
     opt.eqCalls = e;
-    opt.callShares = bucketSharesOf(mul(w, m.P.call), buckets);
+    opt.callShares = classShares(mul(w, m.P.call), classes);
     lines.push(`He calls ${pct(pc)} → pot ${usd(T)}; you have ${pct(e)} vs the hands that call: ${pct(e)} × ${usd(T)} − ${usd(add)} = ${usd(each)} → ${pct(pc)} × ${usd(each)} = ${usd(pc * each)}.`);
   }
   const pr = mix.raise || 0;
@@ -162,19 +165,6 @@ function evalOption(ctx, kind, action) {
   return opt;
 }
 
-function bucketSharesOf(w, buckets) {
-  const s = { strong: 0, medium: 0, draws: 0, air: 0 };
-  let t = 0;
-  for (let k = 0; k < w.length; k++) {
-    if (!(w[k] > 0)) continue;
-    const b = buckets[k];
-    if (!b) continue;
-    s[b] += w[k]; t += w[k];
-  }
-  for (const b of BUCKETS) s[b] = t ? s[b] / t : 0;
-  return s;
-}
-
 // Pros and cons from the numbers, not from memory.
 function prosCons(opt, ctx) {
   const pros = [], cons = [];
@@ -186,13 +176,15 @@ function prosCons(opt, ctx) {
       else cons.push(`The hands that call have you beat: ${pct(opt.eqCalls)} vs them.`);
     }
     if ((m.raise || 0) >= 0.08) cons.push(`He raises ${pct(m.raise)}: you face a tough spot that often.`);
-    if (opt.callShares && opt.callShares.draws >= 0.25) cons.push(`${pct(opt.callShares.draws)} of his calls are draws: later streets get awkward when they hit.`);
+    const dr = opt.callShares ? groupShare(opt.callShares, 'draws') : 0;
+    if (dr >= 0.25) cons.push(`${pct(dr)} of his calls are draws: later streets get awkward when they hit.`);
   }
   if (opt.kind === 'check') {
-    const air = ctx.shares?.air || 0;
+    const air = ctx.shares ? groupShare(ctx.shares, 'air') : 0;
     if ((m.bet || 0) > 0.2 && air > 0.25) pros.push(`Keeps his bluffs in: he bets ${pct(m.bet)} when checked to.`);
     if ((m.check || 0) > 0.6) cons.push(`He checks back ${pct(m.check)}: you get no value from those hands.`);
-    if ((ctx.shares?.draws || 0) >= 0.2 && ctx.street !== 'river') cons.push(`Gives a free card to his draws (${pct(ctx.shares.draws)} of his range).`);
+    const dr = ctx.shares ? groupShare(ctx.shares, 'draws') : 0;
+    if (dr >= 0.2 && ctx.street !== 'river') cons.push(`Gives a free card to his draws (${pct(dr)} of his range).`);
     if (opt.vsBet && opt.vsBet.callEv < 0) cons.push(`If he bets, you have to fold (${pct(opt.vsBet.e)} vs his bets).`);
   }
   if (opt.kind === 'call') {
@@ -213,7 +205,8 @@ const lineOf = (kind, action, pot) => {
 const LINE_LABEL = { fold: 'Fold', call: 'Call', check: 'Check', raise: 'Raise', 'bet-small': 'Bet small', 'bet-big': 'Bet big', 'bet-inbetween': 'Bet an in-between size', bet: 'Bet' };
 
 function sizingByRule(model, shares, opts, heroBucket) {
-  const capped = (shares?.strong ?? 1) < val(model.resolved, 'sizing.cappedStrongShare', 0.15);
+  const strong = shares ? groupShare(shares, 'strongValue') : 1;
+  const capped = strong < val(model.resolved, 'sizing.cappedStrongShare', 0.15);
   const fs = opts.find((o) => o.kind === 'betSmall')?.mix?.fold ?? 0;
   const fb = opts.find((o) => o.kind === 'betBig')?.mix?.fold ?? 0;
   const elastic = (fb - fs) * 100 >= val(model.resolved, 'sizing.elasticPoints', 15);
@@ -222,7 +215,7 @@ function sizingByRule(model, shares, opts, heroBucket) {
   if (!rec || rec.tag !== 'HHP') return null;
   let line = rec.v;
   if (key === 'sizing.cappedElastic' && heroBucket === 'air') line = 'bet-big'; // "a just-big-enough bluff size"
-  const why = `${capped ? 'capped' : 'uncapped'} (Strong ${pct(shares?.strong || 0)} of his range)${capped ? `, ${elastic ? 'elastic' : 'inelastic'} (a big bet folds ${Math.round((fb - fs) * 100)} points more than a small one)` : ''}`;
+  const why = `${capped ? 'capped' : 'uncapped'} (${pct(strong)} of his range is strong value)${capped ? `, ${elastic ? 'elastic' : 'inelastic'} (a big bet folds ${Math.round((fb - fs) * 100)} points more than a small one)` : ''}`;
   return { line, why, quote: rec.src.quote, tag: sourceTag(rec) };
 }
 
@@ -279,50 +272,137 @@ function typeQuote(model, type) {
   return rec?.tag === 'HHP' ? { quote: rec.src.quote, tag: sourceTag(rec) } : null;
 }
 
-function preflopParagraph(h, model, vi, r) {
+// ---------------------------------------------------------------- why his range changed
+const ACT_WORD = { raise: 'raised', 'raise-big': 'opened big', call: 'called', limp: 'limped', check: 'checked', fold: 'folded', 'bet-small': 'bet small', 'bet-big': 'bet big' };
+
+// The strategy numbers behind one of his actions, and the brain quote behind them if any.
+function reasonFor(model, h, p, a) {
+  const st = a.state.street;
+  const tagOf = (key) => model.rec(key);
+  const fmtP = (x) => `${Math.round((x || 0) * 100)}%`;
+  let keys = [], text = '';
+  if (st === 'preflop') {
+    const pre = model.types[p.type]?.pre || {};
+    const lvl = a.entry.level;
+    const posF = TABLE_SETTINGS.positionFactor[p.pos] || 1;
+    if (a.label === 'raise' || a.label === 'raise-big') {
+      if (lvl === 1) {
+        keys = p.type === 'whale' ? ['types.whale.pre.vpipPct', 'types.whale.pre.isoRaiseFreq'] : [`types.${p.type}.pre.openPct`];
+        text = `He raises his top ${pre.openPct}% of hands, × ${posF} for the ${p.pos} = about ${Math.round(pre.openPct * posF)}% here`;
+        if (a.label === 'raise-big') { keys = ['pool.bigOpenPremiums', 'pool.bigOpenMult']; text = `Premiums (${(model.pool.bigOpenPremiums || []).join(', ')}) get the big open ${fmtP(model.pool.bigOpenPremiumFreq)} of the time, other hands ${fmtP(model.pool.bigOpenOtherFreq)}`; }
+      } else if (lvl === 2) {
+        keys = [`types.${p.type}.pre.threeBet`, `types.${p.type}.pre.threeBetPct`, `types.${p.type}.pre.threeBetLight`, 'pool.limpReraise'];
+        text = pre.threeBet ? `He 3-bets ${pre.threeBet.join(', ')}` : `He 3-bets about his top ${pre.threeBetPct}%${pre.threeBetLight ? ` plus ${pre.threeBetLight.join(', ')}` : ''}`;
+      } else if (lvl === 3) { keys = [`types.${p.type}.pre.fourBet`, `types.${p.type}.pre.fourBetPct`, `types.${p.type}.pre.fourBetPartial`]; text = `He 4-bets ${pre.fourBet ? pre.fourBet.join(', ') : `his top ${pre.fourBetPct}%`}`; }
+      else { keys = [`types.${p.type}.pre.fiveBet`]; text = `He 5-bets ${(pre.fiveBet || []).join(', ')}`; }
+    } else if (a.label === 'limp') { keys = [`types.${p.type}.pre.limpList`, `types.${p.type}.pre.limpPct`, 'types.whale.pre.vpipPct']; text = pre.limpList ? `He limps ${pre.limpList.join(', ')} plus about ${pre.limpPct}% more` : `He limps about ${pre.limpPct || 0}% more hands than he raises`; }
+    else if (a.label === 'call') {
+      if (lvl === 2) { keys = [p.pos === 'BB' ? `types.${p.type}.pre.bbDefendPct` : null, `types.${p.type}.pre.callOpenPct`, `types.${p.type}.pre.limpCallPct`].filter(Boolean); text = `He flats an open with about his top ${pre.callOpenPct}%${p.pos === 'BB' && pre.bbDefendPct ? ` (defends ${pre.bbDefendPct}% from the BB)` : ''}`; }
+      else if (lvl === 3) { keys = [`types.${p.type}.pre.continueVs3betPct`, `types.${p.type}.pre.coldCall3bet`]; text = `He calls a 3-bet with about his top ${pre.continueVs3betPct}%`; }
+      else { keys = [`types.${p.type}.pre.callVs4bet`, `types.${p.type}.pre.callVs4betPct`, `types.${p.type}.pre.callVs5bet`]; text = 'He calls a 4-bet only with the top of his range'; }
+    } else if (a.label === 'check') text = 'He checks his option with the hands he doesn\'t raise';
+  } else {
+    const s = model.styles[p.style] || {};
+    const sk = (x) => `styles.${p.style}.${x}`;
+    if (a.label === 'check') { keys = [sk('bet.medium'), sk('bet.air'), sk('bet.strong'), sk(`streetAir.${st}`)]; text = `When checked to he bets strong hands ${fmtP(s.bet?.strong)}, medium ${fmtP(s.bet?.medium)}, air ${fmtP((s.bet?.air || 0) * (s.streetAir?.[st] ?? 1))}, so a check keeps mostly his weaker hands`; }
+    else if (a.label === 'bet-big') { keys = [sk('big.monster'), sk('big.strong'), sk('big.air'), sk('bet.air')]; text = `He puts ${fmtP(s.big?.strong)} of his strong bets and ${fmtP(s.big?.air)} of his bluffs in the big size`; }
+    else if (a.label === 'bet-small') { keys = [sk('big.strong'), sk('bet.air'), sk(`streetAir.${st}`), sk('bet.medium')]; text = `Only ${fmtP(1 - (s.big?.strong || 0))} of his strong bets go small, and he bluffs air ${fmtP((s.bet?.air || 0) * (s.streetAir?.[st] ?? 1))} of the time`; }
+    else if (a.label === 'call') { keys = [sk(`need.${st}`), sk(`sizeSens.${st}`), sk('callAnyPair')]; text = `He continues with hands above about ${fmtP(s.need?.[st])} strength (plus ${fmtP(s.sizeSens?.[st])} per pot-sized bet)${s.callAnyPair && st !== 'river' ? ', and any pair on the flop and turn' : ''}`; }
+    else if (a.label === 'raise') { keys = [sk('raise.strong'), sk('raise.draw'), sk('raise.monster'), sk('raise.air'), sk('riverSpaz')]; text = `He raises monsters ${fmtP(s.raise?.monster)}, strong hands ${fmtP(s.raise?.strong)}, draws ${fmtP(s.raise?.draw)}, air ${fmtP(s.raise?.air)}`; }
+  }
+  const recs = keys.map(tagOf).filter(Boolean);
+  const hhp = recs.find((r) => r.tag === 'HHP');
+  const numbersSourced = recs.length && recs.every((r) => r.tag === 'HHP');
+  return {
+    text: text ? `${text} (from his strategy${numbersSourced ? '' : '; the numbers are [OUTSIDE SOURCE] defaults'}).` : 'From his strategy.',
+    quote: hhp ? hhp.src.quote : null,
+    tag: hhp ? sourceTag(hhp) : '[OUTSIDE SOURCE]',
+  };
+}
+
+// Brain claims about what an action means ("flop check-raises are mostly sets and two pair").
+// Checked against what his strategy actually did; a mismatch shows both views.
+function claimChecks(model, feat, before, after) {
+  const out = [];
+  for (const [key, rec] of Object.entries(model.resolved.values)) {
+    if (!key.startsWith('claims.') || rec.tag !== 'HHP' || !rec.v) continue;
+    const c = rec.v;
+    if (!whenMatches(c.when, feat)) continue;
+    const g1 = groupShare(after, c.group), g0 = groupShare(before, c.group);
+    let ok = true;
+    if (c.min != null && g1 < c.min) ok = false;
+    if (c.max != null && g1 > c.max) ok = false;
+    if (c.direction === 'up' && g1 < g0 - 0.005) ok = false;
+    if (c.direction === 'down' && g1 > g0 + 0.005) ok = false;
+    out.push({ key, ok, title: c.title, quote: rec.src.quote, tag: sourceTag(rec), got: `${c.groupLabel || c.group} ${pct(g0)} → ${pct(g1)}` });
+  }
+  return out;
+}
+// One line per action he took: classes before → after, combos, share of his starting range, why.
+function rangeChanges(h, model, vi, r, fromN, toN, classes) {
   const p = h.players[vi];
-  const acts = r.actions.filter((a) => a.street === 'preflop');
+  const start = total(r.start.preflop);
+  return r.actions.filter((a) => a.n > fromN && a.n < toN).map((a) => {
+    const e = a.entry;
+    const size = e.type === 'bet' || e.type === 'raise'
+      ? ` ${e.type === 'raise' ? 'to ' : ''}${usd(e.to)}${a.street === 'preflop' ? ` (${Math.round((e.to / h.stakes.bb) * 10) / 10}bb)` : e.potBefore ? ` (${pct(e.to / e.potBefore)} pot)` : ''}` : '';
+    const c0 = total(a.before), c1 = total(a.after);
+    const ch = { label: a.label, street: a.street, what: `${p.pos} ${ACT_WORD[a.label] || a.label}${size}`, combos: [c0, c1], pctStart: c1 / start, reason: reasonFor(model, h, p, a) };
+    if (a.street !== 'preflop' && classes) {
+      ch.before = classShares(a.before, classes);
+      ch.after = classShares(a.after, classes);
+      const feat = spotFeatures(a.state, h.heroIdx, vi, {});
+      feat.villainAction = a.label;
+      // A donk: he bets into the preflop raiser before the raiser acts on this street.
+      const pfr = a.state.preflopAggressor;
+      feat.donk = a.label.startsWith('bet') && pfr >= 0 && pfr !== vi && !a.state.log.some((x) => x.street === a.street && x.i === pfr);
+      ch.claims = claimChecks(model, feat, ch.before, ch.after);
+    }
+    if (!a.ok) ch.note = 'His strategy doesn\'t produce this action (an engine fallback), so his range was left unchanged.';
+    return ch;
+  });
+}
+
+// "Your hand vs his range" right now: share of his weighted range you beat, lose to, chop.
+function versusRange(hero, board, w) {
+  if (board.length < 3) return null;
+  const mine = evaluate([...hero, ...board]);
+  let win = 0, lose = 0, tie = 0;
+  for (let k = 0; k < w.length; k++) {
+    if (!(w[k] > 0)) continue;
+    const v = evaluate([...COMBOS[k], ...board]);
+    if (mine > v) win += w[k]; else if (mine < v) lose += w[k]; else tie += w[k];
+  }
+  const t = win + lose + tie || 1;
+  return { beat: win / t, lose: lose / t, chop: tie / t };
+}
+
+function preflopParagraph(h, model, vi, acts, full) {
+  const p = h.players[vi];
   const last = [...acts].reverse().find((a) => a.label !== 'fold') || acts[acts.length - 1];
-  const full = 1326 - 101; // two of your cards removed: 1225 combos
-  const share = last ? total(last.after) / full : 0;
-  const words = { raise: 'raised', 'raise-big': 'opened big', call: 'called', limp: 'limped', check: 'checked', fold: 'folded' };
   const tq = typeQuote(model, p.type);
   const parts = [`${p.pos} is a ${villainLabel(p)}.`];
   if (tq) parts.push(`HHP on this type: “${tq.quote}” ${tq.tag}.`);
-  if (last) parts.push(`He ${acts.map((a) => words[a.label] || a.label).join(', then ')}: that keeps about ${pct(share)} of all hands (${Math.round(total(last.after))} of ${full} combos), the colored part of the grid.`);
+  if (last) parts.push(`He ${acts.map((a) => ACT_WORD[a.label] || a.label).join(', then ')}: that keeps about ${pct(total(last.after) / full)} of all hands (${Math.round(total(last.after))} of ${Math.round(full)} combos).`);
   if (acts.some((a) => a.label === 'raise-big')) {
     const rr = model.rec('rules.bigOpen');
     if (rr?.tag === 'HHP') parts.push(`His open was unusually big: “${rr.src.quote}” ${sourceTag(rr)}.`);
   }
-  parts.push('Computed by replaying his own strategy, the one he plays from, not a guess.');
+  parts.push('The grid replays his own strategy, the one he actually plays from.');
   return parts.join(' ');
 }
 
-function streetParagraph(h, model, vi, r, street, shares, prevShares) {
+function streetParagraph(h, vi, changes, shares, street, combosLeft) {
   const p = h.players[vi];
-  const acts = r.actions.filter((a) => a.street === street);
-  const st = model.styles[p.style];
   const parts = [];
-  const moves = { check: 'checked', 'bet-small': 'bet small', 'bet-big': 'bet big', call: 'called', raise: 'raised', fold: 'folded' };
-  if (!acts.length) parts.push(`He hasn't acted yet on the ${street} when you decide.`);
-  for (const a of acts) {
-    const b = comboBuckets(h.log.find((e) => e.type === 'deal' && e.street === street).board, street);
-    const s0 = bucketShares(a.before, b), s1 = bucketShares(a.after, b);
-    const biggest = BUCKETS.reduce((m, x) => (Math.abs(s1[x] - s0[x]) > Math.abs(s1[m] - s0[m]) ? x : m), 'strong');
-    parts.push(`He ${moves[a.label] || a.label}: ${BUCKET_NAME[biggest]} went ${pct(s0[biggest])} → ${pct(s1[biggest])}.`);
-    if (a.label === 'check' && st?.bet) {
-      const rec = model.rec(`styles.${p.style}.bet.strong`);
-      parts.push(`As a ${styleLabel(p.style).toLowerCase()} he bets his strong hands about ${pct(st.bet.strong)} of the time when checked to ${sourceTag(rec)}, so a check thins them out.`);
-    }
-    if (a.label === 'bet-big') {
-      const rec = model.rec(`styles.${p.style}.big.strong`);
-      if (rec?.tag === 'HHP') parts.push(`Big bets from him lean strong: “${rec.src.quote}” ${sourceTag(rec)}.`);
-    }
-    if (a.label === 'call') parts.push('Most of his air folds to a bet; what calls is made hands and draws.');
+  const mine = changes.filter((c) => c.street === street);
+  if (!mine.length) parts.push(`${p.pos} hasn't acted on the ${street} yet when you decide, so this is his range from the ${street === 'flop' ? 'preflop action' : 'last street'}.`);
+  for (const c of mine) {
+    const big = CLASS_KEYS.reduce((m, x) => (Math.abs(c.after[x] - c.before[x]) > Math.abs(c.after[m] - c.before[m]) ? x : m), CLASS_KEYS[0]);
+    parts.push(`${c.what}: ${CLASS_LABEL[big]} ${pct(c.before[big])} → ${pct(c.after[big])}.`);
   }
-  const tot = total(r.streets[street] || r.w);
-  parts.push(`Now: ${BUCKETS.map((x) => `${BUCKET_NAME[x]} ${pct(shares[x])}`).join(', ')} (${Math.round(tot)} combos, weighted).`);
-  if (prevShares) parts.push(`Start of the ${street}: ${BUCKETS.map((x) => `${BUCKET_NAME[x]} ${pct(prevShares[x])}`).join(', ')}.`);
+  const top = [...CLASS_KEYS].sort((a, b) => shares[b] - shares[a]).slice(0, 2);
+  parts.push(`Mostly ${CLASS_LABEL[top[0]].toLowerCase()} (${pct(shares[top[0]])}) and ${CLASS_LABEL[top[1]].toLowerCase()} (${pct(shares[top[1]])}); ${combosLeft} weighted combos left.`);
   return parts.join(' ');
 }
 
@@ -360,25 +440,15 @@ function edgeText(v) {
 }
 
 // ---------------------------------------------------------------- the whole review
-function mainVillain(h, street, snapState) {
-  const live = activePlayers(snapState).filter((p) => p.i !== h.heroIdx).map((p) => p.i);
-  const agg = [...snapState.log].reverse().find((e) => e.street === street && (e.type === 'bet' || e.type === 'raise') && e.i !== h.heroIdx);
-  if (agg && live.includes(agg.i)) return agg.i;
-  if (live.includes(snapState.preflopAggressor)) return snapState.preflopAggressor;
-  return live[0] ?? null;
-}
-
-function decisionAnalysis(h, d, model, brain, vi, tags) {
+// w and classes are the SAME arrays the grid draws, so the chart and the EV never disagree.
+function decisionAnalysis(h, d, model, brain, vi, tags, w, classes, shares) {
   const st = d.state;
-  const w = d.ranges[vi];
   const street = st.street;
   const board = st.board;
-  const buckets = street === 'preflop' ? new Array(COMBOS.length).fill(null) : comboBuckets(board, street);
   const hero = st.players[h.heroIdx];
   const eq = equityVsRange(hero.cards, board, w, { samples: 160 });
-  const shares = street === 'preflop' ? null : bucketShares(w, buckets);
   const la = legalActions(st);
-  const ctx = { st, heroIdx: h.heroIdx, vi, w, eq, buckets, shares, street };
+  const ctx = { st, heroIdx: h.heroIdx, vi, w, eq, classes, shares, street };
   const kinds = la.toCall > 0 ? ['fold', 'call', 'raise'] : ['betSmall', 'betBig', 'check'];
   const pot = potTotal(st);
   const TITLE = { fold: 'Fold', call: 'Call', raise: 'Raise', betSmall: 'Bet small', betBig: 'Bet big', check: 'Check' };
@@ -406,7 +476,7 @@ function decisionAnalysis(h, d, model, brain, vi, tags) {
   actual.line = lineOf(actualKind, actualAction, pot);
   actual.title = `${LINE_LABEL[actual.line] || cap(e.type)}${actualAction.to ? ` (${usd(actualAction.to)})` : ''}`;
 
-  const feat = spotFeatures(st, h.heroIdx, vi, { heroAction: actual.line.startsWith('bet') ? 'bet' : actual.line, heroCode: handCode(...hero.cards), capped: shares ? shares.strong < val(model.resolved, 'sizing.cappedStrongShare', 0.15) : null });
+  const feat = spotFeatures(st, h.heroIdx, vi, { heroAction: actual.line.startsWith('bet') ? 'bet' : actual.line, heroCode: handCode(...hero.cards), capped: shares ? groupShare(shares, 'strongValue') < val(model.resolved, 'sizing.cappedStrongShare', 0.15) : null });
   if (actual.line.startsWith('bet')) feat.betSize = betSizeClass(actualAction.to, pot);
   const matched = matchBrain(model, feat, brain);
   const conflicted = matched.conflicts.length > 0;
@@ -438,7 +508,7 @@ function decisionAnalysis(h, d, model, brain, vi, tags) {
   const leaks = leakFor(street, actual, verdict, grade, feat, tags);
   const used = new Set([verdict.rule].filter(Boolean));
   return {
-    street, n: d.n, vi, pot, eq, shares, opts, actual, verdict, grade, leaks, feat,
+    street, n: d.n, vi, pot, eq, shares, opts, actual, verdict, grade, leaks, feat, rangeRef: w,
     also: { rules: matched.rules.filter((r) => !used.has(r.key)), conflicts: matched.conflicts },
     multiway: activePlayers(st).length > 2,
   };
@@ -460,6 +530,20 @@ function catalogFieldFor(entry, a) {
   return entry.fields.find((f) => want && want.test(f.name)) || null;
 }
 
+// Which villain a decision is about: the last one who bet or raised into you this street, else
+// the preflop raiser, else the first one still in.
+function villainAt(h, st) {
+  const live = activePlayers(st).filter((p) => p.i !== h.heroIdx).map((p) => p.i);
+  const agg = [...st.log].reverse().find((e) => e.street === st.street && (e.type === 'bet' || e.type === 'raise') && e.i !== h.heroIdx);
+  if (agg && live.includes(agg.i)) return agg.i;
+  if (live.includes(st.preflopAggressor)) return st.preflopAggressor;
+  if (st.street === 'preflop') {
+    const vol = st.log.find((e) => e.street === 'preflop' && e.i !== h.heroIdx && (e.type === 'call' || e.type === 'raise') && live.includes(e.i));
+    return vol ? vol.i : null;
+  }
+  return live[0] ?? null;
+}
+
 export function buildFeedback(h, { model, brain, history = [] }) {
   const tags = brain?.leakTags || [];
   const decisions = [];
@@ -472,24 +556,37 @@ export function buildFeedback(h, { model, brain, history = [] }) {
     },
   });
   const R = tracked.ranges;
-  const out = { villains: [], preflop: null, streets: [], end: null };
+  const heroCards = h.players[h.heroIdx].cards;
+  const out = { preflop: null, streets: [], end: null };
   const involved = Object.keys(R).map(Number).filter((i) => isInvolved(h, i));
+  const classCache = {};
+  const classesFor = (street, board) => (classCache[street] ||= comboClasses(board, street));
 
   // ---- PREFLOP
   const preDec = decisions.filter((d) => d.state.street === 'preflop');
-  // The opponent for the preflop section: the villain who stayed in with you (the raiser if
-  // he did), else whoever acted before your decision.
   const pv = involved.includes(h.preflopAggressor) ? h.preflopAggressor
-    : involved[0] ?? (preDec.length ? mainVillain(h, 'preflop', preDec[0].state) : null);
-  const pre = { villain: pv, grids: {}, paragraph: '', questions: null, actions: h.heroDecisions || [], also: { rules: [], conflicts: [] } };
-  const withGrid = [...new Set([...involved, ...(pv != null ? [pv] : [])])];
-  for (const i of withGrid) {
-    const acts = R[i].actions.filter((a) => a.street === 'preflop');
-    const last = [...acts].reverse().find((a) => a.label !== 'fold') || acts[acts.length - 1];
-    if (last) pre.grids[i] = { cells: gridCells({ actionMix: preflopActionMix(last) }), paragraph: preflopParagraph(h, model, i, R[i]) };
-  }
-  pre.paragraph = pv != null ? pre.grids[pv]?.paragraph || '' : '';
-  pre.questions = preflopQuestions(h, model, h.spot, pv);
+    : involved[0] ?? (preDec.length ? villainAt(h, preDec[0].state) : null);
+  const pre = { villain: pv, points: [], questions: preflopQuestions(h, model, h.spot, pv), also: { rules: [], conflicts: [] } };
+  let lastN = -1;
+  preDec.forEach((d, k) => {
+    const vi = villainAt(h, d.state);
+    const pt = { street: 'preflop', vi, grade: h.heroDecisions?.[k] || null, n: d.n };
+    if (vi != null) {
+      const r = R[vi];
+      const acts = r.actions.filter((a) => a.street === 'preflop' && a.n < d.n);
+      const last = [...acts].reverse().find((a) => a.label !== 'fold');
+      const dead = new Set(heroCards);
+      const full = total(r.start.preflop);
+      if (last) {
+        const mix = preflopActionMix(last);
+        pt.grid = { mode: 'action', cells: actionCells({ mix, before: last.before, dead }), combos: `${Math.round(total(last.after))} combos (${pct(total(last.after) / full)} of his hands)`, detail: { actionMix: mix, before: last.before, dead } };
+        pt.paragraph = preflopParagraph(h, model, vi, acts, full);
+      } else pt.paragraph = `${h.players[vi].pos} hasn't acted yet: his range is every hand.`;
+      pt.changes = rangeChanges(h, model, vi, r, lastN, d.n, null);
+    } else pt.paragraph = 'Nobody has put money in yet: everyone behind you has a full range.';
+    lastN = d.n;
+    pre.points.push(pt);
+  });
   if (preDec.length) {
     const st = preDec[0].state;
     const firstLimper = st.log.find((e) => e.street === 'preflop' && e.type === 'call' && e.level === 1);
@@ -497,50 +594,64 @@ export function buildFeedback(h, { model, brain, history = [] }) {
     const d0 = h.heroDecisions?.[0];
     const heroAction = d0 ? (d0.action === 'call' && (h.spot.kind === 'RFI' || h.spot.kind === 'ISO') ? 'limp' : d0.action) : null;
     const feat = spotFeatures(st, h.heroIdx, pv, { spot: h.spot.kind, heroAction, heroCodes: h.heroCode, limperPos: lp });
-    feat.heroCodes = h.heroCode;
-    // Facing level for the latest preflop decision (5-bet red flag).
     const lastPre = preDec[preDec.length - 1].state;
     const m = matchBrain(model, { ...feat, facingLevel: lastPre.raiseLevel }, brain);
     pre.also = m;
     pre.conflicted = m.conflicts.length > 0;
   }
-  // An open conflict on this spot: the chart grade is reference only (no leak, no takeaway).
   pre.leaks = pre.conflicted ? [] : (h.heroDecisions || []).flatMap((d) => preflopLeaks(d, tags));
   out.preflop = pre;
 
-  // ---- FLOP / TURN / RIVER
+  // ---- FLOP / TURN / RIVER: one point per decision, each with his range at that moment
   for (const street of ['flop', 'turn', 'river']) {
     const deal = h.log.find((e) => e.type === 'deal' && e.street === street);
     if (!deal) break;
     const heroFolded = h.log.some((e) => e.i === h.heroIdx && e.type === 'fold' && h.log.indexOf(e) < h.log.indexOf(deal));
     if (heroFolded) break;
+    const classes = classesFor(street, deal.board);
+    const dealN = h.log.indexOf(deal);
     const sd = decisions.filter((d) => d.state.street === street);
-    const buckets = comboBuckets(deal.board, street);
-    const vi = sd.length ? mainVillain(h, street, sd[0].state) : involved.find((i) => !h.players[i].folded) ?? involved[0];
-    if (vi == null) break;
-    const r = R[vi];
-    const wAt = sd.length ? sd[0].ranges[vi] : r.streets[street];
-    const prev = r.start[street];
-    const shares = bucketShares(wAt, buckets);
-    const s = {
-      street, board: deal.board, villain: vi,
-      grid: { cells: gridCells({ w: wAt, prev, buckets }), shares },
-      paragraph: streetParagraph(h, model, vi, { ...r, actions: r.actions.filter((a) => !sd.length || a.n < sd[0].n) }, street, shares, prev ? bucketShares(prev, buckets) : null),
-      decisions: sd.map((d) => decisionAnalysis(h, d, model, brain, vi, tags)),
-      catalog: null,
+    const dead = new Set([...heroCards, ...deal.board]);
+    const sec = { street, board: deal.board, points: [] };
+    let fromN = dealN;
+    const mk = (vi, w, toN, d) => {
+      const r = R[vi];
+      const prev = r.start[street];
+      const shares = classShares(w, classes);
+      const left = Math.round(total(w) * 10) / 10;
+      const changes = rangeChanges(h, model, vi, r, fromN, toN, classes);
+      const pt = {
+        street, vi, n: toN, shares, changes,
+        grid: { mode: 'class', cells: rangeCells({ w, prev, classes, dead }), shares, combos: `${left} weighted combos left (${pct(total(w) / total(r.start.preflop))} of his starting range)`, detail: { w, prev, classes, dead } },
+        paragraph: streetParagraph(h, vi, changes, shares, street, left),
+        versus: versusRange(heroCards, deal.board, w),
+      };
+      if (d) pt.analysis = decisionAnalysis(h, d, model, brain, vi, tags, w, classes, shares);
+      return pt;
     };
-    const entry = catalogEntry(brain, h.players[vi]);
-    for (const a of s.decisions) {
-      const f = catalogFieldFor(entry, a);
-      if (f) a.also.catalog = { name: entry.name, field: f.name, text: f.text, tag: entryTag(entry) };
+    for (const d of sd) {
+      const vi = villainAt(h, d.state);
+      if (vi == null) continue;
+      sec.points.push(mk(vi, d.ranges[vi], d.n, d));
+      fromN = d.n;
     }
-    out.streets.push(s);
+    if (!sec.points.length) {
+      const vi = involved.find((i) => !h.players[i].folded) ?? involved[0];
+      if (vi == null) break;
+      sec.points.push(mk(vi, R[vi].streets[street], Infinity, null));
+    }
+    const entry = catalogEntry(brain, h.players[sec.points[0].vi]);
+    for (const pt of sec.points) {
+      const f = pt.analysis && catalogFieldFor(entry, pt.analysis);
+      if (f) pt.analysis.also.catalog = { name: entry.name, field: f.name, text: f.text, tag: entryTag(entry) };
+    }
+    out.streets.push(sec);
   }
 
   // ---- END OF HAND
-  const all = [...out.streets.flatMap((s) => s.decisions)];
+  const all = out.streets.flatMap((s) => s.points.map((p) => p.analysis).filter(Boolean));
   const leaks = [...new Set([...pre.leaks, ...all.flatMap((a) => a.leaks)])];
-  const recent = history.slice(-50);
+  const recent = history.slice(0, 50);
   const repeats = Object.fromEntries(leaks.map((t) => [t, recent.filter((x) => (x.leaks || []).includes(t)).length]));
   const worst = all.filter((a) => a.grade.mark === '❌').sort((a, b) => (b.grade.loss || 0) - (a.grade.loss || 0))[0]
     || all.find((a) => a.grade.mark === '⚠️');
@@ -552,14 +663,16 @@ export function buildFeedback(h, { model, brain, history = [] }) {
     if (kl) known.push({ title: kl.title, text: kl.text, tag: '[HHP] project-instructions.md › Known leaks' });
   }
   const whole = [];
-  const mv = out.streets[out.streets.length - 1]?.villain ?? pv;
+  const lastSec = out.streets[out.streets.length - 1];
+  const mv = lastSec ? lastSec.points[lastSec.points.length - 1].vi : pv;
   if (mv != null) {
     const entry = catalogEntry(brain, h.players[mv]);
     if (entry) whole.push({ title: `${entry.name}: ${h.players[mv].pos} played this style`, fields: entry.fields, tag: entryTag(entry) });
   }
   out.end = { takeaway, leaks: leaks.map((t) => ({ tag: t, repeats: repeats[t] })), known, whole };
   out.leaks = leaks;
-  out.involved = withGrid;
+  out.involved = involved;
+  out.comboList = comboList;
   return out;
 }
 

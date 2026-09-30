@@ -11,6 +11,7 @@ import { CHARTS_USED } from './engine/scenario.js';
 import { buildFeedback } from './feedback/engine.js';
 import { feedbackHTML } from './feedback/render.js';
 import { rebuildHand } from './feedback/replay.js';
+import { clearGrids, gridDetail, gridClassInfo } from './ui/grid.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -493,6 +494,25 @@ function gradeHTML(d) {
 
 // Feedback screen: opens only when "See feedback" is tapped. No won/lost amounts, and only
 // involved players' cards.
+// Tap a grid cell for its combos, or a legend class for its definition.
+$('sheetBody').addEventListener('click', (e) => {
+  const wrap = e.target.closest('.gwrap');
+  if (!wrap) return;
+  const box = wrap.querySelector('.gdetail');
+  if (e.target.closest('.gd-x')) { box.hidden = true; wrap.querySelectorAll('.gc.sel').forEach((c) => c.classList.remove('sel')); return; }
+  const cell = e.target.closest('.hgrid .gc');
+  const leg = e.target.closest('.glegend .gl[data-cls]');
+  let html = '';
+  if (cell) {
+    wrap.querySelectorAll('.gc.sel').forEach((c) => c.classList.remove('sel'));
+    cell.classList.add('sel');
+    html = gridDetail(wrap.dataset.grid, cell.dataset.code);
+  } else if (leg && !leg.disabled) html = gridClassInfo(wrap.dataset.grid, leg.dataset.cls);
+  if (!html) return;
+  box.innerHTML = `<button type="button" class="gd-x" aria-label="Close">✕</button>${html}`;
+  box.hidden = false;
+});
+
 // Cards + who won, for the top of the feedback screen (involved players only, no amounts).
 function handsGridHTML(h) {
   const r = h.result;
@@ -522,6 +542,7 @@ function feedbackFor(h, token = handToken) {
 function showFeedback(h = hand, { fromHistory = null } = {}) {
   if (!h || !h.done) return;
   let body;
+  clearGrids();
   try {
     const fb = fromHistory ? buildFeedback(h, { model, brain, history: loadHistory().filter((x) => x.id !== fromHistory.id).slice(0, 50) }) : feedbackFor(h);
     body = feedbackHTML(h, fb, { resultLine: winnerLine(h, true), handsHTML: handsGridHTML(h), gradeHTML });

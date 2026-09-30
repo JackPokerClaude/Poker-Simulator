@@ -4,12 +4,14 @@ import assert from 'node:assert/strict';
 import { ranges } from './setup.mjs';
 import { playOut } from './sim.mjs';
 import { createHand } from '../js/engine/dealer.js';
-import { trackHand, comboIndex, total, comboBuckets, bucketShares, gridCells, COMBOS, preflopActionMix } from '../js/range/tracker.js';
+import { trackHand, comboIndex, total, COMBOS, preflopActionMix } from '../js/range/tracker.js';
+import { comboClasses, classShares, CLASS_KEYS } from '../js/range/classes.js';
+import { rangeCells } from '../js/ui/grid.js';
 import { parseCard } from '../js/engine/cards.js';
 
-test('his real hand is always inside the range the tracker gives', () => {
+test('his real hand is always inside the range the tracker gives (300 hands, every street)', () => {
   let checked = 0;
-  for (let h = 0; h < 120; h++) {
+  for (let h = 0; h < 300; h++) {
     const s = playOut(createHand({ drill: h % 3 === 0 ? 'bigpots' : h % 3 === 1 ? 'threebet' : 'random', ranges }));
     const { ranges: R, state } = trackHand(s);
     assert.deepEqual(state.board.slice(0, s.board.length), s.board.slice(0, state.board.length), 'replay in sync');
@@ -43,23 +45,25 @@ test('ranges narrow: a raise keeps only part of his hands', () => {
   assert.ok(n > 0);
 });
 
-test('buckets and grid cells', () => {
+test('classes, shares and grid cells', () => {
   const board = ['Ah', '7c', '2d'].map(parseCard);
-  const b = comboBuckets(board, 'flop');
+  const b = comboClasses(board, 'flop');
   const idx = (x, y) => comboIndex(parseCard(x), parseCard(y));
-  assert.equal(b[idx('As', 'Kd')], 'strong');
-  assert.equal(b[idx('7s', '7d')], 'strong');
-  assert.equal(b[idx('Ks', 'Qs')], 'air');
   assert.equal(b[idx('Ah', 'Ac')], null, 'board card');
   const w = new Float64Array(COMBOS.length).fill(0);
-  w[idx('As', 'Kd')] = 1; w[idx('Ks', 'Qs')] = 1;
-  const sh = bucketShares(w, b);
-  assert.equal(sh.strong, 0.5); assert.equal(sh.air, 0.5);
+  w[idx('As', 'Kd')] = 1; w[idx('Ks', 'Qs')] = 0.5;
+  const sh = classShares(w, b);
+  assert.ok(Math.abs(CLASS_KEYS.reduce((a, k) => a + sh[k], 0) - 1) < 1e-9);
   const prev = new Float64Array(w); prev[idx('Kd', 'Qd')] = 1;
-  const cells = gridCells({ w, prev, buckets: b });
+  const dead = new Set([...board]);
+  const cells = rangeCells({ w, prev, classes: b, dead });
   assert.equal(cells.length, 169);
   const kq = cells.find((c) => c.code === 'KQs');
-  assert.ok(kq.segs.air > 0 && kq.segs.gone > 0);
+  assert.equal(kq.live, 4); // no suited KQ is blocked by A-7-2
+  assert.ok(Math.abs(kq.freq - 0.5 / 4) < 1e-9, 'frequency = weight over live combos');
+  assert.ok(kq.gone > 0);
+  const ak = cells.find((c) => c.code === 'AKo');
+  assert.equal(ak.live, 9, 'Ah on the board blocks 3 of 12 AKo combos');
 });
 
 test('preflop action mix sums to one per hand', () => {

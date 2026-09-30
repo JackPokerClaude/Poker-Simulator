@@ -23,30 +23,52 @@ for (let h = 0; h < 45; h++) {
   hands.push({ s, fb: buildFeedback(s, { model, brain }) });
 }
 
-test('every hand builds feedback in the fixed order', () => {
-  let streets = 0;
+const points = (fb) => fb.streets.flatMap((st) => st.points);
+
+test('every decision builds in the fixed order', () => {
+  let decs = 0;
   for (const { s, fb } of hands) {
     const html = feedbackHTML(s, fb, { gradeHTML: () => '<div class="grade">g</div>' });
-    const order = ["Opponent's range", 'The questions to ask here', 'Your action', 'Also from the brain'];
-    let at = 0;
-    for (const t of order) { const k = html.indexOf(t, at); assert.ok(k >= 0, `missing ${t}`); at = k; }
-    for (const st of fb.streets) {
-      if (!st.decisions.length) continue;
-      streets++;
-      const k0 = html.indexOf(`What is my opponent's range?`);
-      const k1 = html.indexOf('What happens if…?', k0);
-      const k2 = html.indexOf('Your action', k1);
-      const k3 = html.indexOf('Verdict', k2);
-      const k4 = html.indexOf('Also from the brain', k3);
-      assert.ok(k0 >= 0 && k1 > k0 && k2 > k1 && k3 > k2 && k4 > k3, 'street steps in order');
+    if (fb.preflop.points.length) {
+      let at = html.indexOf('Your decision');
+      for (const t of ['The questions to ask here', 'Your action', 'Also from the brain']) { const k = html.indexOf(t, at); assert.ok(k > at, `preflop: missing ${t}`); at = k; }
+    }
+    // Each postflop decision block: range, what happens if, action, verdict, also.
+    for (const block of html.split('<div class="fb-dec">').slice(1)) {
+      if (!block.includes('What happens if')) continue;
+      decs++;
+      const ks = [/range\?/, /What happens if/, /Your action/, /Verdict/, /Also from the brain/].map((re) => block.search(re));
+      assert.ok(ks.every((k, n) => k >= 0 && (n === 0 || k > ks[n - 1])), 'five steps in order');
     }
     assert.ok(html.indexOf('End of hand') > 0);
   }
-  assert.ok(streets > 10);
+  assert.ok(decs > 10);
+});
+
+test('the chart and the equity math use the same range', () => {
+  for (const { fb } of hands) for (const pt of points(fb)) {
+    if (!pt.analysis) continue;
+    assert.equal(pt.analysis.rangeRef, pt.grid.detail.w, 'same array');
+    const sum = Object.values(pt.shares).reduce((a, x) => a + x, 0);
+    assert.ok(Math.abs(sum - 1) < 1e-9, `class shares sum to ${sum}`);
+    if (pt.versus) assert.ok(Math.abs(pt.versus.beat + pt.versus.lose + pt.versus.chop - 1) < 1e-9);
+  }
+});
+
+test('every range change has a reason with a source tag', () => {
+  let n = 0;
+  for (const { fb } of hands) for (const pt of [...fb.preflop.points, ...points(fb)]) for (const c of pt.changes || []) {
+    n++;
+    assert.match(c.reason.tag, /^\[HHP\] |^\[OUTSIDE SOURCE\]/);
+    if (c.before) assert.ok(Math.abs(Object.values(c.after).reduce((a, x) => a + x, 0) - 1) < 1e-6);
+  }
+  assert.ok(n > 20);
 });
 
 test('verdicts are tagged, grades are marks, conflicts are never graded', () => {
-  for (const { fb } of hands) for (const st of fb.streets) for (const a of st.decisions) {
+  for (const { fb } of hands) for (const pt of points(fb)) {
+    const a = pt.analysis;
+    if (!a) continue;
     assert.match(a.verdict.source, /^\[HHP\]|^\[OUTSIDE SOURCE\]/);
     assert.match(a.grade.mark, /^(✅|⚠️|❌|⚖)$/);
     if (a.also.conflicts.length) { assert.equal(a.grade.mark, '⚖'); assert.deepEqual(a.leaks, []); }
@@ -61,7 +83,9 @@ test('leak tags only come from your list in project-instructions.md', () => {
 });
 
 test('the math on screen matches the numbers', () => {
-  for (const { fb } of hands) for (const st of fb.streets) for (const a of st.decisions) {
+  for (const { fb } of hands) for (const pt of points(fb)) {
+    const a = pt.analysis;
+    if (!a) continue;
     const call = a.opts.find((o) => o.kind === 'call');
     if (call) {
       const t = call.need * a.pot / (1 - call.need);

@@ -382,6 +382,20 @@ hhp('sizing.cappedDef', 'capped', PF1("Capped = his action already showed his st
 out('sizing.cappedStrongShare', 0.15, 'he counts as capped when under 15% of his range is Strong (default, Joan to review)');
 out('sizing.elasticPoints', 15, 'his range counts as elastic when a big bet folds 15+ points more of it than a small bet (default, Joan to review)');
 
+// ---------------------------------------------------------------- range claims (checked, never forced)
+// What the brain says an action means. The feedback checks his actual strategy against each
+// matching claim; a mismatch shows both views and is never resolved in code.
+// group: strongValue | value | draws | air (js/range/classes.js). min/max: share after the action;
+// direction: up/down vs before the action.
+const claim = (id, v, s) => hhp(`claims.${id}`, v, s, { fb: null });
+claim('poolCheckRaise', { title: 'Flop raises are mostly sets and two pair', when: { street: ['flop'], villainAction: ['raise'], villainStyle: ['passiveCaller', 'passiveFolder', 'aggroFolder'] }, group: 'strongValue', groupLabel: 'strong value', min: 0.5 }, BR9('Flop check-raises are mostly sets and two pair'));
+claim('multiwayDonk', { title: 'A multiway donk is much stronger', when: { street: ['flop', 'turn'], multiway: true, donk: true }, group: 'strongValue', groupLabel: 'strong value', direction: 'up' }, PF1('A multiway donk is "much, much stronger" than a heads-up donk.'));
+claim('smallDryCbet', { title: 'A small c-bet on a dry board is not weak', when: { street: ['flop'], villainAction: ['bet-small'], villainPFR: true, board: { dry: true } }, group: 'strongValue', groupLabel: 'strong value', direction: 'up' }, PF1('A small c-bet on a bone-dry static board is NOT weak.'));
+claim('bigMultiwayCbet', { title: 'A big multiway c-bet is too strong', when: { street: ['flop'], multiway: true, villainPFR: true, villainAction: ['bet-big'] }, group: 'strongValue', groupLabel: 'strong value', direction: 'up' }, PF1('A big multiway c-bet is "too strong," so overfold, even top pair.'));
+claim('whaleStabs', { title: 'The whale over-stabs (his bets keep air)', when: { street: ['flop', 'turn'], villainType: ['whale'], villainAction: ['bet-small', 'bet-big'] }, group: 'air', groupLabel: 'air', min: 0.15 }, V1028('over-stabs the flop and turn, then usually gives up the river'));
+claim('passiveFolderRiver', { title: 'A passive folder gives up his draws on the river', when: { street: ['river'], villainStyle: ['passiveFolder'], villainAction: ['bet-small', 'bet-big'] }, group: 'air', groupLabel: 'air', max: 0.15 }, V0217('Double-barrels draws, then gives them up on the river.'));
+claim('recTelegraph', { title: 'Recs telegraph with size', when: { street: ['flop', 'turn', 'river'], villainType: ['rec', 'passive'], villainAction: ['bet-big'] }, group: 'strongValue', groupLabel: 'strong value', direction: 'up' }, src('playbook-postflop-weakness-and-position.md', '4. Pounce on weakness', '2025-01-07')('recs telegraph with size'));
+
 void PI;
 mkdirSync(new URL('../brain-compiled/', import.meta.url), { recursive: true });
 const doc = {

@@ -3219,6 +3219,193 @@
   "sizing.elasticPoints": {
    "v": 15,
    "outside": "his range counts as elastic when a big bet folds 15+ points more of it than a small bet (default, Joan to review)"
+  },
+  "claims.poolCheckRaise": {
+   "v": {
+    "title": "Flop raises are mostly sets and two pair",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "villainAction": [
+      "raise"
+     ],
+     "villainStyle": [
+      "passiveCaller",
+      "passiveFolder",
+      "aggroFolder"
+     ]
+    },
+    "group": "strongValue",
+    "groupLabel": "strong value",
+    "min": 0.5
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "",
+    "quote": "Flop check-raises are mostly sets and two pair"
+   },
+   "fb": null
+  },
+  "claims.multiwayDonk": {
+   "v": {
+    "title": "A multiway donk is much stronger",
+    "when": {
+     "street": [
+      "flop",
+      "turn"
+     ],
+     "multiway": true,
+     "donk": true
+    },
+    "group": "strongValue",
+    "groupLabel": "strong value",
+    "direction": "up"
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "",
+    "quote": "A multiway donk is \"much, much stronger\" than a heads-up donk."
+   },
+   "fb": null
+  },
+  "claims.smallDryCbet": {
+   "v": {
+    "title": "A small c-bet on a dry board is not weak",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "villainAction": [
+      "bet-small"
+     ],
+     "villainPFR": true,
+     "board": {
+      "dry": true
+     }
+    },
+    "group": "strongValue",
+    "groupLabel": "strong value",
+    "direction": "up"
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "",
+    "quote": "A small c-bet on a bone-dry static board is NOT weak."
+   },
+   "fb": null
+  },
+  "claims.bigMultiwayCbet": {
+   "v": {
+    "title": "A big multiway c-bet is too strong",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "multiway": true,
+     "villainPFR": true,
+     "villainAction": [
+      "bet-big"
+     ]
+    },
+    "group": "strongValue",
+    "groupLabel": "strong value",
+    "direction": "up"
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "",
+    "quote": "A big multiway c-bet is \"too strong,\" so overfold, even top pair."
+   },
+   "fb": null
+  },
+  "claims.whaleStabs": {
+   "v": {
+    "title": "The whale over-stabs (his bets keep air)",
+    "when": {
+     "street": [
+      "flop",
+      "turn"
+     ],
+     "villainType": [
+      "whale"
+     ],
+     "villainAction": [
+      "bet-small",
+      "bet-big"
+     ]
+    },
+    "group": "air",
+    "groupLabel": "air",
+    "min": 0.15
+   },
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "over-stabs the flop and turn, then usually gives up the river"
+   },
+   "fb": null
+  },
+  "claims.passiveFolderRiver": {
+   "v": {
+    "title": "A passive folder gives up his draws on the river",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "villainStyle": [
+      "passiveFolder"
+     ],
+     "villainAction": [
+      "bet-small",
+      "bet-big"
+     ]
+    },
+    "group": "air",
+    "groupLabel": "air",
+    "max": 0.15
+   },
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "Double-barrels draws, then gives them up on the river."
+   },
+   "fb": null
+  },
+  "claims.recTelegraph": {
+   "v": {
+    "title": "Recs telegraph with size",
+    "when": {
+     "street": [
+      "flop",
+      "turn",
+      "river"
+     ],
+     "villainType": [
+      "rec",
+      "passive"
+     ],
+     "villainAction": [
+      "bet-big"
+     ]
+    },
+    "group": "strongValue",
+    "groupLabel": "strong value",
+    "direction": "up"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "2025-01-07",
+    "quote": "recs telegraph with size"
+   },
+   "fb": null
   }
  }
 }
