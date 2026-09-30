@@ -222,7 +222,7 @@ button { font: inherit; color: inherit; border: 0; background: none; cursor: poi
 .hand-row.fold { opacity: .6; }
 .hand-row .cs { display: flex; gap: 2px; }
 .hand-row .who { font-size: 15px; font-weight: 800; line-height: 1.2; min-width: 0; }
-.hand-row .who .ty { display: block; color: var(--blue); font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hand-row .who .ty { display: block; color: var(--blue); font-weight: 700; font-size: 13px; overflow-wrap: anywhere; }
 .hand-row .who .hd { display: block; color: var(--muted); font-weight: 700; font-size: 14px; }
 
 .grade { background: var(--tint); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px; margin-bottom: 8px; }
