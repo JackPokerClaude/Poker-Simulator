@@ -159,3 +159,22 @@ test('opponent charts count as exact only for the type they were drawn for', () 
   if (passive) { assert.equal(passive.chart, 'BB vs PASSIVE OPEN'); assert.equal(passive.exact, true); }
   void handCode; void legalActions;
 });
+
+test('the reg/pro opens exactly HHP\'s own RFI chart in the seats that have one, and sits only at 1/3 and 2/5', async () => {
+  const { TABLE_SETTINGS } = await import('../config/table-settings.js');
+  const { getCharts } = await import('../js/villains/model.js');
+  assert.ok(!TABLE_SETTINGS.tableMix['1/2'].pro && TABLE_SETTINGS.tableMix['1/3'].pro > 0 && TABLE_SETTINGS.tableMix['2/5'].pro > 0);
+  const pre = model.types.pro.pre;
+  const types = Object.keys(model.types);
+  for (const [pos, chart] of Object.entries(pre.openCharts)) {
+    const seat = ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'BTN', 'SB', 'BB'].indexOf(pos);
+    const s = mkState(types.map(() => 'pro'));
+    for (let k = 0; k < seat; k++) applyAction(s, { type: 'fold' });
+    const rows = getCharts().charts[chart].hands;
+    for (const code of ALL_CODES) {
+      const opts = villainPolicy(s, seat, cardsFor(code));
+      const raise = opts.filter((o) => o.label.startsWith('raise')).reduce((a, o) => a + o.p, 0);
+      assert.ok(Math.abs(raise - rows[code][0] / 100) < 1e-9, `${pos} ${code}: ${raise} vs chart ${rows[code][0]}%`);
+    }
+  }
+});

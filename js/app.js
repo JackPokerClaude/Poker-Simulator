@@ -4,7 +4,7 @@ import { RANKS, SUITS, SUIT_SYMBOLS, rankOf, suitOf, cardsPretty } from './engin
 import { describeAction, buildRecord, winnerLine, isInvolved, statusOf } from './engine/coach.js';
 import { quickSizes, clampTo, sliderToAmount, amountToSlider, potPercent, SLIDER_MAX } from './ui/sizing.js';
 import { layoutFor, chipCenter } from './ui/layout.js';
-import { buildModel, setModel, villainLabel, getModel } from './villains/model.js';
+import { buildModel, setModel, setCharts, villainLabel, getModel } from './villains/model.js';
 import { loadHistory, addHand, updateHand, clearHistory, computeStats, exportCSV, importCSV } from './storage/history.js';
 import { loadBrain, browserFetchText, browserLastGood, missingCharts } from './brain/loader.js';
 import { CHARTS_USED } from './engine/scenario.js';
@@ -843,6 +843,7 @@ async function boot() {
     Object.assign(brain.charts.charts, model.charts);
     brain.missing = missingCharts(brain, CHARTS_USED);
     ranges = brain.charts;
+    setCharts(ranges);
   } catch (e) {
     $('actionbar').innerHTML = `<div class="status">Could not load the brain. ${esc(String(e.message || e).replace(/\.*$/, ''))}.</div>`;
     return;

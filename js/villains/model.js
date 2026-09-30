@@ -54,6 +54,10 @@ export function buildModel(compiled, texts) {
 
 let current = null;
 export const setModel = (m) => { current = m; };
+// The loaded preflop charts (CSV + compiled), for villains who open from HHP's own charts.
+let charts = null;
+export const setCharts = (c) => { charts = c; };
+export const getCharts = () => charts;
 export const getModel = () => {
   if (!current) throw new Error('Villain model not loaded.');
   return current;

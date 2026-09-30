@@ -25,8 +25,8 @@ const BR9 = src('playbook-postflop-bluffs-and-rivers.md', '9. Adjust by player t
 const PI = src('project-instructions.md', 'HHP player types', '');
 
 // ---------------------------------------------------------------- preflop, per type
-const TYPES = ['passive', 'tight', 'aggressive', 'thinking', 'whale', 'rec'];
-const LABELS = { passive: 'Passive', tight: 'Tight', aggressive: 'Aggressive', thinking: 'Thinking player', whale: 'Whale', rec: 'Loose-passive rec' };
+const TYPES = ['passive', 'tight', 'aggressive', 'thinking', 'whale', 'rec', 'pro'];
+const LABELS = { passive: 'Passive', tight: 'Tight', aggressive: 'Aggressive', thinking: 'Thinking player', whale: 'Whale', rec: 'Loose-passive rec', pro: 'Reg / pro' };
 for (const t of TYPES) out(`types.${t}.label`, LABELS[t], 'display name');
 
 // Passive: opens 7-8%, 3-bets JJ+/AK.
@@ -50,6 +50,27 @@ out('types.tight.pre.limpPct', 4, 'no HHP number');
 out('types.tight.pre.callOpenPct', 14, 'no HHP number');
 out('types.tight.pre.continueVs3betPct', 8, 'no HHP number');
 out('types.tight.pre.limpCallPct', 60, 'no HHP number');
+
+// Reg / pro (1/3 and 2/5 tables only, config/table-settings.js). HHP has hero charts vs a pro's
+// open (EP VS PRO OPEN, BTN VS CO PRO OPEN, both 2024 and ACTIVE) but no chart of the pro's own
+// range, so he opens like HHP's own RFI charts where one exists for his seat.
+const PRE5R = src('playbook-preflop.md', '5. Facing an open (not from the BB)', '2026-01-27');
+const VREADS = src('playbook-villains-oldest-videos.md', 'Reads from the batch 7 videos (Jul-Sep 2025, merged 2026-09-29)', '2025-09-16');
+out('types.pro.pre.openCharts', { UTG: 'RFI - EP - 200BB', 'UTG+1': 'RFI - EP - 200BB', LJ: 'LJ OPEN - 200BB (2025-02-18 HHP)', HJ: 'RFI - HJ - 200BB', BTN: 'RFI - BTN - 200BB' }, "a pro opens like HHP's own RFI charts (the app's assumption; default, Joan to review)");
+out('types.pro.pre.openPct', 22, 'CO and SB have no HHP chart: his top 22% times the seat factor (CO about 30%, between the HJ and BTN charts); default, Joan to review');
+out('types.pro.pre.threeBetPct', 7, 'no HHP number for a pro\'s own 3-bet range');
+out('types.pro.pre.threeBetLight', ['A5s', 'A4s', 'KJs', 'QJs'], 'no HHP number; polar bottom like the hands HHP names for 3-betting a pro');
+out('types.pro.pre.bluff3betPct', 3, 'no HHP number');
+out('types.pro.pre.callOpenPct', 10, 'no HHP number');
+hhp('types.pro.pre.coldCallVs3bet', 0.1, PRE5R('The regs play 4-bet-or-fold and rarely cold-call'), { fb: 0.4, interp: '"rarely cold-call": he cold-calls a 3-bet a tenth as often as he would with a hand he opened (default, Joan to review)' });
+out('types.pro.pre.continueVs3betPct', 9, 'no HHP number');
+out('types.pro.pre.fourBetPct', 3, 'no HHP number');
+out('types.pro.pre.fourBetBluffs', ['A5s', 'A4s'], 'no HHP number');
+out('types.pro.pre.callVs4betPct', 3, 'no HHP number');
+out('types.pro.pre.fiveBet', ['KK+'], 'no HHP number');
+out('types.pro.pre.limpPct', 0, 'no HHP number (plays raise or fold)');
+out('types.pro.pre.limpCallPct', 50, 'no HHP number');
+hhp('types.pro.styleMix', { aggroFolder: 55, aggroCaller: 45 }, VREADS('More aggressive, thin value bets, empties the clip with bluffs.'), { fb: { aggroFolder: 50, aggroCaller: 50 }, interp: '"more aggressive": always one of the aggressive styles; the 55/45 split is a default, Joan to review' });
 
 // Aggressive: opens about 30%, 3-bets a lot, light 3-bets that won't fold to a 4-bet.
 hhp('types.aggressive.pre.openPct', 30, PRE12('Opens about 30%, 3-bets a lot'), { fb: 30 });
@@ -276,6 +297,9 @@ read('tight', 2, 'Very neat chip stacks', V0217('very neat chip stacks'));
 read('rec', 0, 'Limps pairs and suited hands, raises only premiums', PRE14('limps pairs, suited broadways and suited Ax, and raises only premiums'));
 read('rec', 1, 'Limps a lot from early position', PRE14('Habitual EP limper: limps suited broadways and small pairs.'));
 read('rec', 2, 'Here to have a good time', V1028('Donker ("here to have a good time")'));
+read('pro', 0, 'Topped up to the max', VREADS('always tops up to the max'));
+read('pro', 1, 'Pulled $1k chips out of a pocket', VREADS('pulls big chips ($1k, $5k) out of a pocket'));
+read('pro', 2, 'Bought in with all $100 chips', VREADS('buys in with all $100 chips'));
 read('thinking', 0, 'Has 3-bet a lot, folded to a 4-bet once', PRE14('can three bet fold occasionally'));
 read('thinking', 1, 'Plays lots of pots', V0217('plays lots of pots'));
 
@@ -551,6 +575,12 @@ conflict('regTripleBarrel', { title: "A reg's triple barrel in a wide config: ca
 
 conflict('flopXXTurnLead', { title: 'Out of position, flop checked through, strong hand: lead the turn or check-raise?', find: 'LEADS the value hand but check-raises the bluff', when: { street: ['turn'], facing: false, heroIP: false, flopCheckedThrough: true, heroBucket: ['strong'] } },
   src('playbook-postflop-weakness-and-position.md', '5. Out of position, as the preflop caller [08-18]', '')('extends the same table: [2025-01-28 HHP] LEADS the value hand but check-raises the bluff.'));
+
+// Item 11: preflop conflicts that the pro type can reach.
+conflict('btnVsProCo', { title: "BTN vs a pro's CO open, fish behind: 3-bet QQ/JJ/AQs/AK for value, or flat the middle?", find: "BTN vs a pro's CO open, with fish behind", when: { street: ['preflop'], spot: ['VS_OPEN'], heroPos: ['BTN'], villainPos: ['CO'], villainType: ['pro'], fishBehind: true } },
+  src('playbook-preflop.md', '5. Facing an open (not from the BB)', '')("BTN vs a pro's CO open, with fish behind: [2025-03-04 HHP] 3-bets QQ, JJ, AQs (and AKo) for value"));
+conflict('open3JjAqsVsPro', { title: "JJ and AQs vs a pro's 3-bet, in position", find: 'JJ and AQs vs a PRO', open: 'open-3', when: { street: ['preflop'], spot: ['VS_3BET'], villainType: ['pro'], heroIP: true, heroCodes: ['JJ', 'AQs'] } },
+  src('playbook-preflop.md', '8. Facing a 3-bet', '')("JJ and AQs vs a PRO's 3-bet, in position (Joan hasn't ruled; the CSV is unchanged)"));
 
 // ---------------------------------------------------------------- preflop questions (feedback step 2)
 hhp('questions.six', ["What's the villain's range?", "What's our edge on him?", "What's the effective stack?", 'What size did he use?', "What's the rake?", 'How many players are left to act?'],

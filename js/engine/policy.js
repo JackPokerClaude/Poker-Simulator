@@ -8,7 +8,7 @@
 import { handCode, HAND_PCT, expandRange, pick } from './cards.js';
 import { legalActions, potTotal, activePlayers } from './game.js';
 import { boardTable, features, aiClass } from './strength.js';
-import { getModel } from '../villains/model.js';
+import { getModel, getCharts } from '../villains/model.js';
 import { TABLE_SETTINGS } from '../../config/table-settings.js';
 
 const clamp = (x, lo, hi) => Math.max(lo, Math.min(hi, x));
@@ -94,6 +94,10 @@ export function preflopPolicy(s, i, hole) {
     const openEff = cfg.openPct * posF * (limpers ? (cfg.isoFactor ?? 1) : 1);
     const vpip = whale ? (cfg.vpipPct || 0) * Math.min(1.15, posF) : 0;
     let pRaise = inTop(openEff, code) ? 1 : 0;
+    // A pro opens from HHP's own RFI chart for his seat, when there is one.
+    const chartName = cfg.openCharts?.[p.pos];
+    const chartRow = chartName && !limpers ? getCharts()?.charts?.[chartName]?.hands?.[code] : null;
+    if (chartRow) pRaise = chartRow[0] / 100;
     // The whale isos about 80% of the time over limpers, with anything he plays.
     if (whale && limpers && inTop(vpip, code)) pRaise = cfg.isoRaiseFreq ?? pRaise;
     if (!la.canRaise) pRaise = 0;
@@ -162,7 +166,7 @@ export function preflopPolicy(s, i, hole) {
     if (!p4 && involved && inList(cfg.fourBetBluffs, code)) p4 = 0.35;
     if (!la.canRaise) p4 = 0;
     if (p4 > 0) opts.push({ label: 'raise', p: p4, act: raiseAct(s, la, s.currentBet * (inPosVsRaiser ? 2.3 : 2.8)) });
-    const contPct = ((cfg.continueVs3betPct || 0) / pf) * (involved ? 1 : 0.4) * loose;
+    const contPct = ((cfg.continueVs3betPct || 0) / pf) * (involved ? 1 : (cfg.coldCallVs3bet ?? 0.4)) * loose;
     let pc = inTop(contPct, code) && la.toCall < 0.45 * p.stack ? 1 : 0;
     if (!involved && inList(cfg.coldCall3bet, code)) pc = 1;
     opts.push({ label: 'call', p: (1 - p4) * pc, act: { type: 'call' } });

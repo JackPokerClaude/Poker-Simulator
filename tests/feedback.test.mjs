@@ -197,3 +197,33 @@ test('when matching brain rules point at different lines, none decides: the math
     assert.ok(new Set(v.split.map((x) => x.line)).size > 1);
   }
 });
+
+test('facing a pro\'s open: the 2024 PRO charts, and BTN vs a CO pro with fish behind stays ungraded (⚖)', async () => {
+  const { classifySpot } = await import('../js/engine/scenario.js');
+  const { createGame, applyAction } = await import('../js/engine/game.js');
+  const { STAKES } = await import('../js/engine/dealer.js').catch(() => ({}));
+  const mk = (types, heroIdx) => {
+    const players = types.map((type, i) => ({ isHero: i === heroIdx, type, style: 'aggroFolder', stack: 1000, cards: [2 * i, 2 * i + 1], meta: {}, reads: [] }));
+    const s = createGame({ stakes: { sb: 2, bb: 5, label: '2/5' }, players, runout: [40, 41, 42, 43, 44] });
+    s.heroIdx = heroIdx;
+    return s;
+  };
+  // UTG pro opens, UTG+1 hero: EP VS PRO OPEN, exact.
+  let s = mk(['pro', null, 'rec', 'rec', 'rec', 'rec', 'rec', 'rec'], 1);
+  applyAction(s, { type: 'raise', to: 20 });
+  let sp = classifySpot(s, 1);
+  assert.equal(sp.chart, 'EP VS PRO OPEN'); assert.equal(sp.exact, true);
+  // CO pro opens, BTN hero: BTN VS CO PRO OPEN, exact.
+  s = mk(['rec', 'rec', 'rec', 'rec', 'pro', null, 'rec', 'rec'], 5);
+  for (let k = 0; k < 4; k++) applyAction(s, { type: 'fold' });
+  applyAction(s, { type: 'raise', to: 20 });
+  sp = classifySpot(s, 5);
+  assert.equal(sp.chart, 'BTN VS CO PRO OPEN'); assert.equal(sp.exact, true);
+  // The same spot as the matcher sees it: the logged ⚖ CONFLICT applies (fish in the blinds).
+  const { spotFeatures } = await import('../js/feedback/spot.js');
+  const { matchBrain } = await import('../js/feedback/match.js');
+  const f = spotFeatures(s, 5, 4, { spot: sp.kind, heroCodes: 'QQ' });
+  assert.equal(f.fishBehind, true);
+  assert.ok(matchBrain(model, f, brain).conflicts.some((c) => c.key === 'conflicts.btnVsProCo'));
+  void STAKES;
+});

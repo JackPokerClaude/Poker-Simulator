@@ -29,6 +29,7 @@ import { matchBrain, whenMatches } from './match.js';
 import { sourceTag, val } from '../brain/compiled.js';
 import { villainLabel, typeLabel, styleLabel } from '../villains/model.js';
 import { isInvolved } from '../engine/coach.js';
+import { classifySpot } from '../engine/scenario.js';
 
 const pct = (x) => `${Math.round(x * 100)}%`;
 const usd = (x) => {
@@ -287,7 +288,7 @@ function preflopLeaks(d, tags) {
 
 // ---------------------------------------------------------------- paragraphs
 function typeQuote(model, type) {
-  const key = { passive: 'types.passive.pre.openPct', tight: 'types.tight.pre.openPct', aggressive: 'types.aggressive.pre.openPct', thinking: 'types.thinking.pre.openPct', whale: 'types.whale.pre.vpipPct', rec: 'types.rec.pre.openPct' }[type];
+  const key = { passive: 'types.passive.pre.openPct', tight: 'types.tight.pre.openPct', aggressive: 'types.aggressive.pre.openPct', thinking: 'types.thinking.pre.openPct', whale: 'types.whale.pre.vpipPct', rec: 'types.rec.pre.openPct', pro: 'types.pro.styleMix' }[type];
   const rec = key && model.rec(key);
   return rec?.tag === 'HHP' ? { quote: rec.src.quote, tag: sourceTag(rec) } : null;
 }
@@ -297,7 +298,7 @@ const ACT_WORD = { raise: 'raised', 'raise-big': 'opened big', call: 'called', l
 
 // Every strategy number behind something he does, each with its own source.
 const NUM_LABEL = {
-  'pre.openPct': 'opens (top % of hands)', 'pre.threeBetPct': '3-bets (top %)', 'pre.threeBet': '3-bet hands', 'pre.threeBetLight': 'light 3-bets',
+  'pre.openPct': 'opens (top % of hands)', 'pre.openCharts': 'opens from HHP chart', 'pre.coldCallVs3bet': 'cold-calls a 3-bet (share of normal)', 'pre.threeBetPct': '3-bets (top %)', 'pre.threeBet': '3-bet hands', 'pre.threeBetLight': 'light 3-bets',
   'pre.callOpenPct': 'flats an open (top %)', 'pre.bbDefendPct': 'defends the BB (%)', 'pre.limpList': 'limps', 'pre.limpPct': 'extra limps (top %)',
   'pre.limpCallPct': 'calls a raise after limping', 'pre.continueVs3betPct': 'calls a 3-bet (top %)', 'pre.coldCall3bet': 'cold-calls a 3-bet with',
   'pre.fourBet': '4-bet hands', 'pre.fourBetPct': '4-bets (top %)', 'pre.fourBetPartial': 'partial 4-bets', 'pre.fiveBet': '5-bet hands',
@@ -315,7 +316,7 @@ const NUM_LABEL = {
 function fmtNum(v, key) {
   if (Array.isArray(v)) return v.join(', ');
   if (typeof v === 'boolean') return v ? 'yes' : 'no';
-  if (v && typeof v === 'object') return Object.entries(v).map(([k, x]) => `${k} ${Math.round(x * 100)}%`).join(', ');
+  if (v && typeof v === 'object') return Object.entries(v).map(([k, x]) => (typeof x === 'number' ? `${k} ${x <= 1 ? Math.round(x * 100) : x}%` : `${k}: ${x}`)).join(', ');
   if (typeof v !== 'number') return String(v);
   if (/Pct$|openPct|vpipPct/.test(key)) return `${v}%`;
   if (/Mult$/.test(key)) return `${v}×`;
@@ -345,6 +346,12 @@ function reasonFor(model, h, p, a) {
         keys = p.type === 'whale' ? ['types.whale.pre.vpipPct', 'types.whale.pre.isoRaiseFreq'] : [`types.${p.type}.pre.openPct`];
         text = `HHP base: he opens about ${pre.openPct}% of hands`;
         widen = posF !== 1 ? { text: `Seat widening: × ${posF} in the ${p.pos} → about ${Math.round(pre.openPct * posF * 10) / 10}% here`, tag: '[OUTSIDE SOURCE] config/table-settings.js' } : null;
+        const chart = pre.openCharts?.[p.pos];
+        if (chart) {
+          keys = [`types.${p.type}.pre.openCharts`];
+          text = `He opens HHP's own ${chart} chart for his seat (HHP has no chart of a pro's range)`;
+          widen = null;
+        } else if (pre.openCharts) keys = [`types.${p.type}.pre.openPct`, `types.${p.type}.pre.openCharts`];
         if (a.label === 'raise-big') { keys = ['pool.bigOpenPremiums', 'pool.bigOpenMult']; text = `Premiums (${(model.pool.bigOpenPremiums || []).join(', ')}) get the big open ${fmtP(model.pool.bigOpenPremiumFreq)} of the time, other hands ${fmtP(model.pool.bigOpenOtherFreq)}`; }
       } else if (lvl === 2) {
         // The limp-reraise quote only fits when he limped first.
@@ -677,9 +684,21 @@ export function buildFeedback(h, { model, brain, history = [] }) {
     const lp = firstLimper ? (['UTG', 'UTG+1', 'LJ'].includes(st.players[firstLimper.i].pos) ? 'EP' : ['HJ', 'CO', 'BTN'].includes(st.players[firstLimper.i].pos) ? 'late' : null) : null;
     const d0 = h.heroDecisions?.[0];
     const heroAction = d0 ? (d0.action === 'call' && (h.spot.kind === 'RFI' || h.spot.kind === 'ISO') ? 'limp' : d0.action) : null;
-    const feat = spotFeatures(st, h.heroIdx, pv, { spot: h.spot.kind, heroAction, heroCodes: h.heroCode, limperPos: lp });
-    const lastPre = preDec[preDec.length - 1].state;
-    const m = matchBrain(model, { ...feat, facingLevel: lastPre.raiseLevel }, brain);
+    // Match every preflop decision you made (a later one can be facing a 3-bet or 4-bet), and
+    // show the union.
+    const m = { rules: [], conflicts: [] };
+    const seen = new Set();
+    preDec.forEach((pd, k) => {
+      const sk = pd.state;
+      const kind = k === 0 ? h.spot.kind : (classifySpot(sk, h.heroIdx)?.kind || h.spot.kind);
+      const e = h.log[pd.n];
+      const act = k === 0 ? heroAction : e?.type || null;
+      const vi = villainAt(h, sk) ?? pv;
+      const f = spotFeatures(sk, h.heroIdx, vi, { spot: kind, heroAction: act, heroCodes: h.heroCode, limperPos: lp });
+      const mk = matchBrain(model, { ...f, facingLevel: sk.raiseLevel }, brain);
+      for (const x of mk.rules) if (!seen.has(x.key)) { seen.add(x.key); m.rules.push(x); }
+      for (const x of mk.conflicts) if (!seen.has(x.key)) { seen.add(x.key); m.conflicts.push(x); }
+    });
     pre.also = m;
     pre.conflicted = m.conflicts.length > 0;
   }

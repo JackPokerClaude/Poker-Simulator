@@ -3,11 +3,12 @@
 // The type definitions themselves (how each type plays) come from the brain via
 // brain-compiled/behavior.json.
 export const TABLE_SETTINGS = {
-  // How often each type sits at the table, per stake (weights, any scale).
+  // How often each type sits at the table, per stake (weights, any scale). The reg/pro only sits
+  // at 1/3 and 2/5.
   tableMix: {
     '1/2': { rec: 30, passive: 20, tight: 10, whale: 10, aggressive: 18, thinking: 12 },
-    '1/3': { rec: 27, passive: 20, tight: 12, whale: 9, aggressive: 18, thinking: 14 },
-    '2/5': { rec: 20, passive: 20, tight: 14, whale: 8, aggressive: 20, thinking: 18 },
+    '1/3': { rec: 27, passive: 20, tight: 12, whale: 9, aggressive: 18, thinking: 14, pro: 6 },
+    '2/5': { rec: 20, passive: 20, tight: 14, whale: 8, aggressive: 20, thinking: 18, pro: 12 },
   },
   // Normal live open sizes in dollars (one is picked at random). Big opens (the premium tell)
   // are these times the brain's big-open multiplier. HHP gives 20-25 as a normal 2/5 rec open.

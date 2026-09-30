@@ -26,6 +26,8 @@ const FITS = {
   'IP vs AGGRO 3BET (WHALE)': ['whale'],
   'CONTINUING vs PASSIVE 4B': ['passive', 'rec'],
   'CONTINUING vs AGGRO 4B': ['aggressive', 'thinking', 'whale'],
+  'EP VS PRO OPEN': ['pro'],
+  'BTN VS CO PRO OPEN': ['pro'],
 };
 const fits = (chart, type) => !FITS[chart] || FITS[chart].includes(type);
 
@@ -46,6 +48,8 @@ export const SPOT_LABELS = {
 
 // Every chart name this file asks for, so Brain status can flag one the CSV renamed or dropped.
 export const CHARTS_USED = [
+  'EP VS PRO OPEN',
+  'BTN VS CO PRO OPEN',
   'BB vs AGGRO OPEN',
   'BB vs PASSIVE OPEN',
   'BTN ISO vs CO LIMP',
@@ -126,6 +130,12 @@ export function classifySpot(s, heroIdx) {
       }
       const f = fam(P(opener).type);
       const vt = P(opener).type;
+      // A pro opens: the 2024 PRO charts (ACTIVE, no 2026 equivalent). Exact only for the seats
+      // they were drawn for (EP vs an EP pro, BTN vs a CO pro).
+      if (vt === 'pro' && hp !== 'BB' && hp !== 'SB') {
+        if (hp === 'CO' || hp === 'BTN') return vspot('VS_OPEN', 'BTN VS CO PRO OPEN', hp === 'BTN' && P(opener).pos === 'CO', vt, extra);
+        return vspot('VS_OPEN', 'EP VS PRO OPEN', hp === 'EP' && op === 'EP', vt, extra);
+      }
       if (hp === 'BB' || hp === 'SB') {
         return vspot('VS_OPEN', f === 'passive' ? 'BB vs PASSIVE OPEN' : 'BB vs AGGRO OPEN', hp === 'BB', vt, extra);
       }

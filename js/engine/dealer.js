@@ -124,7 +124,7 @@ export function createHand({ drill = 'random', ranges }) {
     // 3-bet drill, hero opening: plant a 3-bettor behind (50% of 3-bet drill hands).
     if (drill === 'threebet' && bucket === 'B') {
       const behind = s.players.filter((p) => p.i > heroIdx && !p.folded);
-      const weights = Object.fromEntries(behind.map((p) => [p.i, p.type === 'aggressive' || p.type === 'thinking' ? 3 : 1]));
+      const weights = Object.fromEntries(behind.map((p) => [p.i, p.type === 'aggressive' || p.type === 'thinking' || p.type === 'pro' ? 3 : 1]));
       const v = s.players[Number(weightedPick(weights))];
       const got = sample3betHand(v.type, spare);
       if (!got) continue;

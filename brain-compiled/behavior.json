@@ -27,6 +27,10 @@
    "v": "Loose-passive rec",
    "outside": "display name"
   },
+  "types.pro.label": {
+   "v": "Reg / pro",
+   "outside": "display name"
+  },
   "types.passive.pre.openPct": {
    "v": 7.5,
    "src": {
@@ -151,6 +155,102 @@
   "types.tight.pre.limpCallPct": {
    "v": 60,
    "outside": "no HHP number"
+  },
+  "types.pro.pre.openCharts": {
+   "v": {
+    "UTG": "RFI - EP - 200BB",
+    "UTG+1": "RFI - EP - 200BB",
+    "LJ": "LJ OPEN - 200BB (2025-02-18 HHP)",
+    "HJ": "RFI - HJ - 200BB",
+    "BTN": "RFI - BTN - 200BB"
+   },
+   "outside": "a pro opens like HHP's own RFI charts (the app's assumption; default, Joan to review)"
+  },
+  "types.pro.pre.openPct": {
+   "v": 22,
+   "outside": "CO and SB have no HHP chart: his top 22% times the seat factor (CO about 30%, between the HJ and BTN charts); default, Joan to review"
+  },
+  "types.pro.pre.threeBetPct": {
+   "v": 7,
+   "outside": "no HHP number for a pro's own 3-bet range"
+  },
+  "types.pro.pre.threeBetLight": {
+   "v": [
+    "A5s",
+    "A4s",
+    "KJs",
+    "QJs"
+   ],
+   "outside": "no HHP number; polar bottom like the hands HHP names for 3-betting a pro"
+  },
+  "types.pro.pre.bluff3betPct": {
+   "v": 3,
+   "outside": "no HHP number"
+  },
+  "types.pro.pre.callOpenPct": {
+   "v": 10,
+   "outside": "no HHP number"
+  },
+  "types.pro.pre.coldCallVs3bet": {
+   "v": 0.1,
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "5. Facing an open (not from the BB)",
+    "date": "2026-01-27",
+    "quote": "The regs play 4-bet-or-fold and rarely cold-call"
+   },
+   "fb": 0.4,
+   "interp": "\"rarely cold-call\": he cold-calls a 3-bet a tenth as often as he would with a hand he opened (default, Joan to review)"
+  },
+  "types.pro.pre.continueVs3betPct": {
+   "v": 9,
+   "outside": "no HHP number"
+  },
+  "types.pro.pre.fourBetPct": {
+   "v": 3,
+   "outside": "no HHP number"
+  },
+  "types.pro.pre.fourBetBluffs": {
+   "v": [
+    "A5s",
+    "A4s"
+   ],
+   "outside": "no HHP number"
+  },
+  "types.pro.pre.callVs4betPct": {
+   "v": 3,
+   "outside": "no HHP number"
+  },
+  "types.pro.pre.fiveBet": {
+   "v": [
+    "KK+"
+   ],
+   "outside": "no HHP number"
+  },
+  "types.pro.pre.limpPct": {
+   "v": 0,
+   "outside": "no HHP number (plays raise or fold)"
+  },
+  "types.pro.pre.limpCallPct": {
+   "v": 50,
+   "outside": "no HHP number"
+  },
+  "types.pro.styleMix": {
+   "v": {
+    "aggroFolder": 55,
+    "aggroCaller": 45
+   },
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "Reads from the batch 7 videos (Jul-Sep 2025, merged 2026-09-29)",
+    "date": "2025-09-16",
+    "quote": "More aggressive, thin value bets, empties the clip with bluffs."
+   },
+   "fb": {
+    "aggroFolder": 50,
+    "aggroCaller": 50
+   },
+   "interp": "\"more aggressive\": always one of the aggressive styles; the 55/45 split is a default, Joan to review"
   },
   "types.aggressive.pre.openPct": {
    "v": 30,
@@ -1926,6 +2026,36 @@
     "section": "The 9 live player types",
     "date": "2025-10-28",
     "quote": "Donker (\"here to have a good time\")"
+   },
+   "fb": null
+  },
+  "reads.pro.0": {
+   "v": "Topped up to the max",
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "Reads from the batch 7 videos (Jul-Sep 2025, merged 2026-09-29)",
+    "date": "2025-09-16",
+    "quote": "always tops up to the max"
+   },
+   "fb": null
+  },
+  "reads.pro.1": {
+   "v": "Pulled $1k chips out of a pocket",
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "Reads from the batch 7 videos (Jul-Sep 2025, merged 2026-09-29)",
+    "date": "2025-09-16",
+    "quote": "pulls big chips ($1k, $5k) out of a pocket"
+   },
+   "fb": null
+  },
+  "reads.pro.2": {
+   "v": "Bought in with all $100 chips",
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "Reads from the batch 7 videos (Jul-Sep 2025, merged 2026-09-29)",
+    "date": "2025-09-16",
+    "quote": "buys in with all $100 chips"
    },
    "fb": null
   },
@@ -7755,6 +7885,67 @@
     "section": "5. Out of position, as the preflop caller [08-18]",
     "date": "",
     "quote": "extends the same table: [2025-01-28 HHP] LEADS the value hand but check-raises the bluff."
+   },
+   "fb": null
+  },
+  "conflicts.btnVsProCo": {
+   "v": {
+    "title": "BTN vs a pro's CO open, fish behind: 3-bet QQ/JJ/AQs/AK for value, or flat the middle?",
+    "find": "BTN vs a pro's CO open, with fish behind",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "VS_OPEN"
+     ],
+     "heroPos": [
+      "BTN"
+     ],
+     "villainPos": [
+      "CO"
+     ],
+     "villainType": [
+      "pro"
+     ],
+     "fishBehind": true
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "5. Facing an open (not from the BB)",
+    "date": "",
+    "quote": "BTN vs a pro's CO open, with fish behind: [2025-03-04 HHP] 3-bets QQ, JJ, AQs (and AKo) for value"
+   },
+   "fb": null
+  },
+  "conflicts.open3JjAqsVsPro": {
+   "v": {
+    "title": "JJ and AQs vs a pro's 3-bet, in position",
+    "find": "JJ and AQs vs a PRO",
+    "open": "open-3",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "VS_3BET"
+     ],
+     "villainType": [
+      "pro"
+     ],
+     "heroIP": true,
+     "heroCodes": [
+      "JJ",
+      "AQs"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "8. Facing a 3-bet",
+    "date": "",
+    "quote": "JJ and AQs vs a PRO's 3-bet, in position (Joan hasn't ruled; the CSV is unchanged)"
    },
    "fb": null
   },

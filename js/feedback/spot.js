@@ -71,6 +71,9 @@ export function spotFeatures(s, heroIdx, vi, extra = {}) {
   const flopCheckedThrough = (street === 'turn' || street === 'river') && !s.log.some((e) => e.street === 'flop' && (e.type === 'bet' || e.type === 'raise'));
   const aggressed = (st) => vi != null && s.log.some((e) => e.street === st && e.i === vi && (e.type === 'bet' || e.type === 'raise'));
   const villainDoubleBarreled = street === 'river' && aggressed('flop') && aggressed('turn');
+  // Preflop: a recreational player (rec, passive, whale) still to act behind you.
+  const fishBehind = s.players.some((p) => p.i > heroIdx && !p.folded && !p.isHero && ['rec', 'passive', 'whale'].includes(p.type)
+    && !s.log.some((e) => e.street === 'preflop' && e.i === p.i && e.type !== 'post'));
   const opener = s.log.find((e) => e.street === 'preflop' && e.type === 'raise');
   const threeBettor = s.log.filter((e) => e.street === 'preflop' && e.type === 'raise')[1];
   return {
@@ -100,6 +103,7 @@ export function spotFeatures(s, heroIdx, vi, extra = {}) {
     turnCheckedThrough,
     flopCheckedThrough,
     villainDoubleBarreled,
+    fishBehind,
     pot,
     ...extra,
   };
