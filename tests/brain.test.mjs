@@ -1,0 +1,151 @@
+// Brain loader tests. The first test runs on the real brain/ files on every deploy, so a
+// broken upload (missing file, unreadable CSV) stops the deploy and the live site keeps the
+// last good brain. It only checks things that must hold; it never pins counts, so normal
+// playbook updates always pass.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync, existsSync } from 'node:fs';
+import { parseCharts, parsePlaybook, parseInstructions, dateTags } from '../js/brain/parse.js';
+import { loadBrain, memoryLastGood, missingCharts } from '../js/brain/loader.js';
+import { CHARTS_USED } from '../js/engine/scenario.js';
+import { gradeDecision } from '../js/grading/grade.js';
+import { HAND_ORDER } from '../js/engine/cards.js';
+
+const root = new URL('../', import.meta.url);
+const manifest = JSON.parse(readFileSync(new URL('config/brain-files.json', root), 'utf8'));
+const readBrain = async (path) => {
+  const u = new URL(path, root);
+  if (!existsSync(u)) throw new Error('HTTP 404');
+  return readFileSync(u, 'utf8');
+};
+
+test('the real brain loads: every listed file present and readable', async () => {
+  const brain = await loadBrain({ manifest, fetchText: readBrain, lastGood: memoryLastGood() });
+  for (const f of brain.files) assert.equal(f.status, 'ok', `${f.name}: ${f.error}`);
+  for (const c of Object.values(brain.charts.charts)) {
+    assert.notEqual(c.status, 'SUPERSEDED', `${c.name} is superseded but active`);
+    assert.equal(Object.keys(c.hands).length, 169);
+  }
+  // Soft checks: reported, never fatal, so an edit on your side can't block a deploy.
+  const missing = missingCharts(brain, CHARTS_USED);
+  if (missing.length) console.log(`# WARNING: charts the app asks for but the CSV lacks: ${missing.join(', ')}`);
+  if (!brain.leakTags.length) console.log('# WARNING: no leak tags found in project-instructions.md');
+  for (const w of brain.warnings) console.log(`# WARNING: ${w}`);
+});
+
+test('date tags: short tags are 2026, full-year tags as written, undated kept', () => {
+  assert.deepEqual(dateTags('a [05-12] b [08-25, 09-15] c [2025-07-15 HHP] d [undated HHP] e [5:38] f [BTN VS CO PRO OPEN]'),
+    ['2026-05-12', '2026-08-25', '2026-09-15', '2025-07-15', 'undated']);
+});
+
+const CSV_HEAD = 'chart,hero_position,scenario,vs,villain_type,hand,aggressive_action,aggressive_pct,call_action,call_pct,other_action,other_pct,fold_pct,source_video,video_date,timestamp,notes,situational';
+const csvChart = (name, note = '', open = new Set(['AA'])) => HAND_ORDER.map((h) =>
+  `${name},EP,open,,,${h},raise,${open.has(h) ? 100 : 0},,0,,0,${open.has(h) ? 0 : 100},Vid,2026-01-06,0:00,${note},no`).join('\n');
+
+test('charts: SUPERSEDED dropped (kept on record), ACTIVE kept, bad files rejected', () => {
+  const text = [CSV_HEAD, csvChart('NEW'), csvChart('OLD', "SUPERSEDED by 2026 'NEW'"), csvChart('KEEP', 'ACTIVE: no 2026 equivalent')].join('\n');
+  const r = parseCharts(text);
+  assert.deepEqual(Object.keys(r.charts).sort(), ['KEEP', 'NEW']);
+  assert.deepEqual(Object.keys(r.superseded), ['OLD']);
+  assert.equal(r.charts.KEEP.status, 'ACTIVE');
+  assert.equal(r.charts.NEW.hands.AA[0], 100);
+  assert.throws(() => parseCharts('chart,hand\nX,AA'), /missing columns/);
+  assert.throws(() => parseCharts([CSV_HEAD, csvChart('NEW').split('\n').slice(0, 100).join('\n')].join('\n')), /100 hands, not 169/);
+});
+
+test('playbooks: entries, villain catalog, conflicts and open questions', () => {
+  const md = [
+    '# Test Playbook',
+    '*Batch 9 was merged under the rule: every difference is logged as `⚖ CONFLICT: Joan to decide`.*',
+    '## 1. Sizing',
+    '- **Bet small on dry boards [05-12].** Because reasons.',
+    '  - **⚖ CONFLICT: Joan to decide. Turn size vs a capped rec: [09-15] vs [2024-12-17 HHP].**',
+    '    | | A | B |',
+    '    |---|---|---|',
+    '- **Next bullet [06-09].**',
+    '',
+    '**♣ OPEN #7: Range-bet the flop? (Joan hasn\'t ruled)**',
+    '- Options:',
+    '  - **(a)** yes',
+    '',
+    '## 2. Villains',
+    '**Whale** [08-25]',
+    '- *Range:* Qx, weak pairs.',
+    '- *Size:* overbet the turn.',
+    '',
+    '#### ⚖ Conflicts',
+    '**⚖1. Tight nits: bluff them a lot, or less?**',
+    '- *[2025-10-28]:* bluff a lot.',
+    '- *[2025-01-21 HHP]:* less.',
+  ].join('\n');
+  const p = parsePlaybook(md, 'test.md');
+  assert.equal(p.title, 'Test Playbook');
+  assert.equal(p.conflicts.length, 2, 'the backtick mention in the intro is not a conflict');
+  const [c1, c2] = p.conflicts;
+  assert.equal(c1.title, 'Turn size vs a capped rec: [09-15] vs [2024-12-17 HHP].');
+  assert.deepEqual(c1.dates, ['2026-09-15', '2024-12-17']);
+  assert.equal(c1.section, '1. Sizing');
+  assert.match(c1.text, /\|---\|/);
+  assert.equal(c2.title, 'Tight nits: bluff them a lot, or less?');
+  assert.match(c2.text, /less\./);
+  assert.equal(p.openQuestions.length, 1);
+  assert.equal(p.openQuestions[0].id, 'open-7');
+  assert.match(p.openQuestions[0].text, /\(a\)/);
+  assert.equal(p.villains.length, 1);
+  assert.equal(p.villains[0].name, 'Whale');
+  assert.deepEqual(p.villains[0].fields.map((f) => f.name), ['Range', 'Size']);
+  const small = p.entries.find((e) => /Bet small/.test(e.title));
+  assert.deepEqual(small.dates, ['2026-05-12', '2026-09-15', '2024-12-17']);
+  assert.ok(small.flags.conflict === false && small.flags.sideBySide === true);
+  // Ids are stable across unrelated edits.
+  const again = parsePlaybook(md.replace('Because reasons.', 'Because other reasons.'), 'test.md');
+  assert.equal(again.conflicts[0].id, c1.id);
+});
+
+test('project instructions: leak tags from the list line, not the first mention', () => {
+  const txt = ['Leak tags (list below). Say if this repeats.', '', 'Leak tags (Joan can edit this list)', '',
+    'limp-pre, bad-sizing, thin-value-too-thin', '', 'Known leaks from her history', 'Tilts. After a loss.', 'How to think through every decision'].join('\n');
+  const r = parseInstructions(txt);
+  assert.deepEqual(r.leakTags, ['limp-pre', 'bad-sizing', 'thin-value-too-thin']);
+  assert.deepEqual(r.knownLeaks, [{ title: 'Tilts', text: 'After a loss.' }]);
+  assert.deepEqual(r.warnings, []);
+});
+
+test('loader: a bad upload falls back to the last good copy with a notice', async () => {
+  const mini = { dir: 'b/', files: [{ name: 'c.csv', kind: 'charts' }, { name: 'p.md', kind: 'playbook' }] };
+  const good = { 'b/c.csv': [CSV_HEAD, csvChart('NEW')].join('\n'), 'b/p.md': '# P\n- **x [05-12]**' };
+  const store = memoryLastGood();
+  const first = await loadBrain({ manifest: mini, fetchText: async (p) => good[p], lastGood: store });
+  assert.deepEqual(first.notices, []);
+  const broken = await loadBrain({ manifest: mini, fetchText: async (p) => (p.endsWith('.csv') ? 'garbage' : good[p]), lastGood: store });
+  assert.equal(broken.files[0].status, 'fallback');
+  assert.match(broken.notices[0], /couldn't be read: c\.csv\. Using the last good version/);
+  assert.ok(broken.charts.charts.NEW);
+  await assert.rejects(loadBrain({ manifest: mini, fetchText: async () => { throw new Error('HTTP 404'); }, lastGood: memoryLastGood() }), /no saved copy/);
+});
+
+test('opens with no HHP chart (CO) are graded [OUTSIDE SOURCE] between HJ and BTN', async () => {
+  const brain = await loadBrain({ manifest, fetchText: readBrain, lastGood: memoryLastGood() });
+  const ranges = brain.charts;
+  const bracket = { floor: 'RFI - HJ - 200BB', ceiling: 'RFI - BTN - 200BB' };
+  const spot = { kind: 'RFI', chart: bracket.ceiling, exact: false, label: 'x', bracket, seat: 'CO' };
+  const opens = (chart, h) => ranges.charts[chart].hands[h][0] > 0;
+  const both = HAND_ORDER.find((h) => opens(bracket.floor, h));
+  const btnOnly = HAND_ORDER.find((h) => !opens(bracket.floor, h) && opens(bracket.ceiling, h));
+  const neither = HAND_ORDER.find((h) => !opens(bracket.ceiling, h));
+  const g = (code, action) => gradeDecision({ ranges, spot, code, action });
+  assert.equal(g(both, 'raise').verdict, 'correct');
+  assert.equal(g(both, 'raise').source, 'OUTSIDE');
+  assert.match(g(both, 'raise').message, /^No HHP chart covers this open \(CO\)\./);
+  assert.match(g(both, 'raise').sourceTag, /^\[OUTSIDE SOURCE\]/);
+  assert.equal(g(both, 'fold').verdict, 'wrong');
+  assert.equal(g(btnOnly, 'raise').verdict, 'mixed');
+  assert.equal(g(btnOnly, 'fold').verdict, 'mixed');
+  assert.equal(g(neither, 'raise').verdict, 'wrong');
+  assert.equal(g(neither, 'fold').verdict, 'correct');
+  assert.equal(g(both, 'call').verdict, 'wrong');
+  // A chart-covered open is tagged [HHP] with its video.
+  const hj = gradeDecision({ ranges, spot: { kind: 'RFI', chart: 'RFI - HJ - 200BB', exact: true, label: 'x' }, code: both, action: 'raise' });
+  assert.equal(hj.source, 'HHP');
+  assert.match(hj.sourceTag, /^\[HHP\] RFI - HJ - 200BB · Live Poker Preflop Guide \(2026\) 2026-01-06$/);
+});

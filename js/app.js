@@ -6,6 +6,8 @@ import { quickSizes, clampTo, sliderToAmount, amountToSlider, potPercent, SLIDER
 import { layoutFor, chipCenter } from './ui/layout.js';
 import { VILLAIN_CONFIG } from '../config/villains.js';
 import { loadHistory, addHand, clearHistory, computeStats, exportCSV, importCSV } from './storage/history.js';
+import { loadBrain, browserFetchText, browserLastGood, missingCharts } from './brain/loader.js';
+import { CHARTS_USED } from './engine/scenario.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -22,6 +24,7 @@ const SPEEDS = { normal: { act: 650, deal: 700 }, fast: { act: 260, deal: 380 },
 
 // ---------- state ----------
 let ranges = null;
+let brain = null;
 let hand = null;
 let handToken = 0;
 let pendingTo = null;
@@ -452,15 +455,16 @@ function showLog() {
 }
 
 const VERDICT_LABEL = { correct: '✓ Chart play', mixed: '≈ Mixed', wrong: '✗ Off chart', situational: '⚑ Situational', nochart: '— No chart' };
+const OUTSIDE_LABEL = { correct: '✓ Good', mixed: '≈ Borderline', wrong: '✗ Mistake', situational: '⚑ Situational', nochart: '— No chart' };
 
 function gradeHTML(d) {
   const sizing = (d.sizing || []).map((z) => `<div class="sizing ${z.ok ? 'ok' : 'bad'}"><span class="ic">${z.ok ? '✓' : '✗'}</span><span><b>${esc(z.rule)}:</b> ${esc(z.message)}</span></div>`).join('');
-  const chartLine = d.chart
-    ? `${esc(d.chart)}${d.exact ? '' : '<span class="noexact">no exact HHP chart</span>'}`
-    : 'No HHP chart';
+  const chartLine = d.sourceTag
+    ? `<span class="src ${d.source === 'OUTSIDE' ? 'outside' : 'hhp'}">${esc(d.sourceTag)}</span>`
+    : d.chart ? esc(d.chart) : 'No HHP chart';
   const msg = d.verdict === 'situational' ? `<b>Mark's rule:</b> ${esc(d.message.replace(/^SITUATIONAL \(Mark\):\s*/i, ''))}` : esc(d.message);
   return `<div class="grade">
-    <div class="row1"><div class="spot">${esc(d.label)}</div><span class="badge ${d.verdict}">${VERDICT_LABEL[d.verdict]}</span></div>
+    <div class="row1"><div class="spot">${esc(d.label)}</div><span class="badge ${d.verdict}">${(d.source === 'OUTSIDE' ? OUTSIDE_LABEL : VERDICT_LABEL)[d.verdict]}</span></div>
     <div class="chart">${chartLine}</div>
     <div class="you">You: <b>${esc(d.heroAction || d.action)}${d.to ? ` $${d.to}` : ''}</b> with <b>${esc(d.code)}</b></div>
     <div class="msg">${msg}</div>
@@ -582,7 +586,27 @@ function showStats() {
     ${kinds || '<div class="empty">Play some hands first.</div>'}
     <h3>Most-missed spots</h3>
     ${missed || '<div class="empty">Nothing missed yet. Nice.</div>'}
-    <div class="about" style="margin-top:12px">Mixed-frequency plays count as correct. Situational hands (Mark's rule) are not counted either way.</div>`);
+    <div class="about" style="margin-top:12px">Mixed-frequency plays count as correct. Situational hands (Mark's rule) are not counted either way.${st.outside ? ` ${st.outside} decision${st.outside > 1 ? 's' : ''} in spots no HHP chart covers ${st.outside > 1 ? 'were' : 'was'} graded [OUTSIDE SOURCE] and ${st.outside > 1 ? 'are' : 'is'} not counted.` : ''}</div>`);
+}
+
+// Brain status: what loaded, from where, and anything that needs you.
+function brainStatusHTML() {
+  if (!brain) return '<h3>Brain</h3><div class="empty">Brain not loaded.</div>';
+  const NOUN = { charts: 'chart', superseded: 'superseded (skipped)', entries: 'entry|entries', villains: 'villain read', conflicts: 'conflict',
+    open: 'open question', leakTags: 'leak tag', knownLeaks: 'known-leak note' };
+  const noun = (k, v) => { const [one, many] = (NOUN[k] || k).split('|'); return v === 1 || one.includes('(') ? one : many || `${one}s`; };
+  const fmt = (c) => Object.entries(c || {}).filter(([, v]) => v).map(([k, v]) => `${v} ${noun(k, v)}`).join(' · ');
+  const rows = brain.files.map((f) => `<div class="bfile ${f.status}">
+      <div class="bn"><b>${esc(f.name)}</b><span class="bs">${{ ok: '✓ loaded', fallback: '⚠ last good copy', missing: '✗ missing' }[f.status]}</span></div>
+      <div class="bc">${esc(fmt(f.counts))}${f.newest ? ` · newest tag ${esc(f.newest)}` : ''}</div>
+      ${f.error ? `<div class="be">${esc(f.error)}</div>` : ''}</div>`).join('');
+  const full = brain.conflicts.filter((c) => !c.summary).length;
+  const notes = [...brain.notices, ...brain.warnings, ...(brain.missing.length ? [`The app asks for chart${brain.missing.length > 1 ? 's' : ''} the CSV doesn't have: ${brain.missing.join(', ')}. Those spots show "No HHP chart".`] : [])];
+  return `<h3>Brain</h3>
+    <div class="about">Loaded ${esc(new Date(brain.loadedAt).toLocaleString())}. ${full} conflicts and ${brain.openQuestions.length} open questions, all Undecided: never applied, never graded.</div>
+    ${notes.map((n) => `<div class="bnote">${esc(n)}</div>`).join('')}
+    <div class="bfiles">${rows}</div>
+    <div class="about">Compiled layer (the numbers villains play by): not built yet. That's step 2.</div>`;
 }
 
 function showMenu() {
@@ -597,8 +621,9 @@ function showMenu() {
       <p>Every hand is a real 52-card shuffle. You only get dealt hands the HHP chart plays in your spot. Villain types are hidden until the hand ends. The reads are your clues.</p>
       <p>Preflop gets graded against the charts and HHP sizing rules. Postflop is for your coach: tap <b>Copy for coach</b>.</p>
       <p>Everything runs on your phone. Hands are saved on this device only, so export a CSV to back them up.</p>
-      <p>Villain tendencies: <code>config/villains.js</code>. Charts: <code>data/ranges.json</code> (built from preflop-ranges.csv).</p>
-    </div>`);
+      <p>Villain tendencies: <code>config/villains.js</code>. Charts: <code>brain/preflop-ranges.csv</code>, read fresh every time the app opens.</p>
+    </div>
+    ${brainStatusHTML()}`);
   document.querySelectorAll('.seg button').forEach((b) => (b.onclick = () => {
     const k = b.dataset.k;
     settings[k] = k === 'fourColor' ? b.dataset.v === 'true' : b.dataset.v;
@@ -705,18 +730,21 @@ function fitTable() {
 }
 new ResizeObserver(fitTable).observe($('tableWrap'));
 
-if (new URLSearchParams(location.search).has('debug')) window.__sim = { hand: () => hand, render: () => renderAll(), geo: () => geo };
+if (new URLSearchParams(location.search).has('debug')) window.__sim = { hand: () => hand, render: () => renderAll(), geo: () => geo, brain: () => brain };
 
 async function boot() {
   applySettings();
   fitTable();
   try {
-    const res = await fetch('data/ranges.json');
-    ranges = await res.json();
-  } catch {
-    $('actionbar').innerHTML = '<div class="status">Could not load charts. Reconnect once to cache the app.</div>';
+    const manifest = await (await fetch('config/brain-files.json', { cache: 'no-cache' })).json();
+    brain = await loadBrain({ manifest, fetchText: browserFetchText, lastGood: browserLastGood() });
+    brain.missing = missingCharts(brain, CHARTS_USED);
+    ranges = brain.charts;
+  } catch (e) {
+    $('actionbar').innerHTML = `<div class="status">Could not load the brain. ${esc(String(e.message || e).replace(/\.*$/, ''))}.</div>`;
     return;
   }
+  if (brain.notices.length) toast(`${brain.notices[0]}${brain.notices.length > 1 ? ` (+${brain.notices.length - 1} more)` : ''} Details: Menu → Settings.`, true);
   newHand();
   if ('serviceWorker' in navigator && location.protocol !== 'file:') {
     navigator.serviceWorker.register('sw.js').catch(() => {});

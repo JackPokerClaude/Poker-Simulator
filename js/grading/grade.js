@@ -42,14 +42,50 @@ const heroActionName = (spot, action, row) => {
   return nice(row?.chart.actions.aggressive || 'raise');
 };
 
+// Where the grade comes from: [HHP] with the chart and its video, or [OUTSIDE SOURCE].
+export function hhpTag(chart) {
+  return `[HHP] ${chart.name}${chart.source ? ` · ${chart.source}` : ''}`;
+}
+
+// An open from a seat with no HHP chart: floor chart opens it = open, only the ceiling chart
+// opens it = borderline, neither = fold. The bracket is [OUTSIDE SOURCE] (config/outside-source.js).
+function gradeBracketOpen({ ranges, spot, code, action, out }) {
+  const lo = chartRow(ranges, spot.bracket.floor, code);
+  const hi = chartRow(ranges, spot.bracket.ceiling, code);
+  const seat = spot.seat || 'this seat';
+  out.heroAction = { fold: 'Fold', check: 'Check', call: 'Limp', raise: 'Raise' }[action] || action;
+  out.source = 'OUTSIDE';
+  out.sourceTag = `[OUTSIDE SOURCE] between ${spot.bracket.floor} and ${spot.bracket.ceiling}`;
+  out.noChart = `No HHP chart covers this open (${seat}).`;
+  if (!lo || !hi) return { ...out, verdict: 'nochart', message: `${out.noChart} The bracket charts are missing from the brain.` };
+  const opensLo = lo.a > 0, opensHi = hi.a > 0;
+  const lower = spot.bracket.floor.replace(/^RFI - | - 200BB$/g, ''), upper = spot.bracket.ceiling.replace(/^RFI - | - 200BB$/g, '');
+  const band = opensLo ? `the ${lower} chart already opens ${code}` : opensHi ? `the ${lower} chart folds ${code}, the ${upper} chart opens it` : `even the ${upper} chart folds ${code}`;
+  if (action === 'call') return { ...out, verdict: 'wrong', message: `${out.noChart} The HHP open charts have no limp option: raise or fold. Here ${band}.` };
+  const opened = action === 'raise';
+  if (opensLo) return { ...out, verdict: opened ? 'correct' : 'wrong', message: `${out.noChart} ${band[0].toUpperCase()}${band.slice(1)}, so ${opened ? 'opening is right' : 'folding is too tight'}.` };
+  if (opensHi) return { ...out, verdict: 'mixed', message: `${out.noChart} Borderline: ${band}. Either is defensible.` };
+  return { ...out, verdict: opened ? 'wrong' : 'correct', message: `${out.noChart} ${band[0].toUpperCase()}${band.slice(1)}, so ${opened ? 'this open is too loose' : 'fold is right'}.` };
+}
+
 export function gradeDecision({ ranges, spot, code, action }) {
   const out = { kind: spot.kind, label: spot.label, chart: spot.chart, exact: spot.exact, code, action };
   if (spot.kind === 'NONE' || !spot.chart) {
     out.heroAction = { fold: 'Fold', check: 'Check', call: 'Call', raise: 'Raise' }[action] || action;
     return { ...out, verdict: 'nochart', message: spot.reason || 'No HHP chart for this spot.' };
   }
+  if (spot.bracket) return gradeBracketOpen({ ranges, spot, code, action, out });
   const row = chartRow(ranges, spot.chart, code);
-  if (!row) return { ...out, verdict: 'nochart', message: 'Hand missing from chart.' };
+  if (!row) return { ...out, verdict: 'nochart', message: `No HHP chart covers this spot: "${spot.chart}" isn't in the brain's preflop-ranges.csv.` };
+  if (spot.exact) {
+    out.source = 'HHP';
+    out.sourceTag = hhpTag(row.chart);
+  } else {
+    // The closest HHP chart is a stand-in, so the grade is outside source.
+    out.source = 'OUTSIDE';
+    out.sourceTag = `[OUTSIDE SOURCE] closest HHP chart: ${row.chart.name}`;
+    out.noChart = 'No HHP chart covers this exact spot.';
+  }
   out.heroAction = heroActionName(spot, action, row);
   out.freq = freqText(row);
   out.situational = row.situational;
@@ -66,10 +102,11 @@ export function gradeDecision({ ranges, spot, code, action }) {
 
   const pct = pctForAction(row, spot, action);
   const best = Math.max(row.a, row.c + (/limp/.test(row.chart.actions.other || '') ? row.o : 0), spot.kind === 'BB_LIMP' ? 0 : row.f);
-  if (pct > 0 && pct >= best) return { ...out, verdict: 'correct', message: row.situational ? `Chart play. Situational hand: ${row.note}` : 'Matches the chart.' };
-  if (pct > 0) return { ...out, verdict: 'mixed', message: `Mixed spot. Your play is part of the chart mix (${pct}%).` };
-  if (row.situational) return { ...out, verdict: 'situational', message: row.note || 'Situational hand (Mark).' };
-  return { ...out, verdict: 'wrong', message: `Chart says: ${freqText(row)}.` };
+  const done = (verdict, message) => ({ ...out, verdict, message: out.noChart ? `${out.noChart} Against the closest HHP chart: ${message}` : message });
+  if (pct > 0 && pct >= best) return done('correct', row.situational ? `Chart play. Situational hand: ${row.note}` : 'Matches the chart.');
+  if (pct > 0) return done('mixed', `Mixed spot. Your play is part of the chart mix (${pct}%).`);
+  if (row.situational) return done('situational', row.note || 'Situational hand (Mark).');
+  return done('wrong', `Chart says: ${freqText(row)}.`);
 }
 
 // ---- Sizing checks (HHP) ----

@@ -1,0 +1,16 @@
+{
+  "_readme": "The brain files the app loads at runtime, from the brain/ folder. The website can't list a folder, so a NEW file has to be added here (a renamed file counts as new). kind: charts = preflop-ranges.csv, playbook = playbook-*.md, instructions = project-instructions.md.",
+  "dir": "brain/",
+  "files": [
+    { "name": "preflop-ranges.csv", "kind": "charts" },
+    { "name": "playbook-preflop.md", "kind": "playbook" },
+    { "name": "playbook-postflop.md", "kind": "playbook" },
+    { "name": "playbook-postflop-weakness-and-position.md", "kind": "playbook" },
+    { "name": "playbook-postflop-bluffs-and-rivers.md", "kind": "playbook" },
+    { "name": "playbook-villains.md", "kind": "playbook" },
+    { "name": "playbook-villains-oldest-videos.md", "kind": "playbook" },
+    { "name": "playbook-deep-stacks.md", "kind": "playbook" },
+    { "name": "playbook-game-mindset.md", "kind": "playbook" },
+    { "name": "project-instructions.md", "kind": "instructions" }
+  ]
+}

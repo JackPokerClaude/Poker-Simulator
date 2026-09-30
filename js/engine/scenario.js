@@ -1,5 +1,6 @@
 // Classify hero's preflop spot and map it to the closest HHP chart.
 import { POSTFLOP_ORDER } from './game.js';
+import { OUTSIDE_SOURCE } from '../../config/outside-source.js';
 
 // 8-handed seat -> chart position
 export const CHART_POS = { 'UTG': 'EP', 'UTG+1': 'EP', 'LJ': 'MP', 'HJ': 'HJ', 'CO': 'CO', 'BTN': 'BTN', 'SB': 'SB', 'BB': 'BB' };
@@ -15,6 +16,33 @@ export const SPOT_LABELS = {
   VS_4BET: 'You 3-bet, facing 4-bet',
   NONE: 'No chart',
 };
+
+// Every chart name this file asks for, so Brain status can flag one the CSV renamed or dropped.
+export const CHARTS_USED = [
+  'BB vs AGGRO OPEN',
+  'BB vs PASSIVE OPEN',
+  'BTN ISO vs CO LIMP',
+  'BTN SQZ vs MP OPEN & COLD CALL',
+  'BTN vs EP OPEN (LOOSE PLAYER)',
+  'BTN vs EP OPEN (TIGHT PLAYER)',
+  'COLD 4B vs TIGHT 3B',
+  'COLD 4B vs WIDE 3B',
+  'CONTINUING vs AGGRO 4B',
+  'CONTINUING vs PASSIVE 4B',
+  'HJ vs EP OPEN (ABC PLAYER)',
+  'IP vs AGGRO 3BET (THINKING)',
+  'IP vs AGGRO 3BET (WHALE)',
+  'IP vs PASSIVE 3BET',
+  'MP ISO vs EP LIMP',
+  'OOP vs AGGRO 3BET',
+  'OOP vs PASSIVE 3BET',
+  'RFI - BTN - 200BB',
+  'RFI - BTN - 200BB (vs two fish in blinds)',
+  'RFI - EP - 200BB',
+  'RFI - HJ - 200BB',
+  'SB SQZ vs MP OPEN & COLD CALL',
+  ...Object.values(OUTSIDE_SOURCE.openBrackets).flatMap((b) => [b.floor, b.ceiling]),
+];
 
 const fam = (type) => (type === 'passive' || type === 'rec' ? 'passive' : type);
 const isFish = (type) => type === 'whale' || type === 'rec';
@@ -36,14 +64,15 @@ export function classifySpot(s, heroIdx) {
       const limpers = pre.filter((e) => e.type === 'call').map((e) => e.i);
       if (!limpers.length) {
         if (hp === 'EP') return spot('RFI', 'RFI - EP - 200BB', true);
-        if (hp === 'MP') return spot('RFI', 'RFI - EP - 200BB', false);
         if (hp === 'HJ') return spot('RFI', 'RFI - HJ - 200BB', true);
-        if (hp === 'CO') return spot('RFI', 'RFI - HJ - 200BB', false);
         if (hp === 'BTN') {
           const fish = isFish(P(6).type) && isFish(P(7).type);
           return spot('RFI', fish ? 'RFI - BTN - 200BB (vs two fish in blinds)' : 'RFI - BTN - 200BB', true);
         }
-        if (hp === 'SB') return spot('RFI', 'RFI - BTN - 200BB', false);
+        // No HHP open chart for MP, CO or SB: graded [OUTSIDE SOURCE] against a bracket of two
+        // HHP charts. Hands are dealt from the looser (ceiling) chart.
+        const bracket = OUTSIDE_SOURCE.openBrackets[hp];
+        if (bracket) return spot('RFI', bracket.ceiling, false, { bracket, seat: hero.pos });
         return spot('NONE', null, false);
       }
       const lp = limpers.map((i) => CHART_POS[P(i).pos]);

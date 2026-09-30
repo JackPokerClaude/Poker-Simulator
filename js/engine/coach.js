@@ -167,7 +167,7 @@ export function buildRecord(s) {
     spot: { kind: s.spot.kind, chart: s.spot.chart, exact: s.spot.exact },
     decisions: s.heroDecisions.map((d) => ({
       kind: d.kind, label: d.label, chart: d.chart, exact: d.exact, code: d.code, heroAction: d.heroAction || d.action,
-      to: d.to, verdict: d.verdict, message: d.message, freq: d.freq || '',
+      to: d.to, verdict: d.verdict, message: d.message, freq: d.freq || '', source: d.source || '', sourceTag: d.sourceTag || '',
       sizing: (d.sizing || []).map((z) => ({ rule: z.rule, ok: z.ok, message: z.message })),
     })),
     net: s.result.net[s.heroIdx],

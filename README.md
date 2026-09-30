@@ -1,6 +1,6 @@
 # HHP Hand Simulator
 
-A mobile-first live NLHE cash simulator: 8-handed, $1/2, $1/3 and $2/5, about 200bb deep. Preflop decisions are graded against the Hungry Horse Poker charts in `data/preflop-ranges.csv`. Postflop goes to your coach with one tap.
+A mobile-first live NLHE cash simulator: 8-handed, $1/2, $1/3 and $2/5, about 200bb deep. Preflop decisions are graded against the Hungry Horse Poker charts in `brain/preflop-ranges.csv`. Postflop goes to your coach with one tap.
 
 No server and no API keys. Everything runs in the browser, and it works offline once it's installed.
 
@@ -41,7 +41,8 @@ Hands are saved on the device only. Use **History → Export CSV** to back them 
 ## Tweak it
 
 - **Villain tendencies:** `config/villains.js`. Every number is in this one file: open/limp/3-bet ranges, postflop bet/raise/call behavior, table mix per stake, open sizes, and the read text.
-- **Charts:** edit `data/preflop-ranges.csv`, then run `node tools/csv2json.mjs` to rebuild `data/ranges.json`.
+- **Brain:** `brain/` holds the HHP playbooks, `preflop-ranges.csv` and `project-instructions.md`. The app reads them fresh at runtime (no build step), so uploading new versions to `brain/` updates the site. Keep the filenames the same; a new file must also be listed in `config/brain-files.json`. Charts marked SUPERSEDED in the CSV are skipped. If an upload can't be read, the app keeps the last good copy and says so in Menu → Settings → Brain, and the deploy's tests stop a CSV the app can't use from going live.
+- **[OUTSIDE SOURCE] defaults:** `config/outside-source.js` (e.g. how opens from seats with no HHP chart, like the CO, get graded).
 
 ## Develop
 

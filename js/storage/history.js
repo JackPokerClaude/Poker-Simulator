@@ -32,7 +32,7 @@ const GOOD = new Set(['correct', 'mixed']);
 export function computeStats(list) {
   const byKind = {};
   const missed = {};
-  let graded = 0, good = 0, sizingChecks = 0, sizingOk = 0;
+  let graded = 0, good = 0, sizingChecks = 0, sizingOk = 0, outside = 0;
   for (const h of list) {
     for (const d of h.decisions || []) {
       for (const z of d.sizing || []) { sizingChecks++; if (z.ok) sizingOk++; else {
@@ -41,6 +41,8 @@ export function computeStats(list) {
         missed[k].count++;
       } }
       if (d.verdict === 'nochart') continue;
+      // Accuracy only counts spots an HHP chart covers; [OUTSIDE SOURCE] grades are listed apart.
+      if (d.source === 'OUTSIDE' || (!d.source && d.exact === false)) { outside++; continue; }
       const b = byKind[d.kind] ||= { kind: d.kind, label: SPOT_LABELS[d.kind] || d.kind, total: 0, good: 0, situational: 0 };
       b.total++;
       if (d.verdict === 'situational') { b.situational++; continue; }
@@ -58,7 +60,7 @@ export function computeStats(list) {
   const topMissed = Object.values(missed).sort((a, b) => b.count - a.count).slice(0, 12);
   return {
     hands: list.length, graded, good, pct: graded ? Math.round((good / graded) * 100) : null,
-    sizingChecks, sizingOk, kinds, topMissed,
+    sizingChecks, sizingOk, kinds, topMissed, outside,
   };
 }
 

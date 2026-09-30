@@ -1,13 +1,28 @@
 // Offline cache: everything the app needs is precached on install.
-// Bump VERSION whenever any file changes so phones pick up the update.
+// Bump VERSION whenever any file changes so phones pick up the update (CI does it per commit).
+// The brain (brain/*, config/brain-files.json) is network-first: fresh when online, the cached
+// copy when offline, so brain uploads show up without waiting for an app update.
 const VERSION = 'hhp-sim-v1';
 const ASSETS = [
   './',
   'index.html',
   'manifest.webmanifest',
   'css/app.css',
-  'data/ranges.json',
   'config/villains.js',
+  'config/outside-source.js',
+  'config/brain-files.json',
+  'brain/preflop-ranges.csv',
+  'brain/playbook-preflop.md',
+  'brain/playbook-postflop.md',
+  'brain/playbook-postflop-weakness-and-position.md',
+  'brain/playbook-postflop-bluffs-and-rivers.md',
+  'brain/playbook-villains.md',
+  'brain/playbook-villains-oldest-videos.md',
+  'brain/playbook-deep-stacks.md',
+  'brain/playbook-game-mindset.md',
+  'brain/project-instructions.md',
+  'js/brain/parse.js',
+  'js/brain/loader.js',
   'js/app.js',
   'js/vendor/pokersolver.js',
   'js/engine/ai.js',
@@ -42,8 +57,21 @@ self.addEventListener('activate', (e) => {
   );
 });
 
+const isBrain = (url) => /\/brain\/[^/]+$/.test(url.pathname) || url.pathname.endsWith('/config/brain-files.json');
+
 self.addEventListener('fetch', (e) => {
-  if (e.request.method !== 'GET' || new URL(e.request.url).origin !== location.origin) return;
+  const url = new URL(e.request.url);
+  if (e.request.method !== 'GET' || url.origin !== location.origin) return;
+  if (isBrain(url)) {
+    e.respondWith(fetch(e.request, { cache: 'no-cache' }).then((res) => {
+      if (res.ok) {
+        const copy = res.clone();
+        caches.open(VERSION).then((c) => c.put(e.request, copy));
+      }
+      return res.ok ? res : caches.match(e.request, { ignoreSearch: true }).then((hit) => hit || res);
+    }).catch(() => caches.match(e.request, { ignoreSearch: true }).then((hit) => hit || Response.error())));
+    return;
+  }
   e.respondWith(
     caches.match(e.request, { ignoreSearch: true }).then((hit) => hit || fetch(e.request).then((res) => {
       if (res.ok) {
