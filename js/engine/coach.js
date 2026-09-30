@@ -1,6 +1,7 @@
 // Builds the "Copy for coach" hand text and the saved history record.
 import { villainLabel } from '../villains/model.js';
 import { summarizePredictions } from '../predict/predict.js';
+import { packReplay } from '../feedback/replay.js';
 import { cardsPretty, cardStr } from './cards.js';
 
 const who = (s, i) => (i === s.heroIdx ? `Hero (${s.players[i].pos})` : s.players[i].pos);
@@ -177,6 +178,8 @@ export function buildRecord(s) {
       sizing: (d.sizing || []).map((z) => ({ rule: z.rule, ok: z.ok, message: z.message })),
     })),
     predictions: summarizePredictions(s),
+    leaks: [],
+    replay: s.initial ? packReplay(s) : null,
     net: s.result.net[s.heroIdx],
     netBB: +(s.result.net[s.heroIdx] / s.stakes.bb).toFixed(1),
     pot: s.result.finalPot,

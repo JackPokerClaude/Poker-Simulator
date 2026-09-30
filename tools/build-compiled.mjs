@@ -289,6 +289,99 @@ hhp('charts.LJ OPEN - 200BB', {
 }, src('playbook-preflop.md', '3. Opening (RFI), 200bb', '2025-02-18')('200bb LJ (44 hands): all suited aces A2s-AKs; AA, AKo, AQo, AJo; KK, KQs-K7s, KQo; QQ, QJs-Q8s; JJ, JTs-J8s; TT, T9s, T8s; 99, 98s; 88, 87s; 77, 76s; 66, 65s.'),
 { fb: null });
 
+// ---------------------------------------------------------------- "Also from the brain" rules
+// Each rule shows its own quote, and only when its conditions match the spot (js/feedback/match.js).
+// when keys: street, spot, facing, heroBucket, villainType, villainStyle, multiway, heroIP, heroPFR,
+// board (aceHigh, paired, monotone, wet, dry), potType, villainAction, heroAction, deep, limperPos,
+// betSize ('small' | 'inbetween' | 'big'). recommend: the line the rule points to (used for the verdict).
+const rule = (id, v, s) => hhp(`rules.${id}`, v, s, { fb: null });
+const PRE1 = src('playbook-preflop.md', '1. Before any chart: think first', '');
+const PRE4 = src('playbook-preflop.md', '4. Limpers', '');
+const PRE5 = src('playbook-preflop.md', '5. Facing an open (not from the BB)', '');
+const PRE8 = src('playbook-preflop.md', '8. Facing a 3-bet', '');
+const PF1 = src('playbook-postflop.md', '1. Read his range first', '');
+const PF2 = src('playbook-postflop.md', '2. Bet sizing: small or big, never in between', '');
+const BR10 = src('playbook-postflop-bluffs-and-rivers.md', '10. Strong hands', '2026-08-11');
+const DS5 = src('playbook-deep-stacks.md', '5. Fold more bluff catchers deep', '');
+const DS6 = src('playbook-deep-stacks.md', '6. Build the biggest pot', '');
+
+rule('neverLimp', { title: 'Never open-limp', when: { street: ['preflop'], spot: ['RFI'], heroAction: ['limp'] } }, PRE4("Never open-limp unless it's a special game (a bounty or a 7-2 game). Play raise or fold."));
+rule('epLimper', { title: 'Vs an EP limper', when: { street: ['preflop'], spot: ['ISO'], limperPos: ['EP'] } }, PRE4('EP limpers are stronger, because people "don\'t limp to limp-fold."'));
+rule('lateLimper', { title: 'Vs a late limper', when: { street: ['preflop'], spot: ['ISO'], limperPos: ['late'] } }, PRE4('Late limpers just want a cheap flop.'));
+rule('isoSize', { title: 'Iso size', when: { street: ['preflop'], spot: ['ISO', 'BB_LIMP'], heroAction: ['raise'] } }, PRE4('Iso size: 6x + 1bb per limper in position, about 7x + 1bb per limper out of position.'));
+rule('anyTwoLimper', { title: 'Vs a limper who calls any two', when: { street: ['preflop'], spot: ['ISO'], villainType: ['whale'] } }, PRE4('Vs a limper who calls ANY two preflop: iso LINEAR, not trash'));
+rule('threeBetOrFold', { title: 'Facing an open: 3-bet or fold', when: { street: ['preflop'], spot: ['VS_OPEN'], heroPos: ['UTG', 'UTG+1', 'LJ', 'HJ', 'CO', 'SB'] } }, PRE5('Default: 3-bet or fold. Calls are mainly for the BTN (absolute position) and the BB (closing the action).'));
+rule('passive3bet', { title: 'Vs a passive 3-bet', when: { street: ['preflop'], spot: ['VS_3BET'], villainType: ['passive', 'rec', 'tight'] } }, PRE8("Vs a passive rec: fold a lot. That's the exploit: they under-3-bet, so overfold. Never 4-bet bluff them, in any position."));
+rule('ask4bet', { title: 'Ask before you 4-bet a 3-bettor', when: { street: ['preflop'], spot: ['VS_3BET', 'COLD4B'] } }, PRE14('how deep, what range he 3-bets, is he 3-bet-or-fold from the SB, is his range too strong or too weak, does he barrel or play fit-or-fold, does he call or fold too much vs a 4-bet'));
+rule('thinking4bet', { title: 'The thinking player', when: { street: ['preflop'], spot: ['VS_3BET', 'COLD4B'], villainType: ['thinking'] } }, PRE14("He's the only one worth 4-bet bluffing."));
+rule('whale4bet', { title: 'Vs an aggressive whale', when: { street: ['preflop'], spot: ['VS_3BET', 'COLD4B', 'VS_4BET'], villainType: ['whale'] } }, PRE14('Stay linear, and size up your nutted hands.'));
+rule('aaOnly', { title: 'Your rule: 5-bet AA only', when: { street: ['preflop'], spot: ['VS_4BET'] } }, src('project-instructions.md', 'Preflop chart file', '')("Joan's rule: she only 5-bets AA."));
+rule('bigOpen', { title: 'Red flag: an unusually large open', when: { street: ['preflop'], villainAction: ['raise-big'] } }, PRE13('An unusually large open (30-35 when normal is 20-25): a stronger range.'));
+rule('limpReraise', { title: 'Red flag: a limp-reraise', when: { street: ['preflop'], villainAction: ['limp-reraise'] } }, PRE13('A limp-reraise: AA, KK, AKs, maybe QQ, with no bluffs. Overfold massively.'));
+rule('bb3betEp', { title: 'Red flag: a BB 3-bet vs an EP open', when: { street: ['preflop'], spot: ['VS_3BET'], heroPos: ['UTG', 'UTG+1', 'LJ'], villainPos: ['BB'] } }, PRE13('A BB 3-bet vs an EP open: massively under-bluffed. Overfold.'));
+rule('rec5bet', { title: 'Red flag: a rec 5-bets', when: { street: ['preflop'], facingLevel: [5], villainType: ['rec', 'passive', 'tight', 'whale'] } }, PRE13("A rec 5-bets at 200bb+: it's AA."));
+rule('readPlayer', { title: 'Read the player, not the seat', when: { street: ['preflop'], spot: ['VS_OPEN', 'SQZ'] } }, PRE1('How wide they open matters more than where they sit.'));
+
+rule('inBetween', { title: 'Small or big, never in between', when: { street: ['flop', 'turn', 'river'], heroAction: ['bet', 'raise'], betSize: ['inbetween'] } }, PF2('In-between is the worst of both: better hands call and your targets fold.'));
+rule('multiwayCbet', { title: 'Multiway c-bets', when: { street: ['flop'], multiway: true, facing: true, villainPFR: true } }, PF1('A big multiway c-bet is "too strong," so overfold, even top pair. A small multiway c-bet is too weak, so attack it with low-equity draws and backdoors.'));
+rule('multiwayDonk', { title: 'Multiway donks', when: { street: ['flop', 'turn'], multiway: true, facing: true, villainAction: ['donk'] } }, PF1('A multiway donk is "much, much stronger" than a heads-up donk.'));
+rule('tightConfig', { title: 'Tight configs have little air', when: { street: ['flop', 'turn', 'river'], potType: ['3bet', '4bet'], tightConfig: true } }, PF1('Early vs early 3-bet pots and 4-bet pots have few bluffs and few flush combos.'));
+rule('smallDryCbet', { title: 'A small c-bet on a dry board', when: { street: ['flop'], facing: true, villainPFR: true, betSize: ['small'], board: { dry: true } } }, PF1('A small c-bet on a bone-dry static board is NOT weak.'));
+rule('sdv', { title: 'Showdown value: just get to showdown', when: { street: ['turn', 'river'], facing: false, heroBucket: ['medium'] }, recommend: 'check' }, PF1("Showdown value's only goal is to REACH showdown"));
+rule('poolCheckRaise', { title: 'Flop check-raises from the pool', when: { street: ['flop'], facing: true, villainAction: ['raise'], villainStyle: ['passiveCaller', 'passiveFolder', 'aggroFolder'] } }, BR9('Flop check-raises are mostly sets and two pair'));
+rule('whaleBigValue', { title: 'Vs a whale: bet big', when: { street: ['flop', 'turn', 'river'], facing: false, villainType: ['whale'], heroBucket: ['strong'] }, recommend: 'bet-big' }, BR9('Bet big and overbet [08-25] | Whales love to call.'));
+rule('fishJam', { title: 'Vs fish: go big on the river', when: { street: ['river'], facing: false, villainType: ['rec'], heroBucket: ['strong'] }, recommend: 'bet-big' }, BR9('Go big and jam rivers more [08-25] | More weak Ax than you expect'));
+rule('stationTwoStreets', { title: 'Vs a passive calling station', when: { street: ['flop', 'turn'], facing: false, villainStyle: ['passiveCaller'], heroBucket: ['strong'] }, recommend: 'bet' }, BR9('Put the money in over two streets [09-15]'));
+rule('underBluffer', { title: 'He under-bluffs: over-fold', when: { street: ['turn', 'river'], facing: true, villainStyle: ['passiveCaller', 'passiveFolder'], heroBucket: ['medium', 'air'] }, recommend: 'fold' }, BR9('He under-bluffs: over-fold.'));
+rule('overBluffer', { title: 'He over-bluffs: over-call', when: { street: ['flop', 'turn', 'river'], facing: true, villainStyle: ['aggroCaller', 'whale'], heroBucket: ['medium'] }, recommend: 'call' }, BR9('He over-bluffs: over-call.'));
+rule('overCaller', { title: 'He over-calls: under-bluff', when: { street: ['flop', 'turn', 'river'], facing: false, villainStyle: ['passiveCaller', 'whale'], heroBucket: ['air'] }, recommend: 'check' }, BR9('He over-calls: under-bluff.'));
+rule('fastPlayFish', { title: 'Vs fish, fast-play', when: { street: ['flop', 'turn'], facing: false, villainType: ['rec', 'whale'], heroBucket: ['strong'] }, recommend: 'bet' }, BR9('Vs fish, fast-play strong hands; slowplaying gains nothing.'));
+rule('inverse', { title: 'On the river: the inverse', when: { street: ['river'] } }, PF1('On the river add "what would I do with the inverse?"'));
+rule('riverBuckets', { title: 'River range in buckets', when: { street: ['river'] } }, PF1('A bucket only counts if it is more than about 10% of his range.'));
+rule('topPairElastic', { title: 'Top pair on the river is elastic', when: { street: ['river'], potType: ['srp'], villainStyle: ['passiveFolder', 'aggroCaller', 'aggroFolder'] } }, BR9("Most live players in 2025 won't stack off with top pair on the river in a normal SRP (elastic, so bluff big, value smaller)."));
+rule('fishInelastic', { title: "A fish who can't fold top pair", when: { street: ['river'], villainStyle: ['whale', 'passiveCaller'] } }, BR9('Vs a fish who never folds it (inelastic), flip it: value 2.5x pot, bluff small just to fold ace-high and king-high draws.'));
+rule('neverBluffing', { title: "Pot odds don't matter if he's never bluffing", when: { street: ['turn', 'river'], facing: true, villainAction: ['raise'], villainStyle: ['passiveCaller', 'passiveFolder'] }, recommend: 'fold' }, BR10("Pot odds don't matter if he's never bluffing"));
+rule('deepFold', { title: 'Deep: fold more bluff catchers', when: { street: ['river'], facing: true, deep: true, heroBucket: ['medium', 'strong'] } }, DS5('When all the money goes in deep, the pool is "way way way under-bluffing," so every bluff catcher is worth more as a fold.'));
+rule('deepOop', { title: 'Deep, out of position: check turns more', when: { street: ['turn'], deep: true, heroIP: false, facing: false, heroBucket: ['strong'] } }, DS6('Out of position, check turns more.'));
+
+// ---------------------------------------------------------------- conflicts and open questions that can come up
+// Never compiled into a verdict: shown side by side with dates, not graded. find = text in the
+// conflict's title (as parsed from the playbook) so the app shows the live playbook block.
+const conflict = (id, v, s) => hhp(`conflicts.${id}`, v, s, { fb: null });
+conflict('a72', { title: 'A72 as the preflop raiser: c-bet the range or check back?', find: 'A72 rainbow', open: 'open-2', when: { street: ['flop'], heroPFR: true, facing: false, board: { aceHigh: true, dry: true } } },
+  src('playbook-postflop.md', '2. Bet sizing: small or big, never in between', '')('Range-bet the flop? (Joan hasn\'t ruled)'));
+conflict('cappedRecTurn', { title: 'A capped rec who checked the turn: size up, or bet tiny?', find: 'A capped rec who checked the turn', when: { street: ['turn'], facing: false, villainAction: ['check'], villainType: ['rec', 'passive', 'tight', 'whale'], capped: true } },
+  src('playbook-postflop-weakness-and-position.md', '4. Pounce on weakness', '')('A capped rec who checked the turn: size UP, or bet TINY?'));
+conflict('riverJam2x', { title: "Jam ~2x pot into a rec's river check with no showdown value?", find: "Jam ~2x pot into a rec's river CHECK", when: { street: ['river'], facing: false, villainAction: ['check'], villainType: ['rec', 'passive', 'whale'], heroBucket: ['air'] } },
+  src('playbook-postflop-weakness-and-position.md', '6. Bluffing: air vs showdown value', '')("Jam ~2x pot into a rec's river CHECK with no showdown value"));
+conflict('pairedRiverBluff', { title: 'A big river bluff when the river pairs the board?', find: 'A big river bluff when the river PAIRS the board', when: { street: ['river'], facing: false, heroBucket: ['air'], riverPairs: true } },
+  src('playbook-postflop-weakness-and-position.md', '6. Bluffing: air vs showdown value', '')('A big river bluff when the river PAIRS the board'));
+conflict('setCheckRaise', { title: 'Check-raise size with a set vs a stab', find: 'Check-raise size with a set', when: { street: ['flop', 'turn'], facing: true, heroBucket: ['strong'], heroIP: false } },
+  src('playbook-postflop.md', '2. Bet sizing: small or big, never in between', '')('Check-raise size with a set (or strong hand) vs a stab'));
+conflict('thickBigStab', { title: 'Thick value facing a big stab', find: 'Thick value facing a BIG stab', when: { street: ['flop', 'turn'], facing: true, heroBucket: ['strong'], betSize: ['big'], villainAction: ['bet-big'] } },
+  src('playbook-postflop-weakness-and-position.md', '5. Out of position, as the preflop caller [08-18]', '')('Thick value facing a BIG stab (KQ on Q-8-4)'));
+conflict('open05-12', { title: 'A half-pot river lead after the turn checks through, weak A-high', find: 'Where does [05-12] go', open: 'open-1', when: { street: ['river'], facing: true, turnCheckedThrough: true, betSize: ['small', 'inbetween'], heroBucket: ['air', 'medium'] } },
+  src('playbook-postflop-weakness-and-position.md', '4. Pounce on weakness', '')('Where does [05-12] go?'));
+conflict('kkIso', { title: 'KK (and AK) small or big in the CO 3-bet iso vs a fish', find: 'KK (and AK) small or big', when: { street: ['preflop'], spot: ['VS_OPEN'], heroPos: ['CO'], villainType: ['whale', 'rec'], heroCodes: ['KK', 'AKs', 'AKo'] } },
+  src('playbook-preflop.md', '5. Facing an open (not from the BB)', '')('KK (and AK) small or big in the CO 3-bet iso vs a fish\'s open, with 2+ regs behind'));
+conflict('abc3bet', { title: 'The "even at 15%" HJ vs LJ 3-bet chart', find: 'The "even at 15%" HJ vs LJ 3-bet chart', when: { street: ['preflop'], spot: ['VS_OPEN'], heroPos: ['HJ'], villainType: ['tight'] } },
+  src('playbook-preflop.md', '5. Facing an open (not from the BB)', '')('The "even at 15%" HJ vs LJ 3-bet chart: CSV vs [2025-03-04 HHP] (CSV unchanged).'));
+
+// ---------------------------------------------------------------- preflop questions (feedback step 2)
+hhp('questions.six', ["What's the villain's range?", "What's our edge on him?", "What's the effective stack?", 'What size did he use?', "What's the rake?", 'How many players are left to act?'],
+  PRE1("Marc's six questions, every hand:"), { fb: null });
+hhp('questions.rfi', 'When to open wider or tighter: a bigger postflop edge (fish in the blinds), a passive table, deeper stacks, late position = wider; regs in the blinds, an aggressive table, shallower, early position = tighter.',
+  src('playbook-preflop.md', '2. When to open wider or tighter', '')('You have a bigger postflop edge (fish in the blinds) | You have a smaller edge (a table of pros, regs in the blinds)'), { fb: null, interp: 'summary of the table rows' });
+
+// ---------------------------------------------------------------- the sizing rule the verdict uses [08-04]
+const PF2S = src('playbook-postflop.md', '2. Bet sizing: small or big, never in between', '2026-08-04');
+hhp('sizing.uncapped', 'bet-small', PF2S('Uncapped: go small, with value AND bluffs, or just call.'), { fb: null });
+hhp('sizing.cappedInelastic', 'bet-big', PF2S('Capped + inelastic: bet huge, pot to 1.6x.'), { fb: null });
+hhp('sizing.cappedElastic', 'bet-small', PF2S('Capped + elastic: go small for value to induce, or use a just-big-enough bluff size.'), { fb: null });
+hhp('sizing.cappedDef', 'capped', PF1("Capped = his action already showed his strength: he checked, bet small into several players, or called where he'd raise a big hand."), { fb: null });
+out('sizing.cappedStrongShare', 0.15, 'he counts as capped when under 15% of his range is Strong (default, Joan to review)');
+out('sizing.elasticPoints', 15, 'his range counts as elastic when a big bet folds 15+ points more of it than a small bet (default, Joan to review)');
+
 void PI;
 mkdirSync(new URL('../brain-compiled/', import.meta.url), { recursive: true });
 const doc = {

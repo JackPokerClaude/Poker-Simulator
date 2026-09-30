@@ -19,9 +19,20 @@ export function saveHistory(list) {
   catch { memory = list; return false; }
 }
 
+// Only the newest hands keep their replay data (it's the big part of a record).
+export const REPLAY_KEEP = 50;
 export function addHand(rec) {
   const list = loadHistory();
   list.unshift(rec);
+  for (let k = REPLAY_KEEP; k < list.length; k++) if (list[k].replay) delete list[k].replay;
+  return saveHistory(list);
+}
+
+export function updateHand(id, patch) {
+  const list = loadHistory();
+  const h = list.find((x) => x.id === id);
+  if (!h) return false;
+  Object.assign(h, patch);
   return saveHistory(list);
 }
 

@@ -29,13 +29,12 @@ Hands are saved on the device only. Use **History → Export CSV** to back them 
   | You 3-bet, got 4-bet | CONTINUING vs 4B |
 
   Seat mapping: UTG and UTG+1 = EP, LJ = MP. When there's no exact chart for your seat or the villain's type, the closest one is used and tagged **no exact HHP chart**.
-- **Villains:** hidden types (Passive, Aggressive, Thinking player, Whale, Loose-passive rec). You only see a live-style read, and the real type is revealed after the hand. They act on their type plus their actual hand strength and draws, and multiway pots are common.
-- **Feedback:**
-  - Chart grade for every preflop decision. Situational cells show Mark's rule instead of "wrong".
-  - Your rule is enforced: only 5-bet AA.
-  - HHP sizing checks: iso = 6x + 1bb per limper IP (7x OOP); 4-bet = ~2.5x IP or 3-3.5x OOP, and under 27.5% of the effective stack.
-- **Copy for coach:** the full hand in the exact coach template, with the villains' real types.
-- **History and stats:** tap any hand to re-copy it. See preflop accuracy by scenario, most-missed spots, and CSV export/import.
+- **Villains:** hidden HHP types (Passive, Tight, Aggressive, Thinking player, Whale, Loose-passive rec) with an HHP postflop style (passive/aggro, caller/folder, or whale), all compiled from the brain. You only see live clues quoted from the playbooks; the real type is revealed after the hand. They act from a probability policy on their type, style and real hand, and multiway pots are common.
+- **Predictions:** before your first decision each street you tap in his range (10 blocks over Strong / Medium / Draws / Air) and what he does if you bet / check / raise. It's graded against his real range and strategy, separately from your action. Turn it off in Settings for fast practice.
+- **Feedback (after every hand, in this order):** preflop: his range grid by action with a brain paragraph, Marc's six questions answered for the hand, your read then your action graded, anything else in the brain that matches. Each later street: his range narrowed (dropped hands gray, bucket %), what happens if you bet small / bet big / check (or fold / call / raise) with step-by-step math against his real range, your read and action graded ✅/⚠️/❌, the verdict with its source, and matching brain entries. ⚖ conflicts and ♣ open questions show both views with dates and are never graded. End of hand: one-sentence takeaway, your leak tags (repeats flagged), and whole-hand brain entries.
+  - Preflop action grades: the chart grade for every decision (situational cells show Mark's rule instead of "wrong"), your only-5-bet-AA rule, and HHP sizing checks (iso = 6x + 1bb per limper IP, 7x OOP; 4-bet = ~2.5x IP or 3-3.5x OOP, under 27.5% of the effective stack).
+- **Copy for coach:** the full hand in the exact coach template, with the villains' real types and your read line under each street.
+- **History and stats:** tap any hand to re-copy it or (for the last 50 hands) open its full feedback. See preflop accuracy by scenario, reads on target, most-missed spots, and CSV export/import.
 - **Drills:** Random, Multiway pots, 3-bet pots, Vs limpers, Blind defense, Big pots.
 
 ## Tweak it

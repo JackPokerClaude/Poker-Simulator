@@ -5,11 +5,12 @@ import { describeAction, buildRecord, winnerLine, isInvolved, statusOf } from '.
 import { quickSizes, clampTo, sliderToAmount, amountToSlider, potPercent, SLIDER_MAX } from './ui/sizing.js';
 import { layoutFor, chipCenter } from './ui/layout.js';
 import { buildModel, setModel, villainLabel, getModel } from './villains/model.js';
-import { loadHistory, addHand, clearHistory, computeStats, exportCSV, importCSV } from './storage/history.js';
+import { loadHistory, addHand, updateHand, clearHistory, computeStats, exportCSV, importCSV } from './storage/history.js';
 import { loadBrain, browserFetchText, browserLastGood, missingCharts } from './brain/loader.js';
 import { CHARTS_USED } from './engine/scenario.js';
-import { rangeViews } from './feedback/rangeview.js';
-import { gridHTML } from './ui/grid.js';
+import { buildFeedback } from './feedback/engine.js';
+import { feedbackHTML } from './feedback/render.js';
+import { rebuildHand } from './feedback/replay.js';
 import { predictionContext, computeTruth, gradePrediction, predictionLine, BUCKETS, BUCKET_LABEL } from './predict/predict.js';
 import { responseTo } from './range/whatif.js';
 
@@ -236,7 +237,7 @@ function renderActionBar() {
         <button class="btn primary" id="nextBtn">Next hand ▶</button>
         <button class="btn secondary wide" id="copyBtn">Copy for coach</button>
       </div>`;
-    $('fbBtn').onclick = showFeedback;
+    $('fbBtn').onclick = () => showFeedback();
     $('nextBtn').onclick = () => newHand();
     $('copyBtn').onclick = () => copyText(lastRecord?.coachText);
     return;
@@ -439,6 +440,13 @@ function finishHand() {
   lastRecord = buildRecord(hand);
   const saved = addHand(lastRecord);
   if (!saved) toast('Storage is full or blocked: this hand is only kept until you close the app.', true);
+  // Leak tags come from the feedback engine; work it out right after the hand so repeats
+  // count even when you skip the feedback screen.
+  const h = hand, token = handToken, rec = lastRecord;
+  setTimeout(() => {
+    if (token !== handToken) return;
+    try { const fb = feedbackFor(h, token); rec.leaks = fb.leaks; updateHand(rec.id, { leaks: fb.leaks }); } catch (e) { console.warn('feedback', e); }
+  }, 30);
   renderAll(); // the feedback screen opens only when "See feedback" is tapped
   if (drawerOpen() && (drawerTab === 'history' || drawerTab === 'stats')) renderDrawer();
 }
@@ -555,40 +563,13 @@ function gradeHTML(d) {
   </div>`;
 }
 
-// Your reads vs his real range and real response, graded apart from your action.
-function predictionsHTML(h) {
-  const preds = Object.values(h.predictions || {});
-  if (!preds.length) return '';
-  const pc = (x) => `${Math.round(x * 100)}%`;
-  return `<h3>Your reads</h3>${preds.map((p) => {
-    const g = p.grade || {};
-    const who = p.target != null ? h.players[p.target].pos : 'the table';
-    const range = g.range ? `<div>${g.range.mark} <b>Range:</b> you said ${BUCKETS.map((b) => `${p.blocks[b] * 10}% ${BUCKET_LABEL[b]}`).join(', ')}. Real: ${BUCKETS.map((b) => `${pc(p.truth.shares[b])} ${BUCKET_LABEL[b]}`).join(', ')}. Off by ${g.range.off} points (${BUCKET_LABEL[g.range.worst]} ${g.range.dir}).</div>` : '';
-    const ans = (p.questions || []).map((q) => {
-      const a = g.answers?.[q.id];
-      if (!a) return '';
-      const name = (v) => (q.options.find((o) => o[0] === v) || [v, v])[1];
-      return `<div>${a.mark} <b>${esc(q.ask)}</b> you said ${esc(name(a.pick).toLowerCase())} (${pc(a.p)} of his range does). Most likely: ${esc(name(a.top).toLowerCase())} ${pc(a.pTop)}.</div>`;
-    }).join('');
-    return `<div class="grade"><div class="row1"><div class="spot">${esc(p.street[0].toUpperCase() + p.street.slice(1))} · reading ${esc(who)}</div></div><div class="msg">${range}${ans}</div></div>`;
-  }).join('')}`;
-}
-
-function rangesHTML(h) {
-  let rv;
-  try { rv = rangeViews(h); } catch (e) { return `<div class="about">Range view unavailable: ${esc(e.message)}</div>`; }
-  return rv.villains.map((v) => `<h3>${esc(v.pos)}'s range</h3>${v.views.map((x) => `<div class="rv"><b>${x.street[0].toUpperCase()}${x.street.slice(1)}</b>
-    ${gridHTML(x.cells, { mode: x.mode, shares: x.shares })}</div>`).join('')}`).join('');
-}
-
 // Feedback screen: opens only when "See feedback" is tapped. No won/lost amounts, and only
 // involved players' cards.
-function showFeedback() {
-  const h = hand;
-  if (!h || !h.done) return;
+// Cards + who won, for the top of the feedback screen (involved players only, no amounts).
+function handsGridHTML(h) {
   const r = h.result;
   const order = [...Array(8).keys()].map((k) => (h.heroIdx + k) % 8).filter((i) => isInvolved(h, i));
-  const handsHTML = order.map((i) => {
+  return order.map((i) => {
     const p = h.players[i];
     const win = r.won[i] > 0;
     const type = p.isHero ? 'You' : villainLabel(p);
@@ -597,24 +578,40 @@ function showFeedback() {
       <div class="who">${p.pos}${win ? ' · Won' : ''}<span class="ty">${esc(type)}</span><span class="hd">${esc(statusOf(h, i).replace(/^won, /, ''))}</span></div>
     </div>`;
   }).join('');
-  const grades = h.heroDecisions.length ? h.heroDecisions.map(gradeHTML).join('') : '<div class="empty">No preflop decision this hand.</div>';
+}
+
+let lastFeedback = null; // { handToken, fb }
+function feedbackFor(h, token = handToken) {
+  if (lastFeedback && lastFeedback.token === token && lastFeedback.hand === h) return lastFeedback.fb;
+  const history = loadHistory().filter((x) => x.id !== lastRecord?.id).slice(0, 50);
+  const fb = buildFeedback(h, { model, brain, history });
+  lastFeedback = { token, hand: h, fb };
+  return fb;
+}
+
+// Feedback screen: opens only when "See feedback" is tapped. No won/lost amounts, and only
+// involved players' cards.
+function showFeedback(h = hand, { fromHistory = null } = {}) {
+  if (!h || !h.done) return;
+  let body;
+  try {
+    const fb = fromHistory ? buildFeedback(h, { model, brain, history: loadHistory().filter((x) => x.id !== fromHistory.id).slice(0, 50) }) : feedbackFor(h);
+    body = feedbackHTML(h, fb, { resultLine: winnerLine(h, true), handsHTML: handsGridHTML(h), gradeHTML });
+  } catch (e) {
+    console.error(e);
+    body = `<div class="resultbox">${esc(winnerLine(h, true))}</div><div class="bnote">The feedback engine hit an error on this hand: ${esc(e.message)}. The preflop grades are below.</div>${(h.heroDecisions || []).map(gradeHTML).join('')}`;
+  }
+  const coach = fromHistory ? fromHistory.coachText : lastRecord?.coachText;
   openSheet(`
     <div class="sheet-top"><h2>Hand feedback</h2><button class="close" id="closeBtn" aria-label="Close">✕</button></div>
-    <div class="resultbox">${esc(winnerLine(h, true))}</div>
-    <h3>Hands</h3>
-    <div class="hands-grid">${handsHTML}</div>
-    <h3>Preflop feedback</h3>
-    ${grades}
-    ${predictionsHTML(h)}
-    ${rangesHTML(h)}
-    <div class="about" style="margin-top:6px">Postflop isn't graded here. Send it to your coach.</div>
+    ${body}
     <div class="sheet-actions">
       <button class="btn secondary" id="copyBtn2">Copy for coach</button>
-      <button class="btn primary" id="nextBtn2">Next hand ▶</button>
+      ${fromHistory ? '' : '<button class="btn primary" id="nextBtn2">Next hand ▶</button>'}
     </div>`, { full: true });
   $('closeBtn').onclick = closeSheet;
-  $('copyBtn2').onclick = () => copyText(lastRecord.coachText);
-  $('nextBtn2').onclick = () => newHand();
+  $('copyBtn2').onclick = () => copyText(coach);
+  if ($('nextBtn2')) $('nextBtn2').onclick = () => newHand();
 }
 
 function showDrills() {
@@ -669,8 +666,11 @@ function showHandDetail(h) {
     <div class="sheet-top"><button class="close" id="backBtn" aria-label="Back to history">‹</button><h2>${esc(h.heroPos)} · ${esc(h.heroCode)} · $${esc(h.stakes)}</h2></div>
     <button class="btn primary" style="width:100%;margin-bottom:12px" id="copyHist">Copy for coach</button>
     <pre class="coach">${esc(h.coachText)}</pre>
+    ${h.replay ? '<button class="btn secondary" style="width:100%;margin-bottom:12px" id="fullFb">See full feedback</button>' : ''}
+    ${h.leaks?.length ? `<div class="fb-line"><b>Leak tags:</b> ${h.leaks.map((t) => `<span class="leak">${esc(t)}</span>`).join('')}</div>` : ''}
     <h3>Preflop feedback</h3>
     ${(h.decisions || []).map(gradeHTML).join('') || '<div class="empty">No preflop decision.</div>'}`);
+  if ($('fullFb')) $('fullFb').onclick = () => { try { showFeedback(rebuildHand(h.replay, h.predictions), { fromHistory: h }); } catch (e) { toast(`Can't rebuild this hand: ${e.message}`, true); } };
   $('backBtn').onclick = showHistory;
   $('copyHist').onclick = () => copyText(h.coachText);
 }

@@ -57,4 +57,4 @@ export const getModel = () => {
 };
 export const typeLabel = (type) => current?.types[type]?.label || type;
 export const styleLabel = (style) => current?.styles[style]?.label || style;
-export const villainLabel = (p) => (p.style && p.style !== 'whale' ? `${typeLabel(p.type)} (${styleLabel(p.style).toLowerCase()})` : typeLabel(p.type));
+export const villainLabel = (p) => (p.style && p.style !== 'whale' ? `${typeLabel(p.type)} · ${styleLabel(p.style).toLowerCase()}` : typeLabel(p.type));

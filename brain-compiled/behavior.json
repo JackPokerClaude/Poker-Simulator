@@ -2011,6 +2011,1214 @@
     "quote": "200bb LJ (44 hands): all suited aces A2s-AKs; AA, AKo, AQo, AJo; KK, KQs-K7s, KQo; QQ, QJs-Q8s; JJ, JTs-J8s; TT, T9s, T8s; 99, 98s; 88, 87s; 77, 76s; 66, 65s."
    },
    "fb": null
+  },
+  "rules.neverLimp": {
+   "v": {
+    "title": "Never open-limp",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "RFI"
+     ],
+     "heroAction": [
+      "limp"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "4. Limpers",
+    "date": "",
+    "quote": "Never open-limp unless it's a special game (a bounty or a 7-2 game). Play raise or fold."
+   },
+   "fb": null
+  },
+  "rules.epLimper": {
+   "v": {
+    "title": "Vs an EP limper",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "ISO"
+     ],
+     "limperPos": [
+      "EP"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "4. Limpers",
+    "date": "",
+    "quote": "EP limpers are stronger, because people \"don't limp to limp-fold.\""
+   },
+   "fb": null
+  },
+  "rules.lateLimper": {
+   "v": {
+    "title": "Vs a late limper",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "ISO"
+     ],
+     "limperPos": [
+      "late"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "4. Limpers",
+    "date": "",
+    "quote": "Late limpers just want a cheap flop."
+   },
+   "fb": null
+  },
+  "rules.isoSize": {
+   "v": {
+    "title": "Iso size",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "ISO",
+      "BB_LIMP"
+     ],
+     "heroAction": [
+      "raise"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "4. Limpers",
+    "date": "",
+    "quote": "Iso size: 6x + 1bb per limper in position, about 7x + 1bb per limper out of position."
+   },
+   "fb": null
+  },
+  "rules.anyTwoLimper": {
+   "v": {
+    "title": "Vs a limper who calls any two",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "ISO"
+     ],
+     "villainType": [
+      "whale"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "4. Limpers",
+    "date": "",
+    "quote": "Vs a limper who calls ANY two preflop: iso LINEAR, not trash"
+   },
+   "fb": null
+  },
+  "rules.threeBetOrFold": {
+   "v": {
+    "title": "Facing an open: 3-bet or fold",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "VS_OPEN"
+     ],
+     "heroPos": [
+      "UTG",
+      "UTG+1",
+      "LJ",
+      "HJ",
+      "CO",
+      "SB"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "5. Facing an open (not from the BB)",
+    "date": "",
+    "quote": "Default: 3-bet or fold. Calls are mainly for the BTN (absolute position) and the BB (closing the action)."
+   },
+   "fb": null
+  },
+  "rules.passive3bet": {
+   "v": {
+    "title": "Vs a passive 3-bet",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "VS_3BET"
+     ],
+     "villainType": [
+      "passive",
+      "rec",
+      "tight"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "8. Facing a 3-bet",
+    "date": "",
+    "quote": "Vs a passive rec: fold a lot. That's the exploit: they under-3-bet, so overfold. Never 4-bet bluff them, in any position."
+   },
+   "fb": null
+  },
+  "rules.ask4bet": {
+   "v": {
+    "title": "Ask before you 4-bet a 3-bettor",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "VS_3BET",
+      "COLD4B"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "how deep, what range he 3-bets, is he 3-bet-or-fold from the SB, is his range too strong or too weak, does he barrel or play fit-or-fold, does he call or fold too much vs a 4-bet"
+   },
+   "fb": null
+  },
+  "rules.thinking4bet": {
+   "v": {
+    "title": "The thinking player",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "VS_3BET",
+      "COLD4B"
+     ],
+     "villainType": [
+      "thinking"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "He's the only one worth 4-bet bluffing."
+   },
+   "fb": null
+  },
+  "rules.whale4bet": {
+   "v": {
+    "title": "Vs an aggressive whale",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "VS_3BET",
+      "COLD4B",
+      "VS_4BET"
+     ],
+     "villainType": [
+      "whale"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "Stay linear, and size up your nutted hands."
+   },
+   "fb": null
+  },
+  "rules.aaOnly": {
+   "v": {
+    "title": "Your rule: 5-bet AA only",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "VS_4BET"
+     ]
+    }
+   },
+   "src": {
+    "file": "project-instructions.md",
+    "section": "Preflop chart file",
+    "date": "",
+    "quote": "Joan's rule: she only 5-bets AA."
+   },
+   "fb": null
+  },
+  "rules.bigOpen": {
+   "v": {
+    "title": "Red flag: an unusually large open",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "villainAction": [
+      "raise-big"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "13. Red flags",
+    "date": "",
+    "quote": "An unusually large open (30-35 when normal is 20-25): a stronger range."
+   },
+   "fb": null
+  },
+  "rules.limpReraise": {
+   "v": {
+    "title": "Red flag: a limp-reraise",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "villainAction": [
+      "limp-reraise"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "13. Red flags",
+    "date": "",
+    "quote": "A limp-reraise: AA, KK, AKs, maybe QQ, with no bluffs. Overfold massively."
+   },
+   "fb": null
+  },
+  "rules.bb3betEp": {
+   "v": {
+    "title": "Red flag: a BB 3-bet vs an EP open",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "VS_3BET"
+     ],
+     "heroPos": [
+      "UTG",
+      "UTG+1",
+      "LJ"
+     ],
+     "villainPos": [
+      "BB"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "13. Red flags",
+    "date": "",
+    "quote": "A BB 3-bet vs an EP open: massively under-bluffed. Overfold."
+   },
+   "fb": null
+  },
+  "rules.rec5bet": {
+   "v": {
+    "title": "Red flag: a rec 5-bets",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "facingLevel": [
+      5
+     ],
+     "villainType": [
+      "rec",
+      "passive",
+      "tight",
+      "whale"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "13. Red flags",
+    "date": "",
+    "quote": "A rec 5-bets at 200bb+: it's AA."
+   },
+   "fb": null
+  },
+  "rules.readPlayer": {
+   "v": {
+    "title": "Read the player, not the seat",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "VS_OPEN",
+      "SQZ"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "1. Before any chart: think first",
+    "date": "",
+    "quote": "How wide they open matters more than where they sit."
+   },
+   "fb": null
+  },
+  "rules.inBetween": {
+   "v": {
+    "title": "Small or big, never in between",
+    "when": {
+     "street": [
+      "flop",
+      "turn",
+      "river"
+     ],
+     "heroAction": [
+      "bet",
+      "raise"
+     ],
+     "betSize": [
+      "inbetween"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "",
+    "quote": "In-between is the worst of both: better hands call and your targets fold."
+   },
+   "fb": null
+  },
+  "rules.multiwayCbet": {
+   "v": {
+    "title": "Multiway c-bets",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "multiway": true,
+     "facing": true,
+     "villainPFR": true
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "",
+    "quote": "A big multiway c-bet is \"too strong,\" so overfold, even top pair. A small multiway c-bet is too weak, so attack it with low-equity draws and backdoors."
+   },
+   "fb": null
+  },
+  "rules.multiwayDonk": {
+   "v": {
+    "title": "Multiway donks",
+    "when": {
+     "street": [
+      "flop",
+      "turn"
+     ],
+     "multiway": true,
+     "facing": true,
+     "villainAction": [
+      "donk"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "",
+    "quote": "A multiway donk is \"much, much stronger\" than a heads-up donk."
+   },
+   "fb": null
+  },
+  "rules.tightConfig": {
+   "v": {
+    "title": "Tight configs have little air",
+    "when": {
+     "street": [
+      "flop",
+      "turn",
+      "river"
+     ],
+     "potType": [
+      "3bet",
+      "4bet"
+     ],
+     "tightConfig": true
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "",
+    "quote": "Early vs early 3-bet pots and 4-bet pots have few bluffs and few flush combos."
+   },
+   "fb": null
+  },
+  "rules.smallDryCbet": {
+   "v": {
+    "title": "A small c-bet on a dry board",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "villainPFR": true,
+     "betSize": [
+      "small"
+     ],
+     "board": {
+      "dry": true
+     }
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "",
+    "quote": "A small c-bet on a bone-dry static board is NOT weak."
+   },
+   "fb": null
+  },
+  "rules.sdv": {
+   "v": {
+    "title": "Showdown value: just get to showdown",
+    "when": {
+     "street": [
+      "turn",
+      "river"
+     ],
+     "facing": false,
+     "heroBucket": [
+      "medium"
+     ]
+    },
+    "recommend": "check"
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "",
+    "quote": "Showdown value's only goal is to REACH showdown"
+   },
+   "fb": null
+  },
+  "rules.poolCheckRaise": {
+   "v": {
+    "title": "Flop check-raises from the pool",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "villainAction": [
+      "raise"
+     ],
+     "villainStyle": [
+      "passiveCaller",
+      "passiveFolder",
+      "aggroFolder"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "",
+    "quote": "Flop check-raises are mostly sets and two pair"
+   },
+   "fb": null
+  },
+  "rules.whaleBigValue": {
+   "v": {
+    "title": "Vs a whale: bet big",
+    "when": {
+     "street": [
+      "flop",
+      "turn",
+      "river"
+     ],
+     "facing": false,
+     "villainType": [
+      "whale"
+     ],
+     "heroBucket": [
+      "strong"
+     ]
+    },
+    "recommend": "bet-big"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "",
+    "quote": "Bet big and overbet [08-25] | Whales love to call."
+   },
+   "fb": null
+  },
+  "rules.fishJam": {
+   "v": {
+    "title": "Vs fish: go big on the river",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "villainType": [
+      "rec"
+     ],
+     "heroBucket": [
+      "strong"
+     ]
+    },
+    "recommend": "bet-big"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "",
+    "quote": "Go big and jam rivers more [08-25] | More weak Ax than you expect"
+   },
+   "fb": null
+  },
+  "rules.stationTwoStreets": {
+   "v": {
+    "title": "Vs a passive calling station",
+    "when": {
+     "street": [
+      "flop",
+      "turn"
+     ],
+     "facing": false,
+     "villainStyle": [
+      "passiveCaller"
+     ],
+     "heroBucket": [
+      "strong"
+     ]
+    },
+    "recommend": "bet"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "",
+    "quote": "Put the money in over two streets [09-15]"
+   },
+   "fb": null
+  },
+  "rules.underBluffer": {
+   "v": {
+    "title": "He under-bluffs: over-fold",
+    "when": {
+     "street": [
+      "turn",
+      "river"
+     ],
+     "facing": true,
+     "villainStyle": [
+      "passiveCaller",
+      "passiveFolder"
+     ],
+     "heroBucket": [
+      "medium",
+      "air"
+     ]
+    },
+    "recommend": "fold"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "",
+    "quote": "He under-bluffs: over-fold."
+   },
+   "fb": null
+  },
+  "rules.overBluffer": {
+   "v": {
+    "title": "He over-bluffs: over-call",
+    "when": {
+     "street": [
+      "flop",
+      "turn",
+      "river"
+     ],
+     "facing": true,
+     "villainStyle": [
+      "aggroCaller",
+      "whale"
+     ],
+     "heroBucket": [
+      "medium"
+     ]
+    },
+    "recommend": "call"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "",
+    "quote": "He over-bluffs: over-call."
+   },
+   "fb": null
+  },
+  "rules.overCaller": {
+   "v": {
+    "title": "He over-calls: under-bluff",
+    "when": {
+     "street": [
+      "flop",
+      "turn",
+      "river"
+     ],
+     "facing": false,
+     "villainStyle": [
+      "passiveCaller",
+      "whale"
+     ],
+     "heroBucket": [
+      "air"
+     ]
+    },
+    "recommend": "check"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "",
+    "quote": "He over-calls: under-bluff."
+   },
+   "fb": null
+  },
+  "rules.fastPlayFish": {
+   "v": {
+    "title": "Vs fish, fast-play",
+    "when": {
+     "street": [
+      "flop",
+      "turn"
+     ],
+     "facing": false,
+     "villainType": [
+      "rec",
+      "whale"
+     ],
+     "heroBucket": [
+      "strong"
+     ]
+    },
+    "recommend": "bet"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "",
+    "quote": "Vs fish, fast-play strong hands; slowplaying gains nothing."
+   },
+   "fb": null
+  },
+  "rules.inverse": {
+   "v": {
+    "title": "On the river: the inverse",
+    "when": {
+     "street": [
+      "river"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "",
+    "quote": "On the river add \"what would I do with the inverse?\""
+   },
+   "fb": null
+  },
+  "rules.riverBuckets": {
+   "v": {
+    "title": "River range in buckets",
+    "when": {
+     "street": [
+      "river"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "",
+    "quote": "A bucket only counts if it is more than about 10% of his range."
+   },
+   "fb": null
+  },
+  "rules.topPairElastic": {
+   "v": {
+    "title": "Top pair on the river is elastic",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "potType": [
+      "srp"
+     ],
+     "villainStyle": [
+      "passiveFolder",
+      "aggroCaller",
+      "aggroFolder"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "",
+    "quote": "Most live players in 2025 won't stack off with top pair on the river in a normal SRP (elastic, so bluff big, value smaller)."
+   },
+   "fb": null
+  },
+  "rules.fishInelastic": {
+   "v": {
+    "title": "A fish who can't fold top pair",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "villainStyle": [
+      "whale",
+      "passiveCaller"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "",
+    "quote": "Vs a fish who never folds it (inelastic), flip it: value 2.5x pot, bluff small just to fold ace-high and king-high draws."
+   },
+   "fb": null
+  },
+  "rules.neverBluffing": {
+   "v": {
+    "title": "Pot odds don't matter if he's never bluffing",
+    "when": {
+     "street": [
+      "turn",
+      "river"
+     ],
+     "facing": true,
+     "villainAction": [
+      "raise"
+     ],
+     "villainStyle": [
+      "passiveCaller",
+      "passiveFolder"
+     ]
+    },
+    "recommend": "fold"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "10. Strong hands",
+    "date": "2026-08-11",
+    "quote": "Pot odds don't matter if he's never bluffing"
+   },
+   "fb": null
+  },
+  "rules.deepFold": {
+   "v": {
+    "title": "Deep: fold more bluff catchers",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "deep": true,
+     "heroBucket": [
+      "medium",
+      "strong"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-deep-stacks.md",
+    "section": "5. Fold more bluff catchers deep",
+    "date": "",
+    "quote": "When all the money goes in deep, the pool is \"way way way under-bluffing,\" so every bluff catcher is worth more as a fold."
+   },
+   "fb": null
+  },
+  "rules.deepOop": {
+   "v": {
+    "title": "Deep, out of position: check turns more",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "deep": true,
+     "heroIP": false,
+     "facing": false,
+     "heroBucket": [
+      "strong"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-deep-stacks.md",
+    "section": "6. Build the biggest pot",
+    "date": "",
+    "quote": "Out of position, check turns more."
+   },
+   "fb": null
+  },
+  "conflicts.a72": {
+   "v": {
+    "title": "A72 as the preflop raiser: c-bet the range or check back?",
+    "find": "A72 rainbow",
+    "open": "open-2",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "heroPFR": true,
+     "facing": false,
+     "board": {
+      "aceHigh": true,
+      "dry": true
+     }
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "",
+    "quote": "Range-bet the flop? (Joan hasn't ruled)"
+   },
+   "fb": null
+  },
+  "conflicts.cappedRecTurn": {
+   "v": {
+    "title": "A capped rec who checked the turn: size up, or bet tiny?",
+    "find": "A capped rec who checked the turn",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "villainAction": [
+      "check"
+     ],
+     "villainType": [
+      "rec",
+      "passive",
+      "tight",
+      "whale"
+     ],
+     "capped": true
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "",
+    "quote": "A capped rec who checked the turn: size UP, or bet TINY?"
+   },
+   "fb": null
+  },
+  "conflicts.riverJam2x": {
+   "v": {
+    "title": "Jam ~2x pot into a rec's river check with no showdown value?",
+    "find": "Jam ~2x pot into a rec's river CHECK",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "villainAction": [
+      "check"
+     ],
+     "villainType": [
+      "rec",
+      "passive",
+      "whale"
+     ],
+     "heroBucket": [
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "",
+    "quote": "Jam ~2x pot into a rec's river CHECK with no showdown value"
+   },
+   "fb": null
+  },
+  "conflicts.pairedRiverBluff": {
+   "v": {
+    "title": "A big river bluff when the river pairs the board?",
+    "find": "A big river bluff when the river PAIRS the board",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "heroBucket": [
+      "air"
+     ],
+     "riverPairs": true
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "",
+    "quote": "A big river bluff when the river PAIRS the board"
+   },
+   "fb": null
+  },
+  "conflicts.setCheckRaise": {
+   "v": {
+    "title": "Check-raise size with a set vs a stab",
+    "find": "Check-raise size with a set",
+    "when": {
+     "street": [
+      "flop",
+      "turn"
+     ],
+     "facing": true,
+     "heroBucket": [
+      "strong"
+     ],
+     "heroIP": false
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "",
+    "quote": "Check-raise size with a set (or strong hand) vs a stab"
+   },
+   "fb": null
+  },
+  "conflicts.thickBigStab": {
+   "v": {
+    "title": "Thick value facing a big stab",
+    "find": "Thick value facing a BIG stab",
+    "when": {
+     "street": [
+      "flop",
+      "turn"
+     ],
+     "facing": true,
+     "heroBucket": [
+      "strong"
+     ],
+     "betSize": [
+      "big"
+     ],
+     "villainAction": [
+      "bet-big"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "",
+    "quote": "Thick value facing a BIG stab (KQ on Q-8-4)"
+   },
+   "fb": null
+  },
+  "conflicts.open05-12": {
+   "v": {
+    "title": "A half-pot river lead after the turn checks through, weak A-high",
+    "find": "Where does [05-12] go",
+    "open": "open-1",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "turnCheckedThrough": true,
+     "betSize": [
+      "small",
+      "inbetween"
+     ],
+     "heroBucket": [
+      "air",
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "",
+    "quote": "Where does [05-12] go?"
+   },
+   "fb": null
+  },
+  "conflicts.kkIso": {
+   "v": {
+    "title": "KK (and AK) small or big in the CO 3-bet iso vs a fish",
+    "find": "KK (and AK) small or big",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "VS_OPEN"
+     ],
+     "heroPos": [
+      "CO"
+     ],
+     "villainType": [
+      "whale",
+      "rec"
+     ],
+     "heroCodes": [
+      "KK",
+      "AKs",
+      "AKo"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "5. Facing an open (not from the BB)",
+    "date": "",
+    "quote": "KK (and AK) small or big in the CO 3-bet iso vs a fish's open, with 2+ regs behind"
+   },
+   "fb": null
+  },
+  "conflicts.abc3bet": {
+   "v": {
+    "title": "The \"even at 15%\" HJ vs LJ 3-bet chart",
+    "find": "The \"even at 15%\" HJ vs LJ 3-bet chart",
+    "when": {
+     "street": [
+      "preflop"
+     ],
+     "spot": [
+      "VS_OPEN"
+     ],
+     "heroPos": [
+      "HJ"
+     ],
+     "villainType": [
+      "tight"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "5. Facing an open (not from the BB)",
+    "date": "",
+    "quote": "The \"even at 15%\" HJ vs LJ 3-bet chart: CSV vs [2025-03-04 HHP] (CSV unchanged)."
+   },
+   "fb": null
+  },
+  "questions.six": {
+   "v": [
+    "What's the villain's range?",
+    "What's our edge on him?",
+    "What's the effective stack?",
+    "What size did he use?",
+    "What's the rake?",
+    "How many players are left to act?"
+   ],
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "1. Before any chart: think first",
+    "date": "",
+    "quote": "Marc's six questions, every hand:"
+   },
+   "fb": null
+  },
+  "questions.rfi": {
+   "v": "When to open wider or tighter: a bigger postflop edge (fish in the blinds), a passive table, deeper stacks, late position = wider; regs in the blinds, an aggressive table, shallower, early position = tighter.",
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "2. When to open wider or tighter",
+    "date": "",
+    "quote": "You have a bigger postflop edge (fish in the blinds) | You have a smaller edge (a table of pros, regs in the blinds)"
+   },
+   "fb": null,
+   "interp": "summary of the table rows"
+  },
+  "sizing.uncapped": {
+   "v": "bet-small",
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2026-08-04",
+    "quote": "Uncapped: go small, with value AND bluffs, or just call."
+   },
+   "fb": null
+  },
+  "sizing.cappedInelastic": {
+   "v": "bet-big",
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2026-08-04",
+    "quote": "Capped + inelastic: bet huge, pot to 1.6x."
+   },
+   "fb": null
+  },
+  "sizing.cappedElastic": {
+   "v": "bet-small",
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2026-08-04",
+    "quote": "Capped + elastic: go small for value to induce, or use a just-big-enough bluff size."
+   },
+   "fb": null
+  },
+  "sizing.cappedDef": {
+   "v": "capped",
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "",
+    "quote": "Capped = his action already showed his strength: he checked, bet small into several players, or called where he'd raise a big hand."
+   },
+   "fb": null
+  },
+  "sizing.cappedStrongShare": {
+   "v": 0.15,
+   "outside": "he counts as capped when under 15% of his range is Strong (default, Joan to review)"
+  },
+  "sizing.elasticPoints": {
+   "v": 15,
+   "outside": "his range counts as elastic when a big bet folds 15+ points more of it than a small bet (default, Joan to review)"
   }
  }
 }
