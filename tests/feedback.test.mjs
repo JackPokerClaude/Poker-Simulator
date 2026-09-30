@@ -89,7 +89,8 @@ test('the math on screen matches the numbers', () => {
     const call = a.opts.find((o) => o.kind === 'call');
     if (call) {
       const t = call.need * a.pot / (1 - call.need);
-      assert.ok(Math.abs(call.ev - (a.eq.total * (a.pot + t) - t)) < 1e-6);
+      const real = a.real ?? 1;
+      assert.ok(Math.abs(call.ev - (a.eq.total * real * (a.pot + t) - t)) < 1e-6);
     }
     for (const o of a.opts) if (o.mix) assert.ok(Math.abs(Object.values(o.mix).reduce((x, y) => x + y, 0) - 1) < 1e-6);
   }
@@ -121,4 +122,16 @@ test('a saved hand rebuilds exactly for feedback from History', () => {
     assert.deepEqual(r.result.won, s.result.won);
     assert.doesNotThrow(() => buildFeedback(r, { model, brain }));
   }
+});
+
+test('out of position before the river, math-only EVs use the realization factor', () => {
+  let seen = 0;
+  for (const { fb } of hands) for (const pt of points(fb)) {
+    const a = pt.analysis;
+    if (!a) continue;
+    if (a.street === 'river') assert.equal(a.real, 1);
+    if (a.real < 1) { seen++; assert.ok(a.opts.some((o) => o.lines.some((l) => /realize about 80%/.test(l)))); }
+    if (a.grade.close) assert.equal(a.grade.mark, '⚠️');
+  }
+  assert.ok(seen > 0);
 });

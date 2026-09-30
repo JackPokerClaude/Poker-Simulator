@@ -9,7 +9,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 | 1 | Remove the prediction step | Done | b256886 (+ test fix efb582b) | 48 pass |
 | 2 | Range chart at every decision, narrowed by what he did | Done | e7c75f2 | 50 pass |
 | 3 | HHP's seven hand classes | Done | b72b81e | 51 pass |
-| 4 | Every decision in the five-step order | Done | (this commit) | 51 pass |
+| 4 | Every decision in the five-step order | Done | 6a551cc | 51 pass |
+| 5 | OOP realization factor, math-only close calls | Done | (this commit) | 52 pass |
 
 ## Notes and open issues
 
@@ -33,3 +34,5 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 7. Tiebreak for hands in two classes: the higher class in the brain's order ("can play for stacks > thick value > thin value > draws > showdown value > air"), so a weak pair with a flush draw is a high-equity draw, and top pair with a draw stays thick/thin value. Default, Joan to review.
 8. Weak ace-high (A2-AJ without a pair or draw) is air, not showdown value; only AK/AQ-high count as showdown value (the brain's example is "AK-high"). Default, Joan to review.
 9. Trips made with one hole card on a paired board count as CPFS, whatever the kicker. Default, Joan to review.
+10. Out-of-position equity realization = 80% on the flop and turn, not applied on the river (no later street to lose equity on). Applied to every EV in the math, whether or not a brain rule decides the verdict. [OUTSIDE SOURCE] in config/outside-source.js.
+11. "Math only, close" = the math-best line beats your action by less than 5% of the pot, when no brain rule or sizing rule decided the verdict. [OUTSIDE SOURCE] in config/outside-source.js.

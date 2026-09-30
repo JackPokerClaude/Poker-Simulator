@@ -20,6 +20,8 @@ import { trackHand, COMBOS, CODE_OF, total, preflopActionMix } from '../range/tr
 import { CLASSES, CLASS_KEYS, CLASS_LABEL, comboClasses, classShares, groupShare, GROUP_OF } from '../range/classes.js';
 import { rangeCells, actionCells, comboList } from '../ui/grid.js';
 import { TABLE_SETTINGS } from '../../config/table-settings.js';
+import { OUTSIDE_SOURCE } from '../../config/outside-source.js';
+import { POSTFLOP_ORDER } from '../engine/game.js';
 import { heroOption, RESPONSE } from '../range/whatif.js';
 import { equityVsRange, equityOver } from './equity.js';
 import { spotFeatures, betSizeClass } from './spot.js';
@@ -72,8 +74,12 @@ function evalOption(ctx, kind, action) {
   const P = potTotal(st);
   const W = wsum(w);
   const lines = [];
+  // Out of position before the river you realize only part of your equity [OUTSIDE SOURCE].
+  const R = ctx.real ?? 1;
+  const realized = (e) => e * R;
   const opt = { kind, action, lines, ev: 0, eqAll: eq.total };
-  const eqAll = eq.total;
+  const eqAll = realized(eq.total);
+  if (R < 1) lines.push(`Out of position you realize about ${pct(R)} of your equity [OUTSIDE SOURCE]: ${pct(eq.total)} × ${R} = ${pct(eqAll)}, used below.`);
   if (kind === 'fold') {
     opt.ev = 0;
     lines.push(`Fold: $0. You give up your ${pct(eqAll)} of a ${usd(P)} pot.`);
@@ -86,7 +92,7 @@ function evalOption(ctx, kind, action) {
     opt.ev = eqAll * (P + t) - t;
     opt.need = need;
     lines.push(`Pot odds: call ${usd(t)} to win ${usd(P)} → you need ${usd(t)} / ${usd(P + t)} = ${pct(need)} equity.`);
-    lines.push(`Your equity vs his real range: ${pct(eqAll)} (${eq.combos} combos, ${eq.exact ? `every ${eq.runouts === 1 ? 'hand' : `one of ${eq.runouts} river cards`}` : `${eq.runouts} sampled runouts`}).`);
+    lines.push(`Your equity vs his real range: ${pct(eq.total)} (${eq.combos} combos, ${eq.exact ? 'exact' : `${eq.runouts} sampled runouts`})${R < 1 ? `, ${pct(eqAll)} after realization` : ''}.`);
     lines.push(`${pct(eqAll)} ${eqAll >= need ? '≥' : '<'} ${pct(need)} → EV = ${pct(eqAll)} × ${usd(P + t)} − ${usd(t)} = ${usd(opt.ev)}.`);
     if (st.street !== 'river' && ctx.shares) opt.next = `you see the next card against this same range: ${topClasses(ctx.shares)}.`;
     return opt;
@@ -120,14 +126,14 @@ function evalOption(ctx, kind, action) {
     let ev = 0;
     const pc = mix.check || 0;
     if (pc) {
-      const e = equityOver(eq.eq, mul(w, m.P.check));
+      const e = realized(equityOver(eq.eq, mul(w, m.P.check)));
       ev += pc * e * P;
       lines.push(`He checks ${pct(pc)} → you keep ${pct(e)} of the ${usd(P)} pot: ${pct(pc)} × ${pct(e)} × ${usd(P)} = ${usd(pc * e * P)}.`);
     }
     const pb = mix.bet || 0;
     if (pb) {
       const b = (m.to.bet || P * 0.5);
-      const e = equityOver(eq.eq, mul(w, m.P.bet));
+      const e = realized(equityOver(eq.eq, mul(w, m.P.bet)));
       const callEv = e * (P + 2 * b) - b;
       const best = Math.max(0, callEv);
       ev += pb * best;
@@ -147,7 +153,7 @@ function evalOption(ctx, kind, action) {
   if (pc) {
     const vAdd = action.to - st.players[vi].committed;
     const T = P + add + vAdd;
-    const e = equityOver(eq.eq, mul(w, m.P.call));
+    const e = realized(equityOver(eq.eq, mul(w, m.P.call)));
     const each = e * T - add;
     ev += pc * each;
     opt.eqCalls = e;
@@ -158,7 +164,7 @@ function evalOption(ctx, kind, action) {
   const pr = mix.raise || 0;
   if (pr) {
     const R = m.to.raise || action.to * 3;
-    const e = equityOver(eq.eq, mul(w, m.P.raise));
+    const e = realized(equityOver(eq.eq, mul(w, m.P.raise)));
     const T = P + (R - hero.committed) + (R - st.players[vi].committed);
     const callEv = e * T - (R - hero.committed);
     const best = Math.max(-add, callEv);
@@ -198,7 +204,7 @@ function prosCons(opt, ctx) {
     if (opt.vsBet && opt.vsBet.callEv < 0) cons.push(`If he bets, you have to fold (${pct(opt.vsBet.e)} vs his bets).`);
   }
   if (opt.kind === 'call') {
-    if (opt.ev > 0) pros.push(`Your ${pct(ctx.eq.total)} beats the ${pct(opt.need)} the price asks for.`); else cons.push(`The price asks for ${pct(opt.need)} and you have ${pct(ctx.eq.total)}.`);
+    if (opt.ev > 0) pros.push(`Your ${pct(opt.eqAll * (ctx.real ?? 1))} beats the ${pct(opt.need)} the price asks for.`); else cons.push(`The price asks for ${pct(opt.need)} and you have ${pct(opt.eqAll * (ctx.real ?? 1))}.`);
   }
   return { pros, cons };
 }
@@ -233,7 +239,11 @@ function gradeAction(actual, verdict, opts, pot, bb, conflicted) {
   if (conflicted) return { mark: '⚖', text: 'Not graded: this spot is an open ⚖ conflict / ♣ question in your playbook. Both views are below.' };
   const best = opts.find((o) => o.line === verdict.line) || opts.reduce((a, b) => (b.ev > a.ev ? b : a), opts[0]);
   const loss = best && actual ? best.ev - actual.ev : 0;
+  const mathOnly = !verdict.rule && !verdict.size;
+  const closePot = OUTSIDE_SOURCE.closeCallPot ?? 0.05;
   const tol = Math.max(bb, 0.05 * pot);
+  const same0 = actual.line === verdict.line || (verdict.line === 'bet' && actual.line.startsWith('bet'));
+  if (!same0 && mathOnly && loss < closePot * pot) return { mark: '⚠️', text: `Math only, close: ${LINE_LABEL[verdict.line].toLowerCase()} is about ${usd(Math.max(0, loss))} better, under ${pct(closePot)} of the pot.`, loss, close: true };
   const same = actual.line === verdict.line || (verdict.line === 'bet' && actual.line.startsWith('bet'));
   if (same) return { mark: '✅', text: `${LINE_LABEL[actual.line]} is the line.`, loss: 0 };
   const bothBets = actual.line.startsWith('bet') && verdict.line.startsWith('bet');
@@ -458,7 +468,9 @@ function decisionAnalysis(h, d, model, brain, vi, tags, w, classes, shares) {
   const hero = st.players[h.heroIdx];
   const eq = equityVsRange(hero.cards, board, w, { samples: 160 });
   const la = legalActions(st);
-  const ctx = { st, heroIdx: h.heroIdx, vi, w, eq, classes, shares, street };
+  const heroOOP = POSTFLOP_ORDER.indexOf(h.heroIdx) < POSTFLOP_ORDER.indexOf(vi);
+  const real = heroOOP && street !== 'river' ? (OUTSIDE_SOURCE.oopRealization ?? 1) : 1;
+  const ctx = { st, heroIdx: h.heroIdx, vi, w, eq, classes, shares, street, real };
   const kinds = la.toCall > 0 ? ['fold', 'call', 'raise'] : ['betSmall', 'betBig', 'check'];
   const pot = potTotal(st);
   const TITLE = { fold: 'Fold', call: 'Call', raise: 'Raise', betSmall: 'Bet small', betBig: 'Bet big', check: 'Check' };
@@ -518,7 +530,7 @@ function decisionAnalysis(h, d, model, brain, vi, tags, w, classes, shares) {
   const leaks = leakFor(street, actual, verdict, grade, feat, tags);
   const used = new Set([verdict.rule].filter(Boolean));
   return {
-    street, n: d.n, vi, pot, eq, shares, opts, actual, verdict, grade, leaks, feat, rangeRef: w,
+    street, n: d.n, vi, pot, eq, shares, opts, actual, verdict, grade, leaks, feat, rangeRef: w, real,
     also: { rules: matched.rules.filter((r) => !used.has(r.key)), conflicts: matched.conflicts },
     multiway: activePlayers(st).length > 2,
   };
