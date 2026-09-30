@@ -3712,6 +3712,1374 @@
    },
    "fb": null
   },
+  "rules.oopCallerCpfs": {
+   "v": {
+    "title": "Can play for stacks vs his c-bet: check-raise",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "heroPFR": false,
+     "heroIP": false,
+     "villainPFR": true,
+     "heroClass": [
+      "cpfs"
+     ]
+    },
+    "recommend": "raise"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2026-08-18",
+    "quote": "Check-raise. Pile money in now"
+   },
+   "fb": null
+  },
+  "rules.oopCallerThin": {
+   "v": {
+    "title": "Thin value vs his c-bet: check-call",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "heroPFR": false,
+     "heroIP": false,
+     "villainPFR": true,
+     "heroClass": [
+      "thin"
+     ]
+    },
+    "recommend": "call"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2026-08-18",
+    "quote": "Thin value | Check-call | Check-call"
+   },
+   "fb": null
+  },
+  "rules.oopCallerDrawsWeak": {
+   "v": {
+    "title": "Vs a weak range, check-raise all your draws",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "heroPFR": false,
+     "heroIP": false,
+     "villainPFR": true,
+     "capped": true,
+     "heroBucket": [
+      "draws"
+     ]
+    },
+    "recommend": "raise"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2026-08-18",
+    "quote": "Check-raise ALL draws, even a gutshot"
+   },
+   "fb": null
+  },
+  "rules.oopTurnStrongCpfs": {
+   "v": {
+    "title": "Vs a big double barrel, check-raise only stack hands",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "heroPFR": false,
+     "heroIP": false,
+     "villainPFR": true,
+     "betSize": [
+      "big"
+     ],
+     "heroClass": [
+      "cpfs"
+     ]
+    },
+    "recommend": "raise"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2026-08-18",
+    "quote": "Vs strong (he double-barrels big): check-raise ONLY can-play-for-stacks hands."
+   },
+   "fb": null
+  },
+  "rules.oopTurnStrongFold": {
+   "v": {
+    "title": "Vs a big double barrel, fold showdown value and air",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "heroPFR": false,
+     "heroIP": false,
+     "betSize": [
+      "big"
+     ],
+     "heroClass": [
+      "sdv",
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2026-08-18",
+    "quote": "Fold showdown value and air."
+   },
+   "fb": null
+  },
+  "rules.oopTurnDrawsXR": {
+   "v": {
+    "title": "Draws vs a small turn bet: check to check-raise",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "heroPFR": false,
+     "heroIP": false,
+     "betSize": [
+      "small",
+      "inbetween"
+     ],
+     "heroBucket": [
+      "draws"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2026-08-18",
+    "quote": "Draws check to check-raise a small or medium bet."
+   },
+   "fb": null
+  },
+  "rules.oopRiverCallBluffer": {
+   "v": {
+    "title": "Big river bet from a bluffer: call your value",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "heroPFR": false,
+     "heroIP": false,
+     "betSize": [
+      "big"
+     ],
+     "villainStyle": [
+      "aggroCaller"
+     ],
+     "heroClass": [
+      "thick",
+      "thin",
+      "sdv"
+     ]
+    },
+    "recommend": "call"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2026-08-18",
+    "quote": "Call thick, thin and showdown value vs a bluffer"
+   },
+   "fb": null
+  },
+  "rules.oopRiverFoldUnderBluffer": {
+   "v": {
+    "title": "Big river bet from an under-bluffer: fold your value",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "heroPFR": false,
+     "heroIP": false,
+     "betSize": [
+      "big"
+     ],
+     "villainStyle": [
+      "passiveCaller",
+      "passiveFolder"
+     ],
+     "heroClass": [
+      "thick",
+      "thin",
+      "sdv"
+     ]
+    },
+    "recommend": "fold"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2026-08-18",
+    "quote": "fold them vs an under-bluffer"
+   },
+   "fb": null
+  },
+  "rules.oopRiverDonkWeak": {
+   "v": {
+    "title": "Vs a weak range on the river, donk your strong hands",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "heroPFR": false,
+     "heroIP": false,
+     "capped": true,
+     "heroBucket": [
+      "strong"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2026-08-18",
+    "quote": "Vs weak (his turn doubled the flop bet): donk-lead strong hands."
+   },
+   "fb": null
+  },
+  "rules.cappedTurnStabXR": {
+   "v": {
+    "title": "He stabs the turn while capped: big boy check-raise",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "heroIP": false,
+     "capped": true,
+     "flopCheckedThrough": true,
+     "heroBucket": [
+      "strong",
+      "draws",
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2026-08-18",
+    "quote": "Blank turn, he'll stab and he's capped: \"big boy\" check-raise your strong hands, thick value, all draws and air."
+   },
+   "fb": null
+  },
+  "rules.oopSdvCheck": {
+   "v": {
+    "title": "Showdown value out of position: check",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": false,
+     "heroIP": false,
+     "heroClass": [
+      "sdv"
+     ]
+    },
+    "recommend": "check"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2026-08-25",
+    "quote": "Default with showdown value: check, let them over-stab, and give credit if they keep firing"
+   },
+   "fb": null
+  },
+  "rules.bbThinVsCo": {
+   "v": {
+    "title": "Thin top pair vs a wide CO c-bet: just call",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "heroPos": [
+      "BB"
+     ],
+     "villainPos": [
+      "CO"
+     ],
+     "villainPFR": true,
+     "heroClass": [
+      "thin"
+     ]
+    },
+    "recommend": "call"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2026-09-15",
+    "quote": "Exception: thin top pair vs a wide CO c-bet from the BB. Just call."
+   },
+   "fb": null
+  },
+  "rules.oopFloatTurnBottomPair": {
+   "v": {
+    "title": "Float his turn barrel with bottom pair",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "heroIP": false,
+     "heroPFR": false,
+     "villainPFR": true,
+     "heroClass": [
+      "sdv"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2025-06-10",
+    "quote": "live players \"massively under triple barrel,\" so call the turn and let him give up."
+   },
+   "fb": null
+  },
+  "rules.oop3betVsRecCheck": {
+   "v": {
+    "title": "3-bet pot OOP vs a rec: don't c-bet a wet flop",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": false,
+     "potType": [
+      "3bet"
+     ],
+     "heroPFR": true,
+     "heroIP": false,
+     "villainType": [
+      "rec",
+      "passive",
+      "whale"
+     ],
+     "board": {
+      "wet": true
+     }
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2025-01-07",
+    "quote": "3-bet pot OOP, don't c-bet vs a rec who slow-plays in position"
+   },
+   "fb": null
+  },
+  "rules.wetSmallCbetXR": {
+   "v": {
+    "title": "A small c-bet on a wet board is too weak",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "villainPFR": true,
+     "heroIP": false,
+     "betSize": [
+      "small"
+     ],
+     "board": {
+      "wet": true
+     },
+     "heroBucket": [
+      "draws",
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2025-06-10",
+    "quote": "a small size = a too-weak range: check-raise everything with no showdown value"
+   },
+   "fb": null
+  },
+  "rules.oopPfrBigStabFold": {
+   "v": {
+    "title": "Big stab as the OOP raiser: fold showdown value",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "potType": [
+      "srp"
+     ],
+     "heroPFR": true,
+     "heroIP": false,
+     "multiway": false,
+     "betSize": [
+      "big"
+     ],
+     "heroClass": [
+      "sdv",
+      "lowDraw"
+     ]
+    },
+    "recommend": "fold"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2025-04-01",
+    "quote": "XF = showdown value (AJ-high, 55, 77) and low-equity draws."
+   },
+   "fb": null
+  },
+  "rules.oopPfrSmallWetStabXR": {
+   "v": {
+    "title": "Small stab on a wet board: check-raise wide",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "potType": [
+      "srp"
+     ],
+     "heroPFR": true,
+     "heroIP": false,
+     "multiway": false,
+     "betSize": [
+      "small"
+     ],
+     "board": {
+      "wet": true
+     },
+     "heroClass": [
+      "cpfs",
+      "thick",
+      "highDraw",
+      "lowDraw"
+     ]
+    },
+    "recommend": "raise"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2025-04-01",
+    "quote": "XR = CPFS (66), combo draws (87dd), thick value, high-equity draws (A3dd) AND low-equity draws (89hh)."
+   },
+   "fb": null
+  },
+  "rules.oopPfrTurnBigFold": {
+   "v": {
+    "title": "Double barrel after a big stab: fold showdown value",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "potType": [
+      "srp"
+     ],
+     "heroPFR": true,
+     "heroIP": false,
+     "multiway": false,
+     "betSize": [
+      "big"
+     ],
+     "heroClass": [
+      "sdv",
+      "lowDraw"
+     ]
+    },
+    "recommend": "fold"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2025-04-01",
+    "quote": "XF = showdown value and low-equity draws. T9hh (thin value on the flop) drops to showdown value here: fold."
+   },
+   "fb": null
+  },
+  "rules.regValueXRFlop": {
+   "v": {
+    "title": "Vs a reg, check-raise value on the flop",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "heroIP": false,
+     "villainType": [
+      "thinking",
+      "aggressive"
+     ],
+     "heroBucket": [
+      "strong"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2025-01-28",
+    "quote": "With VALUE check-raise the FLOP big"
+   },
+   "fb": null
+  },
+  "rules.oopRiverXRSmallBet": {
+   "v": {
+    "title": "His small river bet after checking back the turn: check-raise all-in",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "potType": [
+      "3bet"
+     ],
+     "heroIP": false,
+     "turnCheckedThrough": true,
+     "betSize": [
+      "small"
+     ],
+     "heroClass": [
+      "thin",
+      "sdv"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2025-06-10",
+    "quote": "River, we're OOP vs a SMALL bet after he checked back the turn (3-bet pot, K-high board, we hold a showdown hand like A10s): check-raise ALL-IN."
+   },
+   "fb": null
+  },
+  "rules.oop3bettorBigStabFold": {
+   "v": {
+    "title": "Big stab in your 3-bet pot: fold showdown value",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "potType": [
+      "3bet"
+     ],
+     "heroPFR": true,
+     "heroIP": false,
+     "betSize": [
+      "big"
+     ],
+     "heroClass": [
+      "sdv",
+      "lowDraw"
+     ]
+    },
+    "recommend": "fold"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2025-10-21",
+    "quote": "FOLD showdown value (99) and low-equity draws (the chart)."
+   },
+   "fb": null
+  },
+  "rules.oop3bettorSmallWetXR": {
+   "v": {
+    "title": "Small stab on a wet board in your 3-bet pot: check-raise wide",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "potType": [
+      "3bet"
+     ],
+     "heroPFR": true,
+     "heroIP": false,
+     "betSize": [
+      "small"
+     ],
+     "board": {
+      "wet": true
+     },
+     "heroClass": [
+      "cpfs",
+      "thick",
+      "highDraw",
+      "lowDraw"
+     ]
+    },
+    "recommend": "raise"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2025-10-21",
+    "quote": "Check-raise wide: CPFS (99), thick value (QQ), combo (KQss), high-equity draws (A5ss), even low-equity draws (KQdd)."
+   },
+   "fb": null
+  },
+  "rules.oop3bettorSmallDryCall": {
+   "v": {
+    "title": "Small stab on a dry board in your 3-bet pot: mostly check-call",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "potType": [
+      "3bet"
+     ],
+     "heroPFR": true,
+     "heroIP": false,
+     "betSize": [
+      "small"
+     ],
+     "board": {
+      "dry": true
+     },
+     "heroClass": [
+      "thick",
+      "thin",
+      "sdv",
+      "lowDraw"
+     ]
+    },
+    "recommend": "call"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2025-10-21",
+    "quote": "Check-call thick value (AK), thin value, high- and low-equity draws (JTs at a good price) and showdown value."
+   },
+   "fb": null
+  },
+  "rules.oop3betRiverJamAir": {
+   "v": {
+    "title": "3-bet pot, turn checked through, no showdown value: jam",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "potType": [
+      "3bet"
+     ],
+     "heroIP": false,
+     "turnCheckedThrough": true,
+     "riverPairs": false,
+     "heroBucket": [
+      "air"
+     ]
+    },
+    "recommend": "bet-big"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2026-04-28",
+    "quote": "A5dd (no showdown value vs his range): jam the river as a bluff."
+   },
+   "fb": null
+  },
+  "rules.lag3betRiverXR": {
+   "v": {
+    "title": "A LAG bets small after the turn checks through: check-raise",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "potType": [
+      "3bet"
+     ],
+     "heroIP": false,
+     "turnCheckedThrough": true,
+     "betSize": [
+      "small"
+     ],
+     "villainType": [
+      "aggressive"
+     ],
+     "heroClass": [
+      "thick",
+      "thin"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2026-06-09",
+    "quote": "3-bet pot, top pair, he's a LAG: the flush-completing turn checks through, and he bets small on the river. Check-raise all-in."
+   },
+   "fb": null
+  },
+  "rules.bluffLooseNotTight": {
+   "v": {
+    "title": "Bluff the loose player, not the tight one",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "potType": [
+      "3bet"
+     ],
+     "heroBucket": [
+      "air"
+     ],
+     "villainType": [
+      "tight"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2025-06-17",
+    "quote": "River jam bluff vs the LOOSE player beats the TIGHT player."
+   },
+   "fb": null
+  },
+  "rules.bluffAggroNotPassive": {
+   "v": {
+    "title": "Bluff the aggressive player, not the passive one",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "potType": [
+      "3bet"
+     ],
+     "heroBucket": [
+      "air"
+     ],
+     "villainType": [
+      "aggressive",
+      "passive"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2025-06-17",
+    "quote": "River 2x-pot jam bluff vs the AGGRESSIVE player beats the PASSIVE one."
+   },
+   "fb": null
+  },
+  "rules.turnXRJamVsAggro3bettor": {
+   "v": {
+    "title": "Turn check-raise jam bluff vs the aggro 3-bettor",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "potType": [
+      "3bet"
+     ],
+     "heroPFR": false,
+     "heroIP": false,
+     "villainType": [
+      "aggressive"
+     ],
+     "heroBucket": [
+      "draws",
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2025-06-17",
+    "quote": "Reverse spot (you're the preflop caller in a 3-bet pot): a turn check-raise JAM bluff works vs the aggro 3-bettor"
+   },
+   "fb": null
+  },
+  "rules.multiwayCheckWeakDraws": {
+   "v": {
+    "title": "Multiway: check weak draws",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "multiway": true,
+     "facing": false,
+     "heroClass": [
+      "lowDraw"
+     ]
+    },
+    "recommend": "check"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "2025-08-12",
+    "quote": "Check the crappy gutshot and weak flush draws (65 of spades) multiway."
+   },
+   "fb": null
+  },
+  "rules.multiwayPfrBluff": {
+   "v": {
+    "title": "Multiway bluffs: dry boards, big, several streets",
+    "when": {
+     "street": [
+      "flop",
+      "turn",
+      "river"
+     ],
+     "multiway": true,
+     "heroPFR": true,
+     "facing": false,
+     "heroBucket": [
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "2025-08-12",
+    "quote": "PFR bluff multiway: only on boards unlikely to be stabbed, over multiple streets and BIG"
+   },
+   "fb": null
+  },
+  "rules.multiwayBigTurnDonk": {
+   "v": {
+    "title": "Multiway: a flop call, then a big turn donk",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "multiway": true,
+     "facing": true,
+     "villainAction": [
+      "donk"
+     ],
+     "betSize": [
+      "big"
+     ],
+     "heroClass": [
+      "thick",
+      "thin",
+      "sdv"
+     ]
+    },
+    "recommend": "fold"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "2025-08-12",
+    "quote": "A flop call followed by a big turn donk says \"my hand greatly improved or was very strong.\" Fold KK happily."
+   },
+   "fb": null
+  },
+  "rules.twoCappedTurn": {
+   "v": {
+    "title": "Both players capped on the turn: check-raise",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "multiway": true,
+     "facing": true,
+     "heroIP": false,
+     "villainAction": [
+      "bet-small"
+     ],
+     "betSize": [
+      "small"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "2026-08-04",
+    "quote": "Two players both capped on the turn (one checked, one bet small into two): check-raise"
+   },
+   "fb": null
+  },
+  "rules.smallXRMultiway": {
+   "v": {
+    "title": "Small check-raise vs a multiway monkey c-bet",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "multiway": true,
+     "villainPFR": true,
+     "heroIP": false,
+     "betSize": [
+      "small"
+     ],
+     "heroAction": [
+      "raise"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2026-04-14",
+    "quote": "The small raise keeps JJ/TT/99 in so you can barrel them off."
+   },
+   "fb": null
+  },
+  "rules.smallRiverBetIP": {
+   "v": {
+    "title": "His small river bet in position: thin value",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "heroIP": false,
+     "betSize": [
+      "small"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "2026-09-01",
+    "quote": "A small river bet in position is usually under-bluffed thin value."
+   },
+   "fb": null
+  },
+  "rules.smallRiverBetOOP": {
+   "v": {
+    "title": "His small river bet out of position: often a bluff",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "heroIP": true,
+     "betSize": [
+      "small"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "2026-09-01",
+    "quote": "A small bet out of position is often a cheap bluff."
+   },
+   "fb": null
+  },
+  "rules.bigRiverBet": {
+   "v": {
+    "title": "River bets over 2/3 pot are under-bluffed",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "betSize": [
+      "big"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "2026-09-01",
+    "quote": "River bets over 2/3 pot are under-bluffed."
+   },
+   "fb": null
+  },
+  "rules.riverAirBluff": {
+   "v": {
+    "title": "No showdown value on the river: bluff, pick the size",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "heroBucket": [
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2026-07-07",
+    "quote": "No showdown value on the river: almost always bluff. The question is size, not whether"
+   },
+   "fb": null
+  },
+  "rules.riverScalpel": {
+   "v": {
+    "title": "Vs a strong range: the scalpel",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "heroBucket": [
+      "air"
+     ],
+     "capped": false
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2026-07-07",
+    "quote": "Vs a strong range, \"the scalpel\": a small \"baby bet\" folds his draws and A/K/Q-high"
+   },
+   "fb": null
+  },
+  "rules.rangeFoldTest": {
+   "v": {
+    "title": "Bluffing with showdown value: can you get a range fold?",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "heroClass": [
+      "sdv"
+     ],
+     "heroAction": [
+      "bet"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2026-09-15",
+    "quote": "The test: \"Can I get a range fold?\" If not, check back"
+   },
+   "fb": null
+  },
+  "rules.uncappedLowFoldEquity": {
+   "v": {
+    "title": "Uncapped: little fold equity",
+    "when": {
+     "street": [
+      "flop",
+      "turn",
+      "river"
+     ],
+     "facing": false,
+     "heroBucket": [
+      "air"
+     ],
+     "capped": false
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2024-10-01",
+    "quote": "it is low when he is uncapped or you're shallow."
+   },
+   "fb": null
+  },
+  "rules.cappedDeepBluff": {
+   "v": {
+    "title": "Capped and deep: bet big, then empty the clip",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "capped": true,
+     "deep": true,
+     "heroClass": [
+      "air",
+      "lowDraw"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2024-10-01",
+    "quote": "bet BIG with air and low-equity draws (54dd) on the turn, then jam the river at about 2.5x pot (\"empty the clip\")"
+   },
+   "fb": null
+  },
+  "rules.recDoubleBarrelAir": {
+   "v": {
+    "title": "Double-barrel air vs recs",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "heroPFR": true,
+     "heroBucket": [
+      "air"
+     ],
+     "villainType": [
+      "rec"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2024-12-10",
+    "quote": "Double-barrel turns with air vs recs even with no equity"
+   },
+   "fb": null
+  },
+  "rules.emptyClipWeakRange": {
+   "v": {
+    "title": "His range is weak at the river: empty the clip",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "heroBucket": [
+      "air"
+     ],
+     "capped": true
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2025-05-06",
+    "quote": "if he arrives WEAK and is only \"supposed to\" call weak pairs, empty the clip."
+   },
+   "fb": null
+  },
+  "rules.riverXRJamBluff": {
+   "v": {
+    "title": "Check-raise all-in as a river bluff",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "heroIP": false,
+     "villainPFR": true,
+     "turnCheckedThrough": true,
+     "heroBucket": [
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2025-08-05",
+    "quote": "his best hands are weak Ax/Kx that fold to big river raises (no flush, no 99)."
+   },
+   "fb": null
+  },
+  "rules.tripsBetSmall": {
+   "v": {
+    "title": "Paired board, trips: bet small",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "board": {
+      "paired": true
+     },
+     "heroClass": [
+      "cpfs"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2025-08-05",
+    "quote": "With trips, bet small: it keeps underpairs and Kx in and gets slowplaying 8x to start check-raising."
+   },
+   "fb": null
+  },
+  "rules.crippledBlockers": {
+   "v": {
+    "title": "Vs a crippled range, blockers barely matter",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "heroBucket": [
+      "air"
+     ],
+     "capped": true,
+     "heroAction": [
+      "bet"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2025-02-25",
+    "quote": "\"Blocking or unblocking is nearly irrelevant\" vs a crippled range live."
+   },
+   "fb": null
+  },
+  "rules.tightConfigGiveUp": {
+   "v": {
+    "title": "Tight config: a bluff needs him to fold strong hands",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "heroBucket": [
+      "air"
+     ],
+     "tightConfig": true
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2025-03-11",
+    "quote": "give up (\"bluffs only work if he folds strong-looking hands\")"
+   },
+   "fb": null
+  },
+  "rules.ipSmallRiverCapped": {
+   "v": {
+    "title": "In position vs a capped villain: bet the river small",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "heroIP": true,
+     "capped": true,
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2025-06-10",
+    "quote": "IP vs a capped villain, bet SMALL on the river, for thin value (one pair) and as a small bluff to fold missed draws."
+   },
+   "fb": null
+  },
+  "rules.riverDonkNutsPassive": {
+   "v": {
+    "title": "Vs passive players, donk the river with the nuts",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "heroIP": false,
+     "heroPFR": false,
+     "heroClass": [
+      "cpfs"
+     ],
+     "villainType": [
+      "passive"
+     ]
+    },
+    "recommend": "bet"
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "2025-06-10",
+    "quote": "Donk the river with the nuts vs passive players who check back everything"
+   },
+   "fb": null
+  },
+  "rules.repeatSmallBets": {
+   "v": {
+    "title": "Repeat small bets mean a weak range",
+    "when": {
+     "street": [
+      "turn",
+      "river"
+     ],
+     "facing": true,
+     "villainAction": [
+      "bet-small"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "2026-08-25",
+    "quote": "Repeat small bets mean a weak range (77, 88, 9x). Raise big and take it"
+   },
+   "fb": null
+  },
+  "rules.recDoubleBarrelBig": {
+   "v": {
+    "title": "A rec double-barrels big: he has it",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "villainType": [
+      "rec",
+      "passive",
+      "whale"
+     ],
+     "villainAction": [
+      "bet-big"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "2026-04-14",
+    "quote": "A rec double-barrels BIG: he has it. With trips, check-raise the turn"
+   },
+   "fb": null
+  },
   "conflicts.a72": {
    "v": {
     "title": "A72 as the preflop raiser: c-bet the range or check back?",
@@ -4148,6 +5516,253 @@
     "section": "2. Bet sizing: small or big, never in between",
     "date": "",
     "quote": "A full house on a paired turn after his flop check-raise: [2025-03-04 HHP] vs [2025-05-20 HHP]."
+   },
+   "fb": null
+  },
+  "conflicts.crFreq3bet": {
+   "v": {
+    "title": "How often to check-raise a range c-bettor in a wide 3-bet pot",
+    "find": "How often to check-raise a range c-bettor",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "potType": [
+      "3bet"
+     ],
+     "heroPFR": false,
+     "heroIP": false,
+     "villainPFR": true,
+     "betSize": [
+      "small"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "",
+    "quote": "How often to check-raise a range c-bettor in a wide 3-bet pot: [01-27] 29% vs [2025-03-11 HHP] 53%."
+   },
+   "fb": null
+  },
+  "conflicts.likelyStabbedPfr": {
+   "v": {
+    "title": "Likely-stabbed flop as the raiser: bet thick value, or check it all?",
+    "find": "is on the right-hand",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "heroPFR": true,
+     "facing": false,
+     "potType": [
+      "srp"
+     ],
+     "board": {
+      "wet": true
+     }
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "",
+    "quote": "[2025-04-01 HHP] is on the right-hand (\"check the ENTIRE range\") side of the table above, in a heads-up SRP, vs [2025-08-12] in a multiway SRP."
+   },
+   "fb": null
+  },
+  "conflicts.turnDonkOrCheck": {
+   "v": {
+    "title": "Turned a strong hand out of position: donk or check?",
+    "find": "Two more oldest videos on the DONK side",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "heroIP": false,
+     "heroPFR": false,
+     "flopCheckedThrough": false,
+     "heroBucket": [
+      "strong"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "",
+    "quote": "Two more oldest videos on the DONK side of the table above (added 2026-09-29), vs [04-28] on the CHECK side."
+   },
+   "fb": null
+  },
+  "conflicts.ak4ThreeBettor": {
+   "v": {
+    "title": "3-bettor OOP on a board good for you: c-bet the range, or only strong hands?",
+    "find": "board good for us (A-K-4)",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": false,
+     "potType": [
+      "3bet"
+     ],
+     "heroPFR": true,
+     "heroIP": false,
+     "board": {
+      "aceHigh": true,
+      "dry": true
+     }
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "",
+    "quote": "Out of position as the 3-bettor, board good for us (A-K-4): [2025-03-11 HHP] c-bets the ENTIRE range vs [2025-10-21] / [2025-04-01 HHP] bet only CPFS + thick value."
+   },
+   "fb": null
+  },
+  "conflicts.jt92At100bb": {
+   "v": {
+    "title": "Wet flop OOP at about 100bb: bet strong hands, or check the range?",
+    "find": "J-9-2 at about 100bb OOP",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": false,
+     "heroIP": false,
+     "shallow": true,
+     "heroBucket": [
+      "strong"
+     ],
+     "board": {
+      "wet": true
+     }
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "",
+    "quote": "J-9-2 at about 100bb OOP: [2025-02-18 HHP] bet strong hands vs [2025-04-01 HHP] check the whole range."
+   },
+   "fb": null
+  },
+  "conflicts.proRec3betBoard": {
+   "v": {
+    "title": "3-bet pot OOP: range-bet small vs a pro, check vs a rec?",
+    "find": "Extends the A-K-4 table above",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": false,
+     "potType": [
+      "3bet"
+     ],
+     "heroPFR": true,
+     "heroIP": false,
+     "board": {
+      "aceHigh": true
+     }
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "",
+    "quote": "Extends the A-K-4 table above (board good for us, 3-bet pot)"
+   },
+   "fb": null
+  },
+  "conflicts.aceTurnAir": {
+   "v": {
+    "title": "Ace turn after the flop checks through, holding air",
+    "find": "An Ace turn after the flop checks through",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "heroIP": false,
+     "flopCheckedThrough": true,
+     "heroPFR": false,
+     "heroBucket": [
+      "air"
+     ],
+     "board": {
+      "aceHigh": true
+     }
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "",
+    "quote": "An Ace turn after the flop checks through, we hold air"
+   },
+   "fb": null
+  },
+  "conflicts.recFlopXR3bet": {
+   "v": {
+    "title": "A rec check-raises your flop top pair: call, or 3-bet?",
+    "find": "The same 2024-12-17 hand vs [06-16]",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "villainAction": [
+      "raise"
+     ],
+     "heroPFR": true,
+     "villainType": [
+      "rec",
+      "passive",
+      "whale"
+     ],
+     "heroClass": [
+      "thick",
+      "thin"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "",
+    "quote": "The same 2024-12-17 hand vs [06-16]: CALL his flop check-raise, or 3-bet it?"
+   },
+   "fb": null
+  },
+  "conflicts.tightRecRiverXR": {
+   "v": {
+    "title": "Shove as a bluff into a tight old rec's river check-raise?",
+    "find": "Shove as a bluff into a tight old rec",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "villainAction": [
+      "raise"
+     ],
+     "villainType": [
+      "tight",
+      "rec",
+      "passive"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "6. Bluffing: air vs showdown value",
+    "date": "",
+    "quote": "Shove as a bluff into a tight old rec's river check-raise: [2024-12-17 HHP] shove vs [08-04] / [2025-06-10 HHP] don't try to fold flushes."
    },
    "fb": null
   },

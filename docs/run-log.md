@@ -15,7 +15,7 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 | 7 | Known leak line: second person, [YOUR LOG] | Done | c62a145 | 53 pass |
 | 8 | Range paragraphs: HHP base vs seat widening, sources for every number | Done | 843d35a | 54 pass |
 | 9 | Copy for coach rebuilt around the new format | Done | 2275870 | 55 pass |
-| 10 | "Also from the brain" matcher coverage, in batches | In progress: batch 0 02d8446 (13/74), batch 1 (this commit, 24/74) | | 55 pass |
+| 10 | "Also from the brain" matcher coverage, in batches | In progress: batch 0 02d8446 (13/74), batch 1 b79a031 (24/74), batch 2 (this commit, 43/74) | | 55 pass |
 
 ## Notes and open issues
 
@@ -35,6 +35,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 - Item 10, batch 0: Settings › Brain now shows how many postflop playbook topics the matcher covers and lists the rest. Coverage before any new rules: 13 of 74 topics.
 
 - Item 10, batch 1 (playbook-postflop.md): 31 rules and 7 conflict pointers, every quote checked against the brain (0 stale). New spot features the rules needed: flop checked through, villain double-barreled, four to a flush, and your exact line (bet small/big). Coverage 13 → 24 of 74 topics. Side effect over 300 simulated hands: decisions with a matching ⚖ conflict (shown both ways, not graded) went from about 12% to 17%. One duplicate pointer dropped (the rec-river-check jam conflict is logged in two files; the existing pointer covers it).
+
+- Item 10, batch 2 (playbook-postflop-weakness-and-position.md): 51 rules and 9 conflict pointers, 0 stale quotes. I tightened the drafts where the conditions only approximated the text: "flop checked through" now uses the real feature instead of "capped", "a bluffer" uses his postflop style (aggro caller) instead of his preflop type, a donk-lead rule lost its verdict power because "weak range" was only approximated, and three conflict pointers were narrowed (single-raised pots only; ace-high "board good for us"; ~100bb means under 150bb effective) so they don't leave half the flops ungraded. Coverage 24 → 43 of 74. Decisions with a matching ⚖ conflict (not graded): about 22% of postflop decisions over 300 hands. Known gap: one "⚖ CONFLICT ... extends the existing table" marker sits mid-line in a [2025-03-11 HHP] bullet in part 2, so the brain parser doesn't pick it up as its own conflict (the table it extends is covered).
 
 ## Decisions for Joan
 
@@ -57,3 +59,5 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 15. Storage: the full coach review is kept for the same last 50 hands that keep replay data; older hands fall back to the short hand history (stakes, seats, action, result). "See full feedback" from History rebuilds the full text anyway while the replay exists. Default, Joan to review.
 16. Coverage unit for item 10: a "topic" is one bold-headed paragraph in a numbered section of the three postflop playbooks, plus the bullets under it (or a section's bullets before its first bold paragraph): 74 topics. A topic counts as covered when a matcher entry (a rule or a conflict/open-question pointer) quotes a line inside it. Default, Joan to review.
 17. New matcher rules only decide the verdict ("recommend") when the quote is a direct instruction for exactly that spot; everything else shows as advice under "Also from the brain". Where two brain lines give opposite advice in the same spot without a ⚖ mark, neither decides the verdict. Default, Joan to review.
+18. "About 100bb" in the matcher (and for the LJ chart in item 12) = effective stack under 150bb, the midpoint between 100bb and 200bb. [OUTSIDE SOURCE] cut-off, default, Joan to review.
+19. Two brain lines can show together under "Also from the brain" with opposite advice where the playbook itself disagrees without a ⚖ mark (e.g. fold showdown value to a big turn double barrel vs float the turn because live players under-triple-barrel). Neither decides the verdict; Joan to review whether those deserve a ⚖.

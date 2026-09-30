@@ -94,6 +94,7 @@ export function spotFeatures(s, heroIdx, vi, extra = {}) {
     villainAction: v ? villainAction(s, vi) : null,
     betSize: lastBet ? betSizeClass(lastBet.to, lastBet.potBefore) : null,
     deep: eff / s.stakes.bb >= 300,
+    shallow: eff / s.stakes.bb < 150, // closer to 100bb than to 200bb [OUTSIDE SOURCE] cut-off
     spr: pot ? (eff - hero.committed) / pot : null,
     riverPairs,
     turnCheckedThrough,
