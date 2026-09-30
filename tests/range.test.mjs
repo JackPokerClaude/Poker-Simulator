@@ -73,3 +73,27 @@ test('preflop action mix sums to one per hand', () => {
   const mix = preflopActionMix(act);
   for (const m of Object.values(mix)) assert.ok(Math.abs(m.p.raise + m.p.call + m.p.fold - 1) < 1e-9);
 });
+
+test('the seven HHP classes sort hands the way the brain describes them', async () => {
+  const { classify } = await import('../js/range/classes.js');
+  const c = (h, b, st = 'flop') => classify(h.split(' ').map(parseCard), b.split(' ').map(parseCard), st);
+  const AQJ = 'Ah Qd Jc';
+  assert.equal(c('As Kd', AQJ), 'thick', 'TPTK');
+  assert.equal(c('As Td', AQJ), 'thick', 'top pair, second-best kicker');
+  assert.equal(c('As 9d', AQJ), 'thin', 'A9: weaker kicker');
+  assert.equal(c('As 5d', AQJ), 'thin', 'A5: weaker kicker');
+  assert.equal(c('As 4d', AQJ), 'thin', 'A4: same class as A5 (no cut-off between them)');
+  assert.equal(c('Qs Qh', AQJ), 'cpfs', 'set');
+  assert.equal(c('Ks Th', AQJ), 'cpfs', 'straight');
+  assert.equal(c('As Qs', AQJ), 'cpfs', 'two pair using both');
+  assert.equal(c('Kh Kc', '9h 7c 2d'), 'thick', 'overpair');
+  assert.equal(c('8h 8c', '9h 7c 2d'), 'sdv', 'underpair');
+  assert.equal(c('Kd 7d', 'Ah 7c 2s'), 'sdv', 'second pair');
+  assert.equal(c('Ah Kd', '9h 7c 2d'), 'sdv', 'AK-high');
+  assert.equal(c('Ah 5d', '9h 7c 2d'), 'air', 'weak ace-high, no draw');
+  assert.equal(c('Th 8h', '9h 7c 2h'), 'highDraw', 'combo draw');
+  assert.equal(c('Jc Td', '9h 7c 2d'), 'lowDraw', 'gutshot');
+  assert.equal(c('Jc Td', '9h 7c 2d 3s 4s', 'river'), 'air', 'busted draw on the river');
+  assert.equal(c('3h 2h', 'Kh 9h 5c'), 'highDraw', 'flush draw with nothing else');
+  assert.equal(c('5h 2c', 'Kh 5d 9h Qh'), 'highDraw', 'bottom pair + flush draw: draws rank above showdown value');
+});

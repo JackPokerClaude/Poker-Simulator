@@ -327,7 +327,7 @@ rule('multiwayCbet', { title: 'Multiway c-bets', when: { street: ['flop'], multi
 rule('multiwayDonk', { title: 'Multiway donks', when: { street: ['flop', 'turn'], multiway: true, facing: true, villainAction: ['donk'] } }, PF1('A multiway donk is "much, much stronger" than a heads-up donk.'));
 rule('tightConfig', { title: 'Tight configs have little air', when: { street: ['flop', 'turn', 'river'], potType: ['3bet', '4bet'], tightConfig: true } }, PF1('Early vs early 3-bet pots and 4-bet pots have few bluffs and few flush combos.'));
 rule('smallDryCbet', { title: 'A small c-bet on a dry board', when: { street: ['flop'], facing: true, villainPFR: true, betSize: ['small'], board: { dry: true } } }, PF1('A small c-bet on a bone-dry static board is NOT weak.'));
-rule('sdv', { title: 'Showdown value: just get to showdown', when: { street: ['turn', 'river'], facing: false, heroBucket: ['medium'] }, recommend: 'check' }, PF1("Showdown value's only goal is to REACH showdown"));
+rule('sdv', { title: 'Showdown value: just get to showdown', when: { street: ['turn', 'river'], facing: false, heroClass: ['sdv'] }, recommend: 'check' }, PF1("Showdown value's only goal is to REACH showdown"));
 rule('poolCheckRaise', { title: 'Flop check-raises from the pool', when: { street: ['flop'], facing: true, villainAction: ['raise'], villainStyle: ['passiveCaller', 'passiveFolder', 'aggroFolder'] } }, BR9('Flop check-raises are mostly sets and two pair'));
 rule('whaleBigValue', { title: 'Vs a whale: bet big', when: { street: ['flop', 'turn', 'river'], facing: false, villainType: ['whale'], heroBucket: ['strong'] }, recommend: 'bet-big' }, BR9('Bet big and overbet [08-25] | Whales love to call.'));
 rule('fishJam', { title: 'Vs fish: go big on the river', when: { street: ['river'], facing: false, villainType: ['rec'], heroBucket: ['strong'] }, recommend: 'bet-big' }, BR9('Go big and jam rivers more [08-25] | More weak Ax than you expect'));
@@ -395,6 +395,21 @@ claim('bigMultiwayCbet', { title: 'A big multiway c-bet is too strong', when: { 
 claim('whaleStabs', { title: 'The whale over-stabs (his bets keep air)', when: { street: ['flop', 'turn'], villainType: ['whale'], villainAction: ['bet-small', 'bet-big'] }, group: 'air', groupLabel: 'air', min: 0.15 }, V1028('over-stabs the flop and turn, then usually gives up the river'));
 claim('passiveFolderRiver', { title: 'A passive folder gives up his draws on the river', when: { street: ['river'], villainStyle: ['passiveFolder'], villainAction: ['bet-small', 'bet-big'] }, group: 'air', groupLabel: 'air', max: 0.15 }, V0217('Double-barrels draws, then gives them up on the river.'));
 claim('recTelegraph', { title: 'Recs telegraph with size', when: { street: ['flop', 'turn', 'river'], villainType: ['rec', 'passive'], villainAction: ['bet-big'] }, group: 'strongValue', groupLabel: 'strong value', direction: 'up' }, src('playbook-postflop-weakness-and-position.md', '4. Pounce on weakness', '2025-01-07')('recs telegraph with size'));
+
+// ---------------------------------------------------------------- the seven HHP hand classes
+// rule = how the app sorts a hand into the class (the examples come from the quote; the exact
+// cut-offs are the app's reading, listed in docs/run-log.md "Decisions for Joan").
+const WK4 = src('playbook-postflop-weakness-and-position.md', '4. Pounce on weakness', '2025-08-12');
+const WK5 = src('playbook-postflop-weakness-and-position.md', '5. Out of position, as the preflop caller [08-18]', '2025-10-21');
+const BR7 = src('playbook-postflop-bluffs-and-rivers.md', '7. Bluff-catching and river raises', '');
+const cls = (key, label, rule, s, interp) => hhp(`classes.${key}`, { label, rule }, s, { fb: { label, rule }, interp });
+cls('cpfs', 'Can play for stacks (CPFS)', 'Sets, trips, two pair using both your cards, straights, flushes, full houses and better: hands that cooler strong hands.', WK4('CHECK CPFS (can play for stacks, hands that cooler strong hands)'), 'which made hands count is the app\'s reading of "hands that cooler strong hands"');
+cls('thick', 'Thick value', 'Overpairs, and top pair with the best or second-best kicker still available.', WK4('BET thick value only (TPTK, an overpair'), 'the second-best kicker counts too (default, Joan to review)');
+cls('thin', 'Thin value', 'Top pair with a weaker kicker.', BR7('thin value (KQ, AQ, weaker queens; never sets, two pair or straights with that size)'));
+cls('highDraw', 'High-equity draws', 'Flush draws, open-ended straight draws and combo draws (8+ outs), flop and turn only.', WK5('Check-raise wide: CPFS (99), thick value (QQ), combo (KQss), high-equity draws (A5ss), even low-equity draws (KQdd).'), '8+ outs = high equity (default, Joan to review)');
+cls('lowDraw', 'Low-equity draws', 'Gutshots and other 4-7 out draws, flop and turn only.', WK4('Check the crappy gutshot and weak flush draws (65 of spades) multiway.'), '4-7 outs = low equity (default, Joan to review)');
+cls('sdv', 'Showdown value', 'Second pair and lower, underpairs, and AK / AQ high: hands that want to get to showdown.', WK5('Check-call thin value and showdown value (TT, AK-high).'), 'second pair and underpairs are showdown value; AK/AQ-high count, weaker ace-high doesn\'t (default, Joan to review)');
+cls('air', 'Air', 'No pair and no draw (and busted draws on the river).', src('playbook-postflop.md', '1. Read his range first', '2026-08-18')('can play for stacks > thick value > thin value > draws > showdown value > air'));
 
 void PI;
 mkdirSync(new URL('../brain-compiled/', import.meta.url), { recursive: true });

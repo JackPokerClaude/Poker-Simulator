@@ -354,7 +354,7 @@ pre.coach { white-space: pre-wrap; word-break: break-word; background: var(--tin
 .rc-read .rc-src { display: block; font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
 
 /* 13x13 range grid: bar width = frequency, corner n/m = card removal, hatched = all blocked */
-:root { --g-raise: #1459d9; --g-call: #e3a21a; --g-fold: #dfe4ec; --g-strong: #0f2f73; --g-medium: #5b95f5; --g-draws: #e3a21a; --g-air: #d85a61; --g-gone: #c9ced8; }
+:root { --g-raise: #1459d9; --g-call: #e3a21a; --g-fold: #dfe4ec; --g-cpfs: #0b2560; --g-thick: #1f5fd6; --g-thin: #6ea4f7; --g-hdraw: #d9730d; --g-ldraw: #eec14a; --g-sdv: #8a6fd1; --g-air: #d85a61; --g-gone: #c9ced8; }
 .hgrid { display: grid; grid-template-columns: repeat(13, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; max-width: 520px; }
 .hgrid .gc { position: relative; aspect-ratio: 1; display: flex; align-items: center; justify-content: center; padding: 0; border: 0; border-radius: 0; font: inherit; font-size: clamp(7px, 2.1vw, 11px); font-weight: 700; color: #6b7589; background-color: var(--white); letter-spacing: -0.3px; cursor: pointer; }
 .hgrid .gc.in { color: #fff; text-shadow: 0 0 2px rgba(0, 0, 0, 0.75); }
@@ -405,7 +405,6 @@ div.tag { display: block; margin-top: 4px; }
 .fb-bt td { padding: 3px 4px; border-bottom: 1px solid var(--line); vertical-align: top; }
 .fb-bt td:first-child { white-space: nowrap; font-weight: 700; }
 .dot { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 5px; vertical-align: middle; }
-.dot.strong { background: var(--g-strong); } .dot.medium { background: var(--g-medium); } .dot.draws { background: var(--g-draws); } .dot.air { background: var(--g-air); }
 .fb-math { font-size: 13px; line-height: 1.5; background: var(--white); border: 1px solid var(--line); border-radius: 8px; padding: 6px 8px; margin: 6px 0 2px; font-variant-numeric: tabular-nums; }
 .fb-also { font-size: 14px; line-height: 1.45; margin: 5px 0; padding-left: 8px; border-left: 3px solid var(--blue-soft); }
 .fb-take { font-size: 16px; font-weight: 800; line-height: 1.4; margin: 6px 0 8px; }

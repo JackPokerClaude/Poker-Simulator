@@ -2513,8 +2513,8 @@
       "river"
      ],
      "facing": false,
-     "heroBucket": [
-      "medium"
+     "heroClass": [
+      "sdv"
      ]
     },
     "recommend": "check"
@@ -3406,6 +3406,123 @@
     "quote": "recs telegraph with size"
    },
    "fb": null
+  },
+  "classes.cpfs": {
+   "v": {
+    "label": "Can play for stacks (CPFS)",
+    "rule": "Sets, trips, two pair using both your cards, straights, flushes, full houses and better: hands that cooler strong hands."
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "2025-08-12",
+    "quote": "CHECK CPFS (can play for stacks, hands that cooler strong hands)"
+   },
+   "fb": {
+    "label": "Can play for stacks (CPFS)",
+    "rule": "Sets, trips, two pair using both your cards, straights, flushes, full houses and better: hands that cooler strong hands."
+   },
+   "interp": "which made hands count is the app's reading of \"hands that cooler strong hands\""
+  },
+  "classes.thick": {
+   "v": {
+    "label": "Thick value",
+    "rule": "Overpairs, and top pair with the best or second-best kicker still available."
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "2025-08-12",
+    "quote": "BET thick value only (TPTK, an overpair"
+   },
+   "fb": {
+    "label": "Thick value",
+    "rule": "Overpairs, and top pair with the best or second-best kicker still available."
+   },
+   "interp": "the second-best kicker counts too (default, Joan to review)"
+  },
+  "classes.thin": {
+   "v": {
+    "label": "Thin value",
+    "rule": "Top pair with a weaker kicker."
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "",
+    "quote": "thin value (KQ, AQ, weaker queens; never sets, two pair or straights with that size)"
+   },
+   "fb": {
+    "label": "Thin value",
+    "rule": "Top pair with a weaker kicker."
+   }
+  },
+  "classes.highDraw": {
+   "v": {
+    "label": "High-equity draws",
+    "rule": "Flush draws, open-ended straight draws and combo draws (8+ outs), flop and turn only."
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2025-10-21",
+    "quote": "Check-raise wide: CPFS (99), thick value (QQ), combo (KQss), high-equity draws (A5ss), even low-equity draws (KQdd)."
+   },
+   "fb": {
+    "label": "High-equity draws",
+    "rule": "Flush draws, open-ended straight draws and combo draws (8+ outs), flop and turn only."
+   },
+   "interp": "8+ outs = high equity (default, Joan to review)"
+  },
+  "classes.lowDraw": {
+   "v": {
+    "label": "Low-equity draws",
+    "rule": "Gutshots and other 4-7 out draws, flop and turn only."
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "2025-08-12",
+    "quote": "Check the crappy gutshot and weak flush draws (65 of spades) multiway."
+   },
+   "fb": {
+    "label": "Low-equity draws",
+    "rule": "Gutshots and other 4-7 out draws, flop and turn only."
+   },
+   "interp": "4-7 outs = low equity (default, Joan to review)"
+  },
+  "classes.sdv": {
+   "v": {
+    "label": "Showdown value",
+    "rule": "Second pair and lower, underpairs, and AK / AQ high: hands that want to get to showdown."
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "2025-10-21",
+    "quote": "Check-call thin value and showdown value (TT, AK-high)."
+   },
+   "fb": {
+    "label": "Showdown value",
+    "rule": "Second pair and lower, underpairs, and AK / AQ high: hands that want to get to showdown."
+   },
+   "interp": "second pair and underpairs are showdown value; AK/AQ-high count, weaker ace-high doesn't (default, Joan to review)"
+  },
+  "classes.air": {
+   "v": {
+    "label": "Air",
+    "rule": "No pair and no draw (and busted draws on the river)."
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "2026-08-18",
+    "quote": "can play for stacks > thick value > thin value > draws > showdown value > air"
+   },
+   "fb": {
+    "label": "Air",
+    "rule": "No pair and no draw (and busted draws on the river)."
+   }
   }
  }
 }

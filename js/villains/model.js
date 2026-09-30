@@ -2,6 +2,7 @@
 // checked against the brain) turned into nested objects, plus where every number came from.
 import { resolveCompiled, sourceTag } from '../brain/compiled.js';
 import { ALL_CODES } from '../engine/cards.js';
+import { setClassInfo } from '../range/classes.js';
 
 function setPath(obj, path, v) {
   const parts = path.split('.');
@@ -36,7 +37,7 @@ export function buildModel(compiled, texts) {
   for (const [group, items] of Object.entries(tree.reads || {})) {
     reads[group] = Object.entries(items).filter(([, t]) => t).map(([n, text]) => ({ text, key: `reads.${group}.${n}` }));
   }
-  return {
+  const m = {
     resolved,
     types: tree.types || {},
     styles: tree.styles || {},
@@ -47,6 +48,8 @@ export function buildModel(compiled, texts) {
     rec: (key) => resolved.values[key],
     tag: (key) => sourceTag(resolved.values[key]),
   };
+  setClassInfo(m);
+  return m;
 }
 
 let current = null;

@@ -2,7 +2,8 @@
 // villain just did, your hand's bucket. Thresholds here are [OUTSIDE SOURCE] defaults.
 import { rankOf, suitOf } from '../engine/cards.js';
 import { POSTFLOP_ORDER, potTotal, activePlayers, legalActions } from '../engine/game.js';
-import { features, bucketOf, boardTable } from '../engine/strength.js';
+import { features, boardTable } from '../engine/strength.js';
+import { classify, GROUP_OF } from '../range/classes.js';
 
 export function boardTexture(board) {
   if (!board.length) return {};
@@ -73,7 +74,8 @@ export function spotFeatures(s, heroIdx, vi, extra = {}) {
     street,
     facing: facingBet,
     facingLevel: street === 'preflop' ? s.raiseLevel : null,
-    heroBucket: f ? bucketOf(f, street) : null,
+    heroClass: f ? classify(hero.cards, s.board, street) : null,
+    heroBucket: f ? GROUP_OF[classify(hero.cards, s.board, street)] : null,
     heroFeatures: f,
     heroPos: hero.pos,
     villainPos: v?.pos || null,
