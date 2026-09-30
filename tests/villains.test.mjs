@@ -4,13 +4,16 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { ranges, model, brainTexts } from './setup.mjs';
 import { resolveCompiled, normalizeText } from '../js/brain/compiled.js';
-import { createGame, legalActions, dealNextStreet, POSITIONS } from '../js/engine/game.js';
+import { createGame, legalActions, dealNextStreet, applyAction, POSITIONS } from '../js/engine/game.js';
 import { villainAct } from '../js/engine/ai.js';
 import { villainPolicy } from '../js/engine/policy.js';
 import { createHand } from '../js/engine/dealer.js';
 import { classifySpot, LJ_CHART } from '../js/engine/scenario.js';
 import { gradeDecision } from '../js/grading/grade.js';
-import { shuffledDeck, weightedPick, handCode } from '../js/engine/cards.js';
+import { shuffledDeck, weightedPick, handCode, ALL_CODES, combosOf, RANKS } from '../js/engine/cards.js';
+
+// Two real cards for a code like 'AKs' (suits chosen so they never clash).
+const cardsFor = (code) => { const a = RANKS.indexOf(code[0]) * 4, b = RANKS.indexOf(code[1]) * 4; return code[2] === 's' ? [a, b] : [a, b + 1]; };
 
 test('compiled layer: quotes checked, stale values fall back and get listed', () => {
   const compiled = { version: 1, values: {
@@ -71,28 +74,40 @@ test('policy: probabilities sum to 1, same answer every time, labels kept on the
   }
 });
 
-test('calibration: each type opens and plays about as wide as the brain says', () => {
+// Exact, not sampled: for each type in each seat, folded to him, the share of all 1326 hands
+// his strategy raises. The average over seats UTG-SB must sit near the brain's open %.
+test('calibration: each type opens about as wide as the brain says (exact)', () => {
   const types = Object.keys(model.types);
-  const st = Object.fromEntries(types.map((t) => [t, { seats: 0, vpip: 0, rfiOpp: 0, rfi: 0 }]));
-  for (let h = 0; h < 1500; h++) {
-    const s = mkState(types.map((_, k) => types[(h + k) % types.length]));
-    while (!s.done && !s.awaitingDeal && s.street === 'preflop') {
-      const p = s.players[s.toAct];
-      const unopened = s.raiseLevel === 1 && !s.log.some((e) => e.street === 'preflop' && (e.type === 'call' || e.type === 'raise'));
-      const e = villainAct(s);
-      if (unopened) { st[p.type].rfiOpp++; if (e.type === 'raise') st[p.type].rfi++; }
-    }
-    for (const p of s.players) {
-      st[p.type].seats++;
-      if (s.log.some((e) => e.street === 'preflop' && e.i === p.i && (e.type === 'call' || e.type === 'raise'))) st[p.type].vpip++;
-    }
-  }
   for (const t of types) {
+    let tot = 0, seats = 0;
+    for (let seat = 0; seat <= 6; seat++) {
+      const s = mkState(types.map(() => t));
+      for (let k = 0; k < seat; k++) applyAction(s, { type: 'fold' });
+      let raise = 0;
+      for (const code of ALL_CODES) {
+        const opts = villainPolicy(s, seat, cardsFor(code));
+        raise += combosOf(code) * opts.filter((o) => o.label.startsWith('raise')).reduce((a, o) => a + o.p, 0);
+      }
+      tot += (100 * raise) / 1326; seats++;
+    }
+    const avg = tot / seats;
     const pre = model.types[t].pre;
-    const rfi = (100 * st[t].rfi) / st[t].rfiOpp;
-    if (t !== 'whale') assert.ok(rfi > pre.openPct * 0.5 && rfi < pre.openPct * 1.6, `${t} RFI ${rfi.toFixed(1)} vs ${pre.openPct}`);
-    else assert.ok(Math.abs((100 * st[t].vpip) / st[t].seats - pre.vpipPct) < 15, `whale VPIP ${(100 * st[t].vpip) / st[t].seats}`);
+    assert.ok(avg > pre.openPct * 0.7 && avg < pre.openPct * 1.5, `${t} opens ${avg.toFixed(1)}% on average vs brain ${pre.openPct}%`);
   }
+});
+
+test('calibration: the whale plays VPIP near the brain\'s 70-80% (large sample)', () => {
+  let seats = 0, vpip = 0;
+  for (let h = 0; h < 3000; h++) {
+    const types = Object.keys(model.types);
+    const s = mkState(types.map((_, k) => types[(h + k) % types.length]));
+    while (!s.done && !s.awaitingDeal && s.street === 'preflop') villainAct(s);
+    for (const p of s.players) if (p.type === 'whale') {
+      seats++;
+      if (s.log.some((e) => e.street === 'preflop' && e.i === p.i && (e.type === 'call' || e.type === 'raise'))) vpip++;
+    }
+  }
+  assert.ok(Math.abs((100 * vpip) / seats - model.types.whale.pre.vpipPct) < 15, `whale VPIP ${((100 * vpip) / seats).toFixed(1)}`);
 });
 
 test('LJ opens use the compiled HHP chart [2025-02-18 HHP]', () => {
