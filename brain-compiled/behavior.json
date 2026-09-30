@@ -2895,6 +2895,823 @@
    },
    "fb": null
   },
+  "rules.sdvOopStab": {
+   "v": {
+    "title": "Showdown value OOP: check-call the stab, don't lead",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "heroIP": false,
+     "heroPFR": false,
+     "heroClass": [
+      "sdv"
+     ],
+     "flopCheckedThrough": true
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "2026-05-12",
+    "quote": "Out of position after the flop checks through, check-call a stab (44, BB vs BTN)."
+   },
+   "fb": null
+  },
+  "rules.thickVsOverBluffer": {
+   "v": {
+    "title": "Thick value vs a bluffer: check-call it",
+    "when": {
+     "street": [
+      "flop",
+      "turn",
+      "river"
+     ],
+     "facing": true,
+     "heroIP": false,
+     "heroClass": [
+      "thick"
+     ],
+     "villainStyle": [
+      "aggroCaller",
+      "whale"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "2026-08-18",
+    "quote": "\"Thick value\" depends on the villain: raise or donk it vs an under-bluffer, check-call it vs someone who bluffs enough or over-bluffs."
+   },
+   "fb": null
+  },
+  "rules.thickVsUnderBluffer": {
+   "v": {
+    "title": "Thick value vs an under-bluffer: raise or lead it",
+    "when": {
+     "street": [
+      "flop",
+      "turn",
+      "river"
+     ],
+     "heroIP": false,
+     "heroClass": [
+      "thick"
+     ],
+     "villainStyle": [
+      "passiveCaller",
+      "passiveFolder"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "2026-08-18",
+    "quote": "\"Thick value\" depends on the villain: raise or donk it vs an under-bluffer, check-call it vs someone who bluffs enough or over-bluffs."
+   },
+   "fb": null
+  },
+  "rules.passiveFolderRiverLead": {
+   "v": {
+    "title": "He gives up rivers: lead your value big",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "heroIP": false,
+     "heroPFR": false,
+     "villainStyle": [
+      "passiveFolder"
+     ],
+     "heroClass": [
+      "cpfs"
+     ]
+    },
+    "recommend": "bet-big"
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "3. Value-bet thinner and bigger",
+    "date": "2025-05-20",
+    "quote": "Vs a passive player who bets half pot and gives up rivers: DONK-LEAD your value BIG"
+   },
+   "fb": null
+  },
+  "rules.turnCallsRiverBluff": {
+   "v": {
+    "title": "Turn calls depend on his river bluffing",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "2025-06-24",
+    "quote": "Turn calls depend on his river bluffing."
+   },
+   "fb": null
+  },
+  "rules.blockersAlone": {
+   "v": {
+    "title": "Blockers alone don't make a call",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "heroBucket": [
+      "medium",
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "2025-06-24",
+    "quote": "Great blockers alone don't make a call"
+   },
+   "fb": null
+  },
+  "rules.bigWetStabNoBluff": {
+   "v": {
+    "title": "A big stab on a wet board: don't bluff it",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "villainAction": [
+      "bet-big"
+     ],
+     "board": {
+      "wet": true
+     },
+     "heroBucket": [
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2025-07-15",
+    "quote": "Don't bluff that range."
+   },
+   "fb": null
+  },
+  "rules.gutshotBigTurnFold": {
+   "v": {
+    "title": "A gutshot vs a big turn barrel: fold",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "betSize": [
+      "big"
+     ],
+     "heroClass": [
+      "lowDraw"
+     ]
+    },
+    "recommend": "fold"
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2025-03-04",
+    "quote": "A live player over-stabs the flop, then \"under double-barrels massively\": A5hh with a gutshot folds to a big turn barrel."
+   },
+   "fb": null
+  },
+  "rules.sdvTightConfig": {
+   "v": {
+    "title": "A cold 4-bettor's turn bet: one pair has no showdown value",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "potType": [
+      "4bet"
+     ],
+     "villainPFR": true,
+     "heroClass": [
+      "thick",
+      "thin",
+      "sdv"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "2026-07-07",
+    "quote": "Tight ranges (a cold 4-bettor bets the turn): QQ doesn't."
+   },
+   "fb": null
+  },
+  "rules.poolTurnCheckRaise": {
+   "v": {
+    "title": "The pool under-bluffs a turn check-raise",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "heroIP": true,
+     "villainAction": [
+      "raise"
+     ],
+     "heroClass": [
+      "thick",
+      "thin"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "2025-12-16",
+    "quote": "a turn check-raise vs your small top-pair bet (the pool finds AxJ/AxQ with the nut-flush blocker, not 76s/86s/64s)"
+   },
+   "fb": null
+  },
+  "rules.oopPfrCheckWet": {
+   "v": {
+    "title": "OOP as the raiser on a wet board: check your range",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": false,
+     "heroPFR": true,
+     "heroIP": false,
+     "potType": [
+      "srp"
+     ],
+     "multiway": false,
+     "board": {
+      "wet": true
+     }
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2025-04-08",
+    "quote": "check the whole range when the board is likely to get stabbed"
+   },
+   "fb": null
+  },
+  "rules.oopPfrDryValueBet": {
+   "v": {
+    "title": "OOP as the raiser on a dry board: bet your value",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": false,
+     "heroPFR": true,
+     "heroIP": false,
+     "potType": [
+      "srp"
+     ],
+     "multiway": false,
+     "deep": false,
+     "board": {
+      "dry": true
+     },
+     "heroBucket": [
+      "strong"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2025-04-01",
+    "quote": "SPR under 15 (100bb): bet-bet-bet with CPFS and thick value"
+   },
+   "fb": null
+  },
+  "rules.monotoneTurnBluffCheck": {
+   "v": {
+    "title": "Four to a flush on the turn: check the bluff back, bet small if he checks the river",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "heroPFR": true,
+     "heroIP": true,
+     "villainAction": [
+      "check"
+     ],
+     "board": {
+      "fourFlush": true
+     },
+     "heroClass": [
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2025-02-04",
+    "quote": "the bluff (JT) checks the turn back, then bets small ($50-60, pot $82) if he checks the river too"
+   },
+   "fb": null
+  },
+  "rules.foldEquityCappedDeep": {
+   "v": {
+    "title": "Fold equity needs capped AND deep",
+    "when": {
+     "street": [
+      "turn",
+      "river"
+     ],
+     "facing": false,
+     "capped": false,
+     "heroBucket": [
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2024-10-01",
+    "quote": "Fold equity is high only when he is capped AND you are deep."
+   },
+   "fb": null
+  },
+  "rules.aggroCallerTurnNuts": {
+   "v": {
+    "title": "Vs an aggro caller: big turn with the nuts",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "villainStyle": [
+      "aggroCaller"
+     ],
+     "heroClass": [
+      "cpfs"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2026-02-17",
+    "quote": "nuts on the turn = 2-2.5x pot (his hands are inelastic)"
+   },
+   "fb": null
+  },
+  "rules.threeBetIpCbet": {
+   "v": {
+    "title": "3-bet pot in position: c-bet small",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": false,
+     "potType": [
+      "3bet"
+     ],
+     "heroPFR": true,
+     "heroIP": true
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2025-10-21",
+    "quote": "c-bet your WHOLE range small, about 1/3 to 40% pot (in an SRP it's half to 2/3)"
+   },
+   "fb": null
+  },
+  "rules.threeBetBluffFoldToRaise": {
+   "v": {
+    "title": "3-bet pot c-bet bluff gets raised: fold",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "potType": [
+      "3bet"
+     ],
+     "heroPFR": true,
+     "heroIP": true,
+     "villainAction": [
+      "raise"
+     ],
+     "board": {
+      "wet": true
+     },
+     "heroBucket": [
+      "air"
+     ]
+    },
+    "recommend": "fold"
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2025-07-15",
+    "quote": "With a bluff, fold to a raise cheaply."
+   },
+   "fb": null
+  },
+  "rules.threeBetIpCheckMarginalTurn": {
+   "v": {
+    "title": "3-bet pot in position: check back marginal turns",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "potType": [
+      "3bet"
+     ],
+     "heroPFR": true,
+     "heroIP": true,
+     "heroBucket": [
+      "medium"
+     ]
+    },
+    "recommend": "check"
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2025-04-08",
+    "quote": "check back marginal turns (his AK float can be a bluff), then call the river bet"
+   },
+   "fb": null
+  },
+  "rules.aceHighTurnLead3bet": {
+   "v": {
+    "title": "A turn lead in a 3-bet pot on an ace-high board is strong",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "potType": [
+      "3bet"
+     ],
+     "heroPFR": true,
+     "villainAction": [
+      "donk"
+     ],
+     "board": {
+      "aceHigh": true
+     }
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "2024-10-08",
+    "quote": "A turn lead in a 3-bet pot on an ace-high board, after you showed two aggressive actions (3-bet, small c-bet), is strong"
+   },
+   "fb": null
+  },
+  "rules.tightConfigRiverFold": {
+   "v": {
+    "title": "Early vs early 3-bet pot: fold one pair to a big river bet",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "potType": [
+      "3bet"
+     ],
+     "tightConfig": true,
+     "betSize": [
+      "big"
+     ],
+     "board": {
+      "wet": true
+     },
+     "heroClass": [
+      "thick",
+      "thin",
+      "sdv"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "2026-06-30",
+    "quote": "Fold QQ to a river bet over 60% pot in an EP vs EP 3-bet pot once the draws got there."
+   },
+   "fb": null
+  },
+  "rules.fourBetAceTinyCbet": {
+   "v": {
+    "title": "4-bet pot, dry A-high flop: tiny c-bet",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": false,
+     "potType": [
+      "4bet"
+     ],
+     "heroPFR": true,
+     "board": {
+      "aceHigh": true,
+      "dry": true
+     }
+    },
+    "recommend": "bet-small"
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2026-06-09",
+    "quote": "Flop: a tiny c-bet (about 10%, \"very, very small\")."
+   },
+   "fb": null
+  },
+  "rules.fourBetAceTurnCheck": {
+   "v": {
+    "title": "4-bet pot, dry A-high turn: check your range",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "potType": [
+      "4bet"
+     ],
+     "heroPFR": true,
+     "board": {
+      "aceHigh": true,
+      "dry": true
+     }
+    },
+    "recommend": "check"
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2026-06-09",
+    "quote": "Turn: check the whole range"
+   },
+   "fb": null
+  },
+  "rules.multiwayCbetThickOnly": {
+   "v": {
+    "title": "Multiway: c-bet only thick value and strong draws",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": false,
+     "multiway": true,
+     "heroPFR": true,
+     "heroClass": [
+      "sdv",
+      "air",
+      "lowDraw"
+     ]
+    },
+    "recommend": "check"
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2025-03-04",
+    "quote": "multiway, c-bet only thick value and very strong draws"
+   },
+   "fb": null
+  },
+  "rules.multiwayWetCbet": {
+   "v": {
+    "title": "Multiway wet flop: c-bet about 1/3 pot",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": false,
+     "multiway": true,
+     "heroPFR": true,
+     "board": {
+      "wet": true
+     }
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2025-07-01",
+    "quote": "about 1/3 pot or a bit smaller multiway ($70 into 200 with five players; the next-to-act player raises less)"
+   },
+   "fb": null
+  },
+  "rules.topPairMultiwayBet": {
+   "v": {
+    "title": "Top pair multiway, checked to you: bet",
+    "when": {
+     "street": [
+      "flop",
+      "turn",
+      "river"
+     ],
+     "facing": false,
+     "multiway": true,
+     "villainAction": [
+      "check"
+     ],
+     "heroClass": [
+      "thick",
+      "thin"
+     ]
+    },
+    "recommend": "bet"
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "3. Value-bet thinner and bigger",
+    "date": "2026-09-15",
+    "quote": "Top pair multiway, checked to you: bet (30-40, not $10)."
+   },
+   "fb": null
+  },
+  "rules.fishBetsMultiway": {
+   "v": {
+    "title": "A fish betting into the field is weaker",
+    "when": {
+     "street": [
+      "flop",
+      "turn"
+     ],
+     "facing": true,
+     "multiway": true,
+     "villainType": [
+      "rec",
+      "whale",
+      "passive"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "2026-06-30",
+    "quote": "A fish betting into 3 players is weaker than a pro doing it. Call."
+   },
+   "fb": null
+  },
+  "rules.nextToActUncapped": {
+   "v": {
+    "title": "Multiway callers next to act are uncapped",
+    "when": {
+     "street": [
+      "turn",
+      "river"
+     ],
+     "facing": false,
+     "multiway": true
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "1. Read his range first",
+    "date": "2026-08-04",
+    "quote": "Next-to-act callers multiway are uncapped, because that's where players trap."
+   },
+   "fb": null
+  },
+  "rules.multiwayCappedTurnLead": {
+   "v": {
+    "title": "Capped multiway field: lead the turn big with top pair",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "multiway": true,
+     "heroIP": false,
+     "capped": true,
+     "flopCheckedThrough": true,
+     "heroClass": [
+      "thick",
+      "thin"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "3. Value-bet thinner and bigger",
+    "date": "2026-08-04",
+    "quote": "Capped + inelastic multiway after the flop checks through: lead the turn big with top pair."
+   },
+   "fb": null
+  },
+  "rules.roundRiverBluffsUp": {
+   "v": {
+    "title": "Round river bluffs up",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "heroBucket": [
+      "air"
+     ],
+     "heroAction": [
+      "bet"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2026-04-28",
+    "quote": "Size for the hand you want to fold, then leave margin: \"10% too small is much more costly than 10% too big.\""
+   },
+   "fb": null
+  },
+  "rules.recDoubleBarrelCheck": {
+   "v": {
+    "title": "A rec bets, bets, then checks the river: he's strong",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "villainAction": [
+      "check"
+     ],
+     "villainDoubleBarreled": true,
+     "villainType": [
+      "rec",
+      "passive",
+      "whale"
+     ],
+     "heroClass": [
+      "cpfs"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "3. Value-bet thinner and bigger",
+    "date": "2026-08-11",
+    "quote": "A rec who double-barreled, then checks the river: he's check-calling a strong range."
+   },
+   "fb": null
+  },
+  "rules.valueRaiseNonBeliever": {
+   "v": {
+    "title": "Two pair vs a non-believer's big river bet: raise",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "betSize": [
+      "big"
+     ],
+     "villainStyle": [
+      "aggroCaller"
+     ],
+     "heroClass": [
+      "cpfs"
+     ]
+    },
+    "recommend": "raise"
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "3. Value-bet thinner and bigger",
+    "date": "2026-04-14",
+    "quote": "Two pair vs a sticky, aggressive \"non-believer\" betting 80% on the river: value-raise"
+   },
+   "fb": null
+  },
   "conflicts.a72": {
    "v": {
     "title": "A72 as the preflop raiser: c-bet the range or check back?",
@@ -3141,6 +3958,196 @@
     "section": "5. Facing an open (not from the BB)",
     "date": "",
     "quote": "The \"even at 15%\" HJ vs LJ 3-bet chart: CSV vs [2025-03-04 HHP] (CSV unchanged)."
+   },
+   "fb": null
+  },
+  "conflicts.fourBetAceRiver": {
+   "v": {
+    "title": "4-bet pot, A-high board: river value and bluff sizes",
+    "find": "4-bet pot, A-high board, RIVER sizes",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "potType": [
+      "4bet"
+     ],
+     "board": {
+      "aceHigh": true
+     }
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "",
+    "quote": "4-bet pot, A-high board, RIVER sizes: [undated HHP] vs [06-09] vs [04-28] vs [2025-07-15]."
+   },
+   "fb": null
+  },
+  "conflicts.riverBluff942K": {
+   "v": {
+    "title": "3-bet pot river bluff after small, small: big or small?",
+    "find": "River BLUFF size after small, small in the 3-bet pot",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "potType": [
+      "3bet"
+     ],
+     "heroPFR": true,
+     "heroIP": true,
+     "board": {
+      "dry": true
+     },
+     "heroBucket": [
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "",
+    "quote": "River BLUFF size after small, small in the 3-bet pot on 9-4-2 with a K turn: [2025-02-04 HHP] BIG vs [undated HHP] small."
+   },
+   "fb": null
+  },
+  "conflicts.smallRiverBluffCapped": {
+   "v": {
+    "title": "River bluff vs a capped range: small or 1.5-2x pot?",
+    "find": "A small river bluff vs a capped range",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "capped": true,
+     "heroBucket": [
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "",
+    "quote": "A small river bluff vs a capped range: [undated HHP] 125-150 vs [2025-07-15] 1.5-2x pot."
+   },
+   "fb": null
+  },
+  "conflicts.smallRiverValue": {
+   "v": {
+    "title": "Small river value: vs passive, aggressive or capped-elastic?",
+    "find": "Small river VALUE: [undated HHP]",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "villainAction": [
+      "check"
+     ],
+     "capped": true,
+     "heroClass": [
+      "thick",
+      "thin"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "",
+    "quote": "Small river VALUE: [undated HHP] (small vs an aggressive player, BIG vs a passive one) vs [08-04] (capped and elastic: bet small to induce)."
+   },
+   "fb": null
+  },
+  "conflicts.nutFlushRiverPassive": {
+   "v": {
+    "title": "Nut flush river, he checks: tiny or huge vs a passive player?",
+    "find": "Nut flush river, he checks: value size vs a passive player",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "heroIP": true,
+     "villainAction": [
+      "check"
+     ],
+     "villainType": [
+      "passive",
+      "rec",
+      "whale"
+     ],
+     "heroClass": [
+      "cpfs"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "",
+    "quote": "Nut flush river, he checks: value size vs a passive player."
+   },
+   "fb": null
+  },
+  "conflicts.smallTurnVsCheck": {
+   "v": {
+    "title": "A small (about 1/3 pot) turn bet: fine or the size to avoid?",
+    "find": "A small turn bet (about 1/3 pot) vs a check",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "villainAction": [
+      "check"
+     ],
+     "capped": false,
+     "heroLine": [
+      "bet-small"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "",
+    "quote": "A small turn bet (about 1/3 pot) vs a check: [undated HHP] vs the [2025-07-15] \"avoid the 1/3-to-pot size on turns and rivers\" headline."
+   },
+   "fb": null
+  },
+  "conflicts.pairedTurnBoat": {
+   "v": {
+    "title": "A full house on a paired turn after his check-raise: $70 or about pot?",
+    "find": "A full house on a paired turn after his flop check-raise",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "villainAction": [
+      "check"
+     ],
+     "board": {
+      "paired": true
+     },
+     "heroClass": [
+      "cpfs"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "",
+    "quote": "A full house on a paired turn after his flop check-raise: [2025-03-04 HHP] vs [2025-05-20 HHP]."
    },
    "fb": null
   },

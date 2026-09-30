@@ -18,7 +18,7 @@ export function boardTexture(board) {
   const twoTone = maxSuit === 2;
   // Wet = draws are easy: a flush draw with connected cards, three to a straight, or three to a flush.
   const wet = (maxSuit >= 2 && connected >= 2) || connected >= 3 || maxSuit >= 3;
-  return { aceHigh: ranks[0] === 12, paired, monotone, twoTone, wet, dry: !wet, connected, high: ranks[0] };
+  return { aceHigh: ranks[0] === 12, paired, monotone, fourFlush: maxSuit >= 4, twoTone, wet, dry: !wet, connected, high: ranks[0] };
 }
 
 // The preflop pot type: srp (one raise), 3bet, 4bet.
@@ -68,6 +68,9 @@ export function spotFeatures(s, heroIdx, vi, extra = {}) {
   const lastBet = facingBet ? [...s.log].reverse().find((e) => e.street === street && (e.type === 'bet' || e.type === 'raise')) : null;
   const riverPairs = street === 'river' && s.board.slice(0, 4).map(rankOf).includes(rankOf(s.board[4]));
   const turnCheckedThrough = street === 'river' && !s.log.some((e) => e.street === 'turn' && (e.type === 'bet' || e.type === 'raise'));
+  const flopCheckedThrough = (street === 'turn' || street === 'river') && !s.log.some((e) => e.street === 'flop' && (e.type === 'bet' || e.type === 'raise'));
+  const aggressed = (st) => vi != null && s.log.some((e) => e.street === st && e.i === vi && (e.type === 'bet' || e.type === 'raise'));
+  const villainDoubleBarreled = street === 'river' && aggressed('flop') && aggressed('turn');
   const opener = s.log.find((e) => e.street === 'preflop' && e.type === 'raise');
   const threeBettor = s.log.filter((e) => e.street === 'preflop' && e.type === 'raise')[1];
   return {
@@ -94,6 +97,8 @@ export function spotFeatures(s, heroIdx, vi, extra = {}) {
     spr: pot ? (eff - hero.committed) / pot : null,
     riverPairs,
     turnCheckedThrough,
+    flopCheckedThrough,
+    villainDoubleBarreled,
     pot,
     ...extra,
   };

@@ -15,7 +15,7 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 | 7 | Known leak line: second person, [YOUR LOG] | Done | c62a145 | 53 pass |
 | 8 | Range paragraphs: HHP base vs seat widening, sources for every number | Done | 843d35a | 54 pass |
 | 9 | Copy for coach rebuilt around the new format | Done | 2275870 | 55 pass |
-| 10 | "Also from the brain" matcher coverage, in batches | In progress: batch 0 (coverage count + uncovered list) | (this commit) | 55 pass |
+| 10 | "Also from the brain" matcher coverage, in batches | In progress: batch 0 02d8446 (13/74), batch 1 (this commit, 24/74) | | 55 pass |
 
 ## Notes and open issues
 
@@ -33,6 +33,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 - Item 9: "Copy for coach" is now built from the same feedback object as the screen (js/feedback/coach-report.js): hand facts, then per street the action line, and per decision his class % at the start of the street, each of his actions (combos and class % before → after, plus any unresolved brain-vs-strategy check), his range now, you vs his range, the options weighed with EVs, your action with its ✅/⚠️/❌ and reason, the verdict with its source tag, conflicts (not graded) and leak tags; then result, takeaway, hand leak tags (repeats flagged) and your known leak. Typical length 3-5k characters. New test checks each decision in the text has range, options, action, verdict (with its source) and leak tags, and only your 18 tags. In History, the text sits behind "Show the coach text" so the screen isn't a wall of monospace.
 
 - Item 10, batch 0: Settings › Brain now shows how many postflop playbook topics the matcher covers and lists the rest. Coverage before any new rules: 13 of 74 topics.
+
+- Item 10, batch 1 (playbook-postflop.md): 31 rules and 7 conflict pointers, every quote checked against the brain (0 stale). New spot features the rules needed: flop checked through, villain double-barreled, four to a flush, and your exact line (bet small/big). Coverage 13 → 24 of 74 topics. Side effect over 300 simulated hands: decisions with a matching ⚖ conflict (shown both ways, not graded) went from about 12% to 17%. One duplicate pointer dropped (the rec-river-check jam conflict is logged in two files; the existing pointer covers it).
 
 ## Decisions for Joan
 
@@ -54,3 +56,4 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 14. Seat widening multipliers (how much wider than HHP's base open % he plays from each seat) are [OUTSIDE SOURCE] in config/table-settings.js and are shown as their own line, never folded into the HHP number. Default, Joan to review.
 15. Storage: the full coach review is kept for the same last 50 hands that keep replay data; older hands fall back to the short hand history (stakes, seats, action, result). "See full feedback" from History rebuilds the full text anyway while the replay exists. Default, Joan to review.
 16. Coverage unit for item 10: a "topic" is one bold-headed paragraph in a numbered section of the three postflop playbooks, plus the bullets under it (or a section's bullets before its first bold paragraph): 74 topics. A topic counts as covered when a matcher entry (a rule or a conflict/open-question pointer) quotes a line inside it. Default, Joan to review.
+17. New matcher rules only decide the verdict ("recommend") when the quote is a direct instruction for exactly that spot; everything else shows as advice under "Also from the brain". Where two brain lines give opposite advice in the same spot without a ⚖ mark, neither decides the verdict. Default, Joan to review.

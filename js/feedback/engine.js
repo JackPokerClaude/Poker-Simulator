@@ -551,7 +551,7 @@ function decisionAnalysis(h, d, model, brain, vi, tags, w, classes, shares) {
   actual.line = lineOf(actualKind, actualAction, pot);
   actual.title = `${LINE_LABEL[actual.line] || cap(e.type)}${actualAction.to ? ` (${usd(actualAction.to)})` : ''}`;
 
-  const feat = spotFeatures(st, h.heroIdx, vi, { heroAction: actual.line.startsWith('bet') ? 'bet' : actual.line, heroCode: handCode(...hero.cards), capped: shares ? groupShare(shares, 'strongValue') < val(model.resolved, 'sizing.cappedStrongShare', 0.15) : null });
+  const feat = spotFeatures(st, h.heroIdx, vi, { heroAction: actual.line.startsWith('bet') ? 'bet' : actual.line, heroLine: actual.line, heroCode: handCode(...hero.cards), capped: shares ? groupShare(shares, 'strongValue') < val(model.resolved, 'sizing.cappedStrongShare', 0.15) : null });
   if (actual.line.startsWith('bet')) feat.betSize = betSizeClass(actualAction.to, pot);
   const matched = matchBrain(model, feat, brain);
   const conflicted = matched.conflicts.length > 0;
