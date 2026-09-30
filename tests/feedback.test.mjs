@@ -146,3 +146,23 @@ test('your known leak is written to you and tagged [YOUR LOG]', async () => {
   assert.match(k.text, /\$1\/2: \+\$5,493/);
   assert.match(k.tag, /^\[YOUR LOG\] project-instructions\.md › Known leaks \(Jul 3/);
 });
+
+// Every [HHP] tag on screen must point at a real brain file and a heading in it, and quoted
+// text next to it must be in that file: no [HHP] on content that isn't from the brain.
+test('[HHP] tags only sit on brain content', () => {
+  const norm = (t) => t.toLowerCase().replace(/[’‘]/g, "'").replace(/[“”]/g, '"').replace(/\*\*|__|`/g, '').replace(/\s+/g, ' ');
+  let tags = 0;
+  for (const { s, fb } of hands) {
+    const html = feedbackHTML(s, fb, { gradeHTML: () => '' }).replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&').replace(/&quot;/g, '"').replace(/&#39;/g, "'");
+    for (const m of html.matchAll(/(?:“([^”]{12,})”\s*(?:<[^>]+>\s*)*)?\[HHP\]\s+([\w.-]+\.md)\s+›\s+([^<·(\n]+)/g)) {
+      tags++;
+      const [, quote, file, section] = m;
+      const text = brainTexts[file];
+      assert.ok(text, `[HHP] tag names ${file}, which isn't a brain file`);
+      const sec = section.trim().split(' › ').pop().replace(/([^\d\s])\.(\s.*)?$/, '$1'); // inline tag ends at its sentence
+      assert.ok(norm(text).includes(norm(sec)), `${file} has no section "${sec}"`);
+      if (quote) for (const part of quote.split(/\s*…\s*|\.\.\./)) if (part.length > 12) assert.ok(norm(text).includes(norm(part).replace(/^"|"$/g, '')), `quote not in ${file}: ${part.slice(0, 60)}`);
+    }
+  }
+  assert.ok(tags > 50, `only ${tags} tags checked`);
+});

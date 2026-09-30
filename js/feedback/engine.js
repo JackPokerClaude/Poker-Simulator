@@ -295,12 +295,47 @@ function typeQuote(model, type) {
 // ---------------------------------------------------------------- why his range changed
 const ACT_WORD = { raise: 'raised', 'raise-big': 'opened big', call: 'called', limp: 'limped', check: 'checked', fold: 'folded', 'bet-small': 'bet small', 'bet-big': 'bet big' };
 
+// Every strategy number behind something he does, each with its own source.
+const NUM_LABEL = {
+  'pre.openPct': 'opens (top % of hands)', 'pre.threeBetPct': '3-bets (top %)', 'pre.threeBet': '3-bet hands', 'pre.threeBetLight': 'light 3-bets',
+  'pre.callOpenPct': 'flats an open (top %)', 'pre.bbDefendPct': 'defends the BB (%)', 'pre.limpList': 'limps', 'pre.limpPct': 'extra limps (top %)',
+  'pre.limpCallPct': 'calls a raise after limping', 'pre.continueVs3betPct': 'calls a 3-bet (top %)', 'pre.coldCall3bet': 'cold-calls a 3-bet with',
+  'pre.fourBet': '4-bet hands', 'pre.fourBetPct': '4-bets (top %)', 'pre.fourBetPartial': 'partial 4-bets', 'pre.fiveBet': '5-bet hands',
+  'pre.callVs4bet': 'calls a 4-bet with', 'pre.callVs4betPct': 'calls a 4-bet (top %)', 'pre.callVs5bet': 'calls a 5-bet with',
+  'pre.vpipPct': 'VPIP (%)', 'pre.isoRaiseFreq': 'isos over limpers', 'bigOpenPremiums': 'big-open premiums', 'bigOpenMult': 'big open = normal ×',
+  'bigOpenPremiumFreq': 'premiums open big', 'bigOpenOtherFreq': 'other hands open big', limpReraise: 'limp-reraises',
+  'bet.monster': 'bets monsters', 'bet.strong': 'bets strong hands', 'bet.medium': 'bets medium hands', 'bet.draw': 'bets draws', 'bet.air': 'bluffs air',
+  'big.monster': 'big size with monsters', 'big.strong': 'big size with strong hands', 'big.medium': 'big size with medium', 'big.draw': 'big size with draws', 'big.air': 'big size with bluffs',
+  'raise.monster': 'raises monsters', 'raise.strong': 'raises strong hands', 'raise.draw': 'raises draws', 'raise.air': 'raises air', riverSpaz: 'spazzes vs a small river bet',
+  callAnyPair: 'calls any pair (flop, turn)', cbet: 'extra c-bet frequency',
+  'need.flop': 'continues above strength (flop)', 'need.turn': 'continues above strength (turn)', 'need.river': 'continues above strength (river)',
+  'sizeSens.flop': 'extra strength per pot-size bet (flop)', 'sizeSens.turn': 'extra strength per pot-size bet (turn)', 'sizeSens.river': 'extra strength per pot-size bet (river)',
+  'streetAir.flop': 'bluff multiplier (flop)', 'streetAir.turn': 'bluff multiplier (turn)', 'streetAir.river': 'bluff multiplier (river)',
+};
+function fmtNum(v, key) {
+  if (Array.isArray(v)) return v.join(', ');
+  if (typeof v === 'boolean') return v ? 'yes' : 'no';
+  if (v && typeof v === 'object') return Object.entries(v).map(([k, x]) => `${k} ${Math.round(x * 100)}%`).join(', ');
+  if (typeof v !== 'number') return String(v);
+  if (/Pct$|openPct|vpipPct/.test(key)) return `${v}%`;
+  if (/Mult$/.test(key)) return `${v}×`;
+  return v <= 1 ? `${Math.round(v * 100)}%` : String(v);
+}
+export function numbersFor(model, keys) {
+  return keys.map((key) => {
+    const rec = model.rec(key);
+    if (!rec) return null;
+    const short = key.replace(/^types\.\w+\.|^styles\.\w+\.|^pool\./, '');
+    return { key, what: NUM_LABEL[short] || short, val: fmtNum(rec.v, short), tag: sourceTag(rec), quote: rec.tag === 'HHP' ? rec.src.quote : null };
+  }).filter(Boolean);
+}
+
 // The strategy numbers behind one of his actions, and the brain quote behind them if any.
 function reasonFor(model, h, p, a) {
   const st = a.state.street;
   const tagOf = (key) => model.rec(key);
   const fmtP = (x) => `${Math.round((x || 0) * 100)}%`;
-  let keys = [], text = '';
+  let keys = [], text = '', widen = null;
   if (st === 'preflop') {
     const pre = model.types[p.type]?.pre || {};
     const lvl = a.entry.level;
@@ -308,16 +343,23 @@ function reasonFor(model, h, p, a) {
     if (a.label === 'raise' || a.label === 'raise-big') {
       if (lvl === 1) {
         keys = p.type === 'whale' ? ['types.whale.pre.vpipPct', 'types.whale.pre.isoRaiseFreq'] : [`types.${p.type}.pre.openPct`];
-        text = `He raises his top ${pre.openPct}% of hands, × ${posF} for the ${p.pos} = about ${Math.round(pre.openPct * posF)}% here`;
+        text = `HHP base: he opens about ${pre.openPct}% of hands`;
+        widen = posF !== 1 ? { text: `Seat widening: × ${posF} in the ${p.pos} → about ${Math.round(pre.openPct * posF * 10) / 10}% here`, tag: '[OUTSIDE SOURCE] config/table-settings.js' } : null;
         if (a.label === 'raise-big') { keys = ['pool.bigOpenPremiums', 'pool.bigOpenMult']; text = `Premiums (${(model.pool.bigOpenPremiums || []).join(', ')}) get the big open ${fmtP(model.pool.bigOpenPremiumFreq)} of the time, other hands ${fmtP(model.pool.bigOpenOtherFreq)}`; }
       } else if (lvl === 2) {
-        keys = [`types.${p.type}.pre.threeBet`, `types.${p.type}.pre.threeBetPct`, `types.${p.type}.pre.threeBetLight`, 'pool.limpReraise'];
+        // The limp-reraise quote only fits when he limped first.
+        const limped = h.log.slice(0, a.n).some((e) => e.i === a.entry.i && e.meta?.label === 'limp');
+        keys = [`types.${p.type}.pre.threeBet`, `types.${p.type}.pre.threeBetPct`, `types.${p.type}.pre.threeBetLight`, limped ? 'pool.limpReraise' : null].filter(Boolean);
         text = pre.threeBet ? `He 3-bets ${pre.threeBet.join(', ')}` : `He 3-bets about his top ${pre.threeBetPct}%${pre.threeBetLight ? ` plus ${pre.threeBetLight.join(', ')}` : ''}`;
       } else if (lvl === 3) { keys = [`types.${p.type}.pre.fourBet`, `types.${p.type}.pre.fourBetPct`, `types.${p.type}.pre.fourBetPartial`]; text = `He 4-bets ${pre.fourBet ? pre.fourBet.join(', ') : `his top ${pre.fourBetPct}%`}`; }
       else { keys = [`types.${p.type}.pre.fiveBet`]; text = `He 5-bets ${(pre.fiveBet || []).join(', ')}`; }
     } else if (a.label === 'limp') { keys = [`types.${p.type}.pre.limpList`, `types.${p.type}.pre.limpPct`, 'types.whale.pre.vpipPct']; text = pre.limpList ? `He limps ${pre.limpList.join(', ')} plus about ${pre.limpPct}% more` : `He limps about ${pre.limpPct || 0}% more hands than he raises`; }
     else if (a.label === 'call') {
-      if (lvl === 2) { keys = [p.pos === 'BB' ? `types.${p.type}.pre.bbDefendPct` : null, `types.${p.type}.pre.callOpenPct`, `types.${p.type}.pre.limpCallPct`].filter(Boolean); text = `He flats an open with about his top ${pre.callOpenPct}%${p.pos === 'BB' && pre.bbDefendPct ? ` (defends ${pre.bbDefendPct}% from the BB)` : ''}`; }
+      if (lvl === 2) {
+        keys = [p.pos === 'BB' ? `types.${p.type}.pre.bbDefendPct` : null, `types.${p.type}.pre.callOpenPct`, `types.${p.type}.pre.limpCallPct`].filter(Boolean);
+        text = `He flats an open with about his top ${pre.callOpenPct}%${p.pos === 'BB' && pre.bbDefendPct ? ` (defends ${pre.bbDefendPct}% from the BB)` : ''}`;
+        if (posF !== 1) widen = { text: `Seat widening: × ${posF} in the ${p.pos}, and he widens further for a good price or other callers`, tag: '[OUTSIDE SOURCE] config/table-settings.js' };
+      }
       else if (lvl === 3) { keys = [`types.${p.type}.pre.continueVs3betPct`, `types.${p.type}.pre.coldCall3bet`]; text = `He calls a 3-bet with about his top ${pre.continueVs3betPct}%`; }
       else { keys = [`types.${p.type}.pre.callVs4bet`, `types.${p.type}.pre.callVs4betPct`, `types.${p.type}.pre.callVs5bet`]; text = 'He calls a 4-bet only with the top of his range'; }
     } else if (a.label === 'check') text = 'He checks his option with the hands he doesn\'t raise';
@@ -334,10 +376,20 @@ function reasonFor(model, h, p, a) {
   const hhp = recs.find((r) => r.tag === 'HHP');
   const numbersSourced = recs.length && recs.every((r) => r.tag === 'HHP');
   return {
-    text: text ? `${text} (from his strategy${numbersSourced ? '' : '; the numbers are [OUTSIDE SOURCE] defaults'}).` : 'From his strategy.',
+    text: text ? `${text} (from his strategy${numbersSourced ? '' : '; some numbers are [OUTSIDE SOURCE] defaults, listed below'}).` : 'From his strategy.',
     quote: hhp ? hhp.src.quote : null,
     tag: hhp ? sourceTag(hhp) : '[OUTSIDE SOURCE]',
+    widen,
+    numbers: numbersFor(model, keys),
   };
+}
+
+// The strategy numbers behind his answer to one of your options ("he folds 81%").
+function responseNumbers(model, p, kind, street) {
+  const sk = (x) => `styles.${p.style}.${x}`;
+  if (kind === 'betSmall' || kind === 'betBig' || kind === 'raise' || kind === 'actual') return numbersFor(model, [sk(`need.${street}`), sk(`sizeSens.${street}`), sk('callAnyPair'), sk('raise.monster'), sk('raise.strong'), sk('raise.draw'), sk('raise.air')]);
+  if (kind === 'check') return numbersFor(model, [sk('bet.strong'), sk('bet.medium'), sk('bet.draw'), sk('bet.air'), sk(`streetAir.${street}`), sk('big.strong'), sk('big.air')]);
+  return [];
 }
 
 // Brain claims about what an action means ("flop check-raises are mostly sets and two pair").
@@ -483,6 +535,7 @@ function decisionAnalysis(h, d, model, brain, vi, tags, w, classes, shares) {
     o.title = k === 'raise' ? `Raise to ${usd(action.to)}` : TITLE[k] + (action.to ? ` (${usd(action.to)}, ${pct((action.to - hero.committed) / pot)} pot)` : '');
     o.line = lineOf(k, action, pot);
     Object.assign(o, prosCons(o, ctx));
+    o.numbers = responseNumbers(model, st.players[vi], k, street);
     if (k === 'betBig' && o.eqCalls != null) o.wantCalls = o.eqCalls >= 0.5 ? `Yes: you have ${pct(o.eqCalls)} vs the hands that call.` : `No: you have ${pct(o.eqCalls)} vs the hands that call. A big bet only works as a bluff here: it needs folds.`;
     opts.push(o);
   }

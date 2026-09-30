@@ -12,7 +12,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 | 4 | Every decision in the five-step order | Done | 6a551cc | 51 pass |
 | 5 | OOP realization factor, math-only close calls | Done | b8ea613 | 52 pass |
 | 6 | Preflop card: ✅/⚠️/❌ + one-line reason | Done | 906fca6 | 52 pass |
-| 7 | Known leak line: second person, [YOUR LOG] | Done | (this commit) | 53 pass |
+| 7 | Known leak line: second person, [YOUR LOG] | Done | c62a145 | 53 pass |
+| 8 | Range paragraphs: HHP base vs seat widening, sources for every number | Done | (this commit) | 54 pass |
 
 ## Notes and open issues
 
@@ -24,6 +25,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 - Item 3: claim re-check with the seven classes (400 hands): whale stabs keep >=15% air in 32 of 45 cases; aggro folder flop raises reached 49% strong value (claim says 50%+) in 1 of 5.
 
 - Item 3's deploy run went red on a GitHub Pages server error (HTTP 502 while creating the deployment; tests had passed). Item 4's deploy right after it went green, so the live site was never broken.
+
+- Item 8: every "Why" line now splits the HHP base number (e.g. "HHP base: he opens about 14% of hands") from the seat widening (a separate line tagged [OUTSIDE SOURCE] config/table-settings.js). Under each change and each what-if option, "Where the numbers come from" lists every strategy number used (fold/continue thresholds, bet and raise frequencies) with its own tag: [HHP] file › section · date plus the quote, or [OUTSIDE SOURCE]. Fixed along the way: a 3-bet from someone who never limped was quoting the brain's limp-reraise line; that quote now only shows after an actual limp. New test: every [HHP] tag on screen names a real brain file and section, and any quote next to it is in that file.
 
 ## Decisions for Joan
 
@@ -42,3 +45,4 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 11. "Math only, close" = the math-best line beats your action by less than 5% of the pot, when no brain rule or sizing rule decided the verdict. [OUTSIDE SOURCE] in config/outside-source.js.
 12. Preflop card marks: chart play ✅; a mixed (non-situational) chart cell where you picked one of the mixed actions ✅ (it counts as correct in your stats too); situational cell ⚠️ (Mark's rule decides, not graded either way); off chart ❌; [OUTSIDE SOURCE] bracket opens: good ✅, borderline ⚠️, mistake ❌. Default, Joan to review.
 13. Known-leak line: sentences addressed to a coach (mentioning "she", "Bring this up", "Treat...", "keep tracking") are dropped; the rest is rewritten to "you". It still shows only on 1/3 and 2/5 hands that had a leak or an off-chart preflop play. Default, Joan to review.
+14. Seat widening multipliers (how much wider than HHP's base open % he plays from each seat) are [OUTSIDE SOURCE] in config/table-settings.js and are shown as their own line, never folded into the HHP number. Default, Joan to review.

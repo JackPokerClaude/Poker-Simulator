@@ -65,6 +65,7 @@ function optionHTML(o) {
     ${o.pros?.length ? `<div class="fb-line"><b>Pros:</b> ${o.pros.map(esc).join(' ')}</div>` : ''}
     ${o.cons?.length ? `<div class="fb-line"><b>Cons:</b> ${o.cons.map(esc).join(' ')}</div>` : ''}
     <div class="fb-math">${o.lines.map((l) => `<div>${esc(l)}</div>`).join('')}</div>
+    ${o.numbers?.length ? `<div class="fb-line muted">His answers come from his strategy for this style:</div>${numbersHTML(o.numbers)}` : ''}
     <div class="tag">[OUTSIDE SOURCE] math vs his real range and his real strategy</div></details>`;
 }
 const ord = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'}`;
@@ -78,7 +79,15 @@ function changeHTML(c) {
     ? `<div class="chg-ok">Matches the brain: “${esc(x.quote)}” <span class="tag">${esc(x.tag)}</span></div>`
     : `<div class="chg-bad">⚖ Brain vs his strategy (not resolved): the brain says “${esc(x.quote)}” <span class="tag">${esc(x.tag)}</span>; his strategy gives ${esc(x.got)}.</div>`)).join('');
   return `<div class="chg"><div><b>${esc(c.what)}.</b> ${esc(shift)}${Math.round(c.combos[0])} → ${Math.round(c.combos[1])} combos (${pct(c.pctStart)} of his starting range).</div>
-    <div class="chg-why">Why: ${esc(c.reason.text)}${c.reason.quote ? ` The brain: “${esc(c.reason.quote)}”` : ''} <span class="tag">${esc(c.reason.tag)}</span></div>${claims}${c.note ? `<div class="muted">${esc(c.note)}</div>` : ''}</div>`;
+    <div class="chg-why">Why: ${esc(c.reason.text)}${c.reason.quote ? ` The brain: “${esc(c.reason.quote)}”` : ''} <span class="tag">${esc(c.reason.tag)}</span></div>
+    ${c.reason.widen ? `<div class="chg-why">${esc(c.reason.widen.text)} <span class="tag">${esc(c.reason.widen.tag)}</span></div>` : ''}
+    ${numbersHTML(c.reason.numbers)}${claims}${c.note ? `<div class="muted">${esc(c.note)}</div>` : ''}</div>`;
+}
+
+// "Where the numbers come from": every strategy number with its own tag, collapsed.
+function numbersHTML(nums) {
+  if (!nums?.length) return '';
+  return `<details class="fb-nums"><summary>Where the numbers come from</summary>${nums.map((n) => `<div class="fb-num"><b>${esc(n.what)}:</b> ${esc(n.val)} <span class="tag">${esc(n.tag)}</span>${n.quote ? `<div class="muted">“${esc(n.quote)}”</div>` : ''}</div>`).join('')}</details>`;
 }
 
 function classInfoHTML(key) {
