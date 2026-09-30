@@ -28,6 +28,8 @@ const ASSETS = [
   'js/villains/model.js',
   'js/engine/policy.js',
   'js/range/tracker.js',
+  'js/range/whatif.js',
+  'js/predict/predict.js',
   'js/feedback/rangeview.js',
   'js/ui/grid.js',
   'js/app.js',

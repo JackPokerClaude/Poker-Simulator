@@ -1,5 +1,6 @@
 // Builds the "Copy for coach" hand text and the saved history record.
 import { villainLabel } from '../villains/model.js';
+import { summarizePredictions } from '../predict/predict.js';
 import { cardsPretty, cardStr } from './cards.js';
 
 const who = (s, i) => (i === s.heroIdx ? `Hero (${s.players[i].pos})` : s.players[i].pos);
@@ -137,15 +138,21 @@ export function coachText(s) {
     const line = streetLine(s, name);
     return `${label} [${cards}] (pot $${deal.pot}): ${line || 'no betting (all-in)'}`;
   };
+  // Your read for the street (prediction step), right under that street's line.
+  const read = (name) => (s.predictions?.[name]?.line ? [s.predictions[name].line] : []);
   return [
     `Stakes / venue: $${s.stakes.sb}/$${s.stakes.bb} NLHE, Simulator`,
     `Effective stack ($): $${eff} (${Math.round(eff / bb)}bb)`,
     `Hero seat + cards: ${hero.pos}, ${cardsPretty(hero.cards)} ($${hero.startStack})`,
     `Villain(s): ${villains.length ? villains.join(' | ') : 'none (everyone folded)'}`,
     `Preflop: ${streetLine(s, 'preflop')}`,
+    ...read('preflop'),
     street('flop', 0),
+    ...read('flop'),
     street('turn', 3),
+    ...read('turn'),
     street('river', 4),
+    ...read('river'),
     `Result: ${resultText(s)}`,
     'My question: Review every decision street by street.',
   ].join('\n');
@@ -169,6 +176,7 @@ export function buildRecord(s) {
       to: d.to, verdict: d.verdict, message: d.message, freq: d.freq || '', source: d.source || '', sourceTag: d.sourceTag || '',
       sizing: (d.sizing || []).map((z) => ({ rule: z.rule, ok: z.ok, message: z.message })),
     })),
+    predictions: summarizePredictions(s),
     net: s.result.net[s.heroIdx],
     netBB: +(s.result.net[s.heroIdx] / s.stakes.bb).toFixed(1),
     pot: s.result.finalPot,

@@ -10,6 +10,8 @@ import { loadBrain, browserFetchText, browserLastGood, missingCharts } from './b
 import { CHARTS_USED } from './engine/scenario.js';
 import { rangeViews } from './feedback/rangeview.js';
 import { gridHTML } from './ui/grid.js';
+import { predictionContext, computeTruth, gradePrediction, predictionLine, BUCKETS, BUCKET_LABEL } from './predict/predict.js';
+import { responseTo } from './range/whatif.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -18,7 +20,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // ---------- settings (per-device conveniences) ----------
 const SETTINGS_KEY = 'hhp-sim-settings-v1';
 const settings = (() => {
-  const d = { speed: 'normal', fourColor: true, drill: 'random' };
+  const d = { speed: 'normal', fourColor: true, drill: 'random', predictions: true };
   try { return { ...d, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') }; } catch { return d; }
 })();
 const saveSettings = () => { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch { /* private mode */ } };
@@ -224,6 +226,7 @@ function renderActionBar() {
   const bar = $('actionbar');
   const h = hand;
   bar.classList.toggle('done', !!h?.done);
+  bar.classList.remove('predicting');
   if (!h) { bar.innerHTML = '<div class="status"><b>Dealing…</b></div>'; return; }
   if (h.done) {
     bar.innerHTML = `
@@ -243,6 +246,11 @@ function renderActionBar() {
     const last = [...h.log].reverse().find((e) => !['post', 'deal', 'uncalled'].includes(e.type));
     bar.innerHTML = `<div class="status"><b>${esc(acting)}</b>${last ? `<span>${esc(describeAction(h, last))}</span>` : ''}</div>`;
     return;
+  }
+  // Prediction step: before your first decision on each street, read him first.
+  if (settings.predictions && !h.predictions?.[h.street]) {
+    const ctx = predictionContext(h);
+    if (ctx) { renderPredict(bar, h, ctx); return; }
   }
   const la = legalActions(h);
   if (la.canRaise) pendingTo = pendingTo == null ? la.minTo : clampTo(la, pendingTo);
@@ -274,6 +282,68 @@ function renderActionBar() {
   $('callBtn').onclick = () => act(la.canCheck ? { type: 'check' } : { type: 'call' });
   if ($('raiseBtn')) $('raiseBtn').onclick = doRaise;
   if (la.canRaise) syncSizer(la);
+}
+
+// ---------- prediction panel ----------
+let draft = null; // { key, target, blocks, answers }
+
+function renderPredict(bar, h, baseCtx) {
+  const key = `${handToken}:${h.street}`;
+  if (!draft || draft.key !== key) draft = { key, target: baseCtx.target, blocks: { strong: 0, medium: 0, draws: 0, air: 0 }, answers: {} };
+  const ctx = draft.target === baseCtx.target ? baseCtx : withTarget(h, baseCtx, draft.target);
+  const used = BUCKETS.reduce((a, b) => a + draft.blocks[b], 0);
+  const ready = (!ctx.askRange || used === 10) && ctx.questions.every((q) => draft.answers[q.id]);
+  const street = h.street[0].toUpperCase() + h.street.slice(1);
+  bar.classList.add('predicting');
+  bar.innerHTML = `<div class="predict">
+    <div class="pr-head"><b>Your read · ${street}</b><span>Predict, then act. Graded apart from your action.</span></div>
+    ${ctx.targets.length > 1 ? `<div class="pr-who"><span>Reading:</span>${ctx.targets.map((i) => `<button class="chipbtn${i === draft.target ? ' on' : ''}" data-t="${i}">${h.players[i].pos}</button>`).join('')}</div>` : ''}
+    ${ctx.askRange ? `<div class="pr-range"><div class="pr-sub">${h.players[ctx.target].pos}'s range: split 10 blocks <em>${10 - used ? `${10 - used} left` : 'done'}</em></div>
+      ${BUCKETS.map((b) => `<div class="pr-b"><button class="pr-add" data-b="${b}"><span class="pr-l">${BUCKET_LABEL[b]}</span><span class="pips">${[...Array(10)].map((_, n) => `<i class="${n < draft.blocks[b] ? `on ${b}` : ''}"></i>`).join('')}</span></button><button class="pr-minus" data-b="${b}" aria-label="One less ${BUCKET_LABEL[b]}" ${draft.blocks[b] ? '' : 'disabled'}>−</button></div>`).join('')}</div>` : ''}
+    ${ctx.questions.map((q) => `<div class="pr-q"><span>${esc(q.ask)}</span><div class="seg">${q.options.map(([v, l]) => `<button data-q="${q.id}" data-v="${v}" class="${draft.answers[q.id] === v ? 'on' : ''}">${esc(l)}</button>`).join('')}</div></div>`).join('')}
+    <button class="btn primary wide" id="prGo" ${ready ? '' : 'disabled'}>Lock in my read ▶</button>
+  </div>`;
+  bar.querySelectorAll('.pr-add').forEach((b) => (b.onclick = () => { if (used < 10) { draft.blocks[b.dataset.b]++; renderActionBar(); } }));
+  bar.querySelectorAll('.pr-minus').forEach((b) => (b.onclick = () => { if (draft.blocks[b.dataset.b] > 0) { draft.blocks[b.dataset.b]--; renderActionBar(); } }));
+  bar.querySelectorAll('[data-q]').forEach((b) => (b.onclick = () => { draft.answers[b.dataset.q] = b.dataset.v; renderActionBar(); }));
+  bar.querySelectorAll('[data-t]').forEach((b) => (b.onclick = () => { draft.target = Number(b.dataset.t); draft.answers = {}; renderActionBar(); }));
+  $('prGo').onclick = () => lockPrediction(h, ctx);
+}
+
+// Same questions, reading a different villain (multiway).
+function withTarget(h, ctx, target) {
+  const fresh = predictionContext(h);
+  const alt = { ...fresh, target };
+  // "If you check" only makes sense if he's still to act behind you.
+  alt.questions = fresh.questions.filter((q) => q.id !== 'ifCheck');
+  const behind = !h.log.some((e) => e.street === h.street && e.i === target && !['post', 'deal', 'uncalled'].includes(e.type));
+  const ifCheck = ctx.questions.find((q) => q.id === 'ifCheck') || null;
+  if (ifCheck && behind) alt.questions.push(ifCheck);
+  return alt;
+}
+
+function lockPrediction(h, ctx) {
+  const pred = { street: h.street, target: ctx.target, blocks: ctx.askRange ? { ...draft.blocks } : null, answers: { ...draft.answers },
+    questions: ctx.questions.map((q) => ({ id: q.id, ask: q.ask, options: q.options, heroKind: q.heroKind })) };
+  let truth = null;
+  try { truth = computeTruth(h, ctx, ctx.target); } catch (e) { console.warn('prediction truth', e); }
+  (h.predictions ||= {})[h.street] = { ...pred, truth, grade: truth ? gradePrediction(pred, truth) : null };
+  h.predictions[h.street].line = predictionLine(h, pred);
+  draft = null;
+  $('actionbar').classList.remove('predicting');
+  renderActionBar();
+}
+
+// If you then bet or raise a different size than the question assumed, re-ask it at your size.
+function regradeWithActual(before, action) {
+  const pred = before.predictions?.[before.street];
+  if (!pred?.truth || !['bet', 'raise'].includes(action.type)) return;
+  const q = pred.questions.find((x) => x.id === 'ifBet' || x.id === 'ifRaise');
+  if (!q || pred.target == null || !pred.truth.w) return;
+  const r = responseTo(before, before.heroIdx, action, pred.target, pred.truth.w, pred.truth.buckets);
+  if (!r) return;
+  pred.truth.answers[q.id] = { mix: r.mix, byBucket: r.byBucket, action };
+  pred.grade = gradePrediction(pred, pred.truth);
 }
 
 // The − and + buttons move the amount by exactly $1; hold to repeat.
@@ -324,6 +394,7 @@ function doRaise() {
 }
 
 function act(action) {
+  const before = hand.predictions?.[hand.street] ? structuredClone(hand) : null;
   try {
     heroAct(hand, action, ranges);
   } catch (e) {
@@ -331,6 +402,7 @@ function act(action) {
     return;
   }
   pendingTo = null;
+  if (before) { try { regradeWithActual(before, action); hand.predictions[before.street] = before.predictions[before.street]; } catch (e) { console.warn(e); } }
   renderAll();
   runLoop();
 }
@@ -483,6 +555,25 @@ function gradeHTML(d) {
   </div>`;
 }
 
+// Your reads vs his real range and real response, graded apart from your action.
+function predictionsHTML(h) {
+  const preds = Object.values(h.predictions || {});
+  if (!preds.length) return '';
+  const pc = (x) => `${Math.round(x * 100)}%`;
+  return `<h3>Your reads</h3>${preds.map((p) => {
+    const g = p.grade || {};
+    const who = p.target != null ? h.players[p.target].pos : 'the table';
+    const range = g.range ? `<div>${g.range.mark} <b>Range:</b> you said ${BUCKETS.map((b) => `${p.blocks[b] * 10}% ${BUCKET_LABEL[b]}`).join(', ')}. Real: ${BUCKETS.map((b) => `${pc(p.truth.shares[b])} ${BUCKET_LABEL[b]}`).join(', ')}. Off by ${g.range.off} points (${BUCKET_LABEL[g.range.worst]} ${g.range.dir}).</div>` : '';
+    const ans = (p.questions || []).map((q) => {
+      const a = g.answers?.[q.id];
+      if (!a) return '';
+      const name = (v) => (q.options.find((o) => o[0] === v) || [v, v])[1];
+      return `<div>${a.mark} <b>${esc(q.ask)}</b> you said ${esc(name(a.pick).toLowerCase())} (${pc(a.p)} of his range does). Most likely: ${esc(name(a.top).toLowerCase())} ${pc(a.pTop)}.</div>`;
+    }).join('');
+    return `<div class="grade"><div class="row1"><div class="spot">${esc(p.street[0].toUpperCase() + p.street.slice(1))} · reading ${esc(who)}</div></div><div class="msg">${range}${ans}</div></div>`;
+  }).join('')}`;
+}
+
 function rangesHTML(h) {
   let rv;
   try { rv = rangeViews(h); } catch (e) { return `<div class="about">Range view unavailable: ${esc(e.message)}</div>`; }
@@ -514,6 +605,7 @@ function showFeedback() {
     <div class="hands-grid">${handsHTML}</div>
     <h3>Preflop feedback</h3>
     ${grades}
+    ${predictionsHTML(h)}
     ${rangesHTML(h)}
     <div class="about" style="margin-top:6px">Postflop isn't graded here. Send it to your coach.</div>
     <div class="sheet-actions">
@@ -599,6 +691,7 @@ function showStats() {
       <div class="kpi"><div class="v">${st.hands}</div><div class="l">Hands</div></div>
       <div class="kpi"><div class="v">${st.pct == null ? '—' : `${st.pct}%`}</div><div class="l">Preflop accuracy</div></div>
       <div class="kpi"><div class="v">${st.sizingChecks ? `${Math.round((st.sizingOk / st.sizingChecks) * 100)}%` : '—'}</div><div class="l">Sizing on target</div></div>
+      <div class="kpi"><div class="v">${st.reads ? `${Math.round((st.readsGood / st.reads) * 100)}%` : '—'}</div><div class="l">Reads on target</div></div>
     </div>
     <h3>Preflop accuracy by scenario</h3>
     ${kinds || '<div class="empty">Play some hands first.</div>'}
@@ -644,6 +737,7 @@ function showMenu() {
     <h2>Settings</h2>
     <div class="setting"><b>Villain speed</b>${seg('speed', [['normal', 'Normal'], ['fast', 'Fast'], ['instant', 'Instant']])}</div>
     <div class="setting"><b>Deck</b>${seg('fourColor', [['true', '4-color'], ['false', '2-color']])}</div>
+    <div class="setting"><b>Predictions</b>${seg('predictions', [['true', 'On'], ['false', 'Off (fast practice)']])}</div>
     <h3>How it works</h3>
     <div class="about">
       <p>Every hand is a real 52-card shuffle. You only get dealt hands the HHP chart plays in your spot. Villain types are hidden until the hand ends. The reads are your clues.</p>
@@ -654,9 +748,10 @@ function showMenu() {
     ${brainStatusHTML()}`);
   document.querySelectorAll('.seg button').forEach((b) => (b.onclick = () => {
     const k = b.dataset.k;
-    settings[k] = k === 'fourColor' ? b.dataset.v === 'true' : b.dataset.v;
+    settings[k] = k === 'fourColor' || k === 'predictions' ? b.dataset.v === 'true' : b.dataset.v;
     saveSettings();
     applySettings();
+    if (k === 'predictions') renderActionBar();
     showMenu();
   }));
 }

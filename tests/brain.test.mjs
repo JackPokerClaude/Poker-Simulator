@@ -157,3 +157,12 @@ test('the offline cache lists every app file', async () => {
   const files = [...walk('js'), ...walk('config'), 'brain-compiled/behavior.json'].filter((f) => /\.(js|json)$/.test(f));
   for (const f of files) assert.ok(sw.includes(`'${f}'`), `${f} missing from sw.js ASSETS`);
 });
+
+test('every browser file parses (catches errors tests never import, like app.js)', async () => {
+  const { execFileSync } = await import('node:child_process');
+  const { readdirSync, statSync } = await import('node:fs');
+  const walk = (dir) => readdirSync(new URL(dir, root)).flatMap((f) => (statSync(new URL(`${dir}/${f}`, root)).isDirectory() ? walk(`${dir}/${f}`) : [`${dir}/${f}`]));
+  for (const f of [...walk('js'), ...walk('config'), 'sw.js'].filter((x) => x.endsWith('.js') && !x.includes('vendor'))) {
+    execFileSync(process.execPath, ['--check', new URL(f, root).pathname], { stdio: 'pipe' });
+  }
+});

@@ -92,8 +92,8 @@
    "outside": "no HHP number"
   },
   "types.passive.pre.continueVs3betPct": {
-   "v": 12,
-   "outside": "no HHP number"
+   "v": 5,
+   "outside": "no HHP number: calls a 3-bet with his top 5% of all hands, about two-thirds of his opens"
   },
   "types.passive.pre.limpCallPct": {
    "v": 70,
@@ -145,7 +145,7 @@
    "outside": "no HHP number"
   },
   "types.tight.pre.continueVs3betPct": {
-   "v": 10,
+   "v": 8,
    "outside": "no HHP number"
   },
   "types.tight.pre.limpCallPct": {
@@ -243,7 +243,7 @@
    "outside": "no HHP number"
   },
   "types.aggressive.pre.continueVs3betPct": {
-   "v": 16,
+   "v": 13,
    "outside": "no HHP number"
   },
   "types.aggressive.pre.limpCallPct": {
@@ -309,7 +309,7 @@
    "outside": "no HHP number"
   },
   "types.thinking.pre.continueVs3betPct": {
-   "v": 10,
+   "v": 11,
    "outside": "no HHP number"
   },
   "types.thinking.pre.limpCallPct": {
@@ -577,7 +577,7 @@
    "interp": "\"Calls everything\": flats an open with his top 30% (the number is a default, Joan to review)"
   },
   "types.rec.pre.continueVs3betPct": {
-   "v": 20,
+   "v": 5,
    "outside": "no HHP number"
   },
   "types.rec.pre.limpCallPct": {

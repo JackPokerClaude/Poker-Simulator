@@ -119,13 +119,17 @@ export function aiClass(f, opponents = 1) {
   return 'air';
 }
 
-// HHP range buckets, heads-up: Strong (can play for stacks + thick value), Medium (thin value
-// + showdown value), Draws, Air. A made medium hand with a draw counts as Medium.
+// HHP range buckets (hand classes: can play for stacks > thick value > thin value > draws >
+// showdown value > air): Strong = can play for stacks + thick value (top pair good kicker,
+// overpairs, two pair and better), Medium = thin value + showdown value (weaker pairs),
+// Draws (4+ outs, flop/turn), Air. A made pair with a draw counts as its pair.
+// [OUTSIDE SOURCE] cut-offs on the hand's percentile vs random hands; default, Joan to review.
+export const BUCKET_CUTS = { strong: 0.88, medium: 0.5 };
 export function bucketOf(f, street) {
-  const c = aiClass(f, 1);
-  if (c === 'monster' || c === 'strong') return 'strong';
-  if (c === 'medium') return 'medium';
+  if (f.hasPair && f.rawHs >= BUCKET_CUTS.strong) return 'strong';
+  if (f.hasPair && f.rawHs >= BUCKET_CUTS.medium) return 'medium';
   if (street !== 'river' && f.draws.outs >= 4) return 'draws';
+  if (f.hasPair) return 'medium';
   return 'air';
 }
 

@@ -37,7 +37,7 @@ out('types.passive.pre.fourBet', ['KK+'], 'no HHP number for a passive player\'s
 out('types.passive.pre.fiveBet', ['AA'], 'no HHP number');
 out('types.passive.pre.limpPct', 10, 'no HHP number for how much a passive player limps');
 out('types.passive.pre.callOpenPct', 20, 'no HHP number');
-out('types.passive.pre.continueVs3betPct', 12, 'no HHP number');
+out('types.passive.pre.continueVs3betPct', 5, 'no HHP number: calls a 3-bet with his top 5% of all hands, about two-thirds of his opens');
 out('types.passive.pre.limpCallPct', 70, 'no HHP number');
 
 // Tight (2026 wording): opens about 15%.
@@ -48,7 +48,7 @@ out('types.tight.pre.callVs4bet', ['QQ', 'AK'], 'no HHP number');
 out('types.tight.pre.fiveBet', ['AA'], 'no HHP number');
 out('types.tight.pre.limpPct', 4, 'no HHP number');
 out('types.tight.pre.callOpenPct', 14, 'no HHP number');
-out('types.tight.pre.continueVs3betPct', 10, 'no HHP number');
+out('types.tight.pre.continueVs3betPct', 8, 'no HHP number');
 out('types.tight.pre.limpCallPct', 60, 'no HHP number');
 
 // Aggressive: opens about 30%, 3-bets a lot, light 3-bets that won't fold to a 4-bet.
@@ -61,7 +61,7 @@ out('types.aggressive.pre.fourBetBluffs', ['A5s', 'A4s'], 'no HHP number');
 out('types.aggressive.pre.fiveBet', ['KK+', 'AKs'], 'no HHP number');
 out('types.aggressive.pre.limpPct', 2, 'no HHP number');
 out('types.aggressive.pre.callOpenPct', 16, 'no HHP number');
-out('types.aggressive.pre.continueVs3betPct', 16, 'no HHP number');
+out('types.aggressive.pre.continueVs3betPct', 13, 'no HHP number');
 out('types.aggressive.pre.limpCallPct', 60, 'no HHP number');
 out('types.aggressive.pre.bluff3betPct', 5, 'no HHP number');
 
@@ -75,7 +75,7 @@ out('types.thinking.pre.callVs4betPct', 3, 'no HHP number');
 out('types.thinking.pre.fiveBet', ['KK+'], 'no HHP number');
 out('types.thinking.pre.limpPct', 0, 'no HHP number');
 out('types.thinking.pre.callOpenPct', 12, 'no HHP number');
-out('types.thinking.pre.continueVs3betPct', 10, 'no HHP number');
+out('types.thinking.pre.continueVs3betPct', 11, 'no HHP number');
 out('types.thinking.pre.limpCallPct', 50, 'no HHP number');
 out('types.thinking.pre.bluff3betPct', 4, 'no HHP number');
 
@@ -106,7 +106,7 @@ hhp('types.rec.pre.callVs5bet', ['KK', 'QQ', 'AK'], PRE14("Fish and recs don't f
 hhp('types.rec.pre.callVs4bet', ['QQ', 'AK'], PRE14("He won't fold QQ to a 4-bet"), { fb: ['QQ', 'AK'], interp: 'the passive rec 3-bettor keeps QQ (and AK) vs a 4-bet' });
 hhp('types.rec.pre.bbDefendPct', 37.5, PRE6('a rec BB defends about 37-38%'), { fb: 30, interp: 'midpoint of 37-38%' });
 hhp('types.rec.pre.callOpenPct', 30, PRE12('Calls everything'), { fb: 30, interp: '"Calls everything": flats an open with his top 30% (the number is a default, Joan to review)' });
-out('types.rec.pre.continueVs3betPct', 20, 'no HHP number');
+out('types.rec.pre.continueVs3betPct', 5, 'no HHP number');
 hhp('types.rec.pre.limpCallPct', 90, PRE12('Calls everything'), { fb: 90, interp: 'calls a raise after limping 90% of the time' });
 out('types.rec.pre.isoFactor', 0.7, 'no HHP number');
 
