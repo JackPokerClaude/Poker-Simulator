@@ -57,7 +57,8 @@ function optionHTML(o) {
     const cells = ['fold', 'call', 'raise', 'check', 'bet'].filter((r) => x[r] > 0.005).map((r) => `${RESP[r]} ${pct(x[r])}`).join(', ');
     return `<tr><td><i class="dot" style="background:${c.color}"></i>${esc(c.label)}</td><td class="num">${pct(x.share)}</td><td>${cells}</td></tr>`;
   }).join('') : '';
-  const next = o.next ? `<div class="fb-line"><b>Next street:</b> ${esc(o.next)}</div>` : '';
+  const next = (o.next ? `<div class="fb-line"><b>Next street:</b> ${esc(o.next)}</div>` : '')
+    + (o.look ? `<div class="fb-look"><div class="fb-line"><b>On the ${esc(o.look.street)} that came (${esc(o.look.card)}):</b></div>${o.look.lines.map((l) => `<div class="fb-line">${esc(l)}</div>`).join('')}<div class="tag">${esc(o.look.tag)}</div></div>` : '');
   return `<details class="fb-opt"${o.open ? ' open' : ''}><summary><span class="ot"><b>${esc(o.title)}</b><span class="os">${esc(summary)}</span></span><span class="ev">EV ${esc(evText(o.ev))}</span></summary>
     ${rows ? `<table class="fb-bt"><tr><th>His class</th><th>Share</th><th>What it does</th></tr>${rows}</table>` : ''}
     ${o.wantCalls ? `<div class="fb-line"><b>Do you want the calls?</b> ${esc(o.wantCalls)}</div>` : ''}

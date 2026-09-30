@@ -14,6 +14,9 @@ export const OUTSIDE_SOURCE = {
   // A math-only verdict that beats your action by less than this share of the pot is a close
   // call: graded ⚠️ "math only, close", never ❌.
   closeCallPot: 0.05,
+  // One street ahead (what-ifs): with this much equity vs his range on the next card, the plan is
+  // "bet for value"; below it, check (and call his bet only with the pot odds).
+  nextPlan: { value: 0.65 },
   openBrackets: {
     MP: { floor: 'RFI - EP - 200BB', ceiling: 'RFI - HJ - 200BB' },
     CO: { floor: 'RFI - HJ - 200BB', ceiling: 'RFI - BTN - 200BB' },

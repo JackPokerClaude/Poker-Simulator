@@ -12,7 +12,7 @@ import { whenMatches } from '../js/feedback/match.js';
 import { packReplay, rebuildHand } from '../js/feedback/replay.js';
 import { loadBrain, memoryLastGood } from '../js/brain/loader.js';
 import { COMBOS, comboIndex } from '../js/range/tracker.js';
-import { parseCard } from '../js/engine/cards.js';
+import { parseCard, cardPretty as cardPrettyOf } from '../js/engine/cards.js';
 import { readFileSync } from 'node:fs';
 
 const manifest = JSON.parse(readFileSync(new URL('../config/brain-files.json', import.meta.url), 'utf8'));
@@ -226,4 +226,18 @@ test('facing a pro\'s open: the 2024 PRO charts, and BTN vs a CO pro with fish b
   assert.equal(f.fishBehind, true);
   assert.ok(matchBrain(model, f, brain).conflicts.some((c) => c.key === 'conflicts.btnVsProCo'));
   void STAKES;
+});
+
+test('what-ifs look one street ahead on the card that came, heads-up', () => {
+  let n = 0;
+  for (const { s, fb } of hands) for (const st of fb.streets) for (const pt of st.points) for (const o of pt.analysis?.opts || []) {
+    if (!o.look) continue;
+    n++;
+    const next = { flop: 3, turn: 4 }[st.street];
+    assert.ok(next != null, 'no lookahead from the river');
+    assert.equal(o.look.card, cardPrettyOf(s.initial.runout[next]));
+    assert.ok(o.look.lines.length >= 1 && o.look.lines.some((l) => /^You/.test(l)), 'your plan is there');
+    assert.match(o.look.tag, /OUTSIDE SOURCE/);
+  }
+  assert.ok(n > 5, `only ${n} lookaheads`);
 });

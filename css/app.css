@@ -426,3 +426,4 @@ div.tag { display: block; margin-top: 4px; }
 .fb-num { margin: 3px 0 3px 8px; line-height: 1.4; }
 details.coach-d { margin-bottom: 12px; }
 details.coach-d > summary { cursor: pointer; font-weight: 600; color: var(--blue); padding: 8px 0; }
+.fb-look { border-left: 3px solid var(--line); padding-left: 8px; margin: 6px 0; }

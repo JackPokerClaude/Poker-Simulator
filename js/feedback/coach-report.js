@@ -43,7 +43,10 @@ function decisionLines(pt, h, k, out) {
   if (pt.versus) out.push(`  You vs his range: beat ${pct(pt.versus.beat)}, lose to ${pct(pt.versus.lose)}, chop ${pct(pt.versus.chop)}.`);
   if (!a) return;
   out.push(`  Options weighed (equity ${pct(a.eq.total)}${a.real < 1 ? `, realized at ${pct(a.real)} out of position [OUTSIDE SOURCE]` : ''}):`);
-  for (const o of a.opts) out.push(`    - ${optionLine(o)}`);
+  for (const o of a.opts) {
+    out.push(`    - ${optionLine(o)}`);
+    if (o.look) out.push(`      then, on the ${o.look.street} that came (${o.look.card}): ${o.look.lines.join(' ')}`);
+  }
   if (!a.opts.includes(a.actual)) out.push(`    - What you did, ${optionLine(a.actual)}`);
   out.push(`  Your action: ${a.grade.mark} ${a.actual.title}. ${a.grade.text}`);
   out.push(`  Verdict: ${a.verdict.title}. ${a.verdict.why} ${a.verdict.source}`);

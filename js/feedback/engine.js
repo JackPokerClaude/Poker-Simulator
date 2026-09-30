@@ -11,7 +11,7 @@
 // his response to each option, then your equity vs the hands that continue. It says so on
 // screen. Where a brain rule covers the line, the brain decides the verdict (her coaches win)
 // and the math is shown as [OUTSIDE SOURCE] support.
-import { legalActions, applyAction, potTotal, activePlayers } from '../engine/game.js';
+import { legalActions, applyAction, potTotal, activePlayers, dealNextStreet } from '../engine/game.js';
 import { villainPolicy } from '../engine/policy.js';
 import { boardTable } from '../engine/strength.js';
 import { handCode, cardsPretty, cardPretty } from '../engine/cards.js';
@@ -40,9 +40,9 @@ const usd = (x) => {
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
 
 // ---------------------------------------------------------------- his response, per combo
-function responseMatrix(st, heroIdx, action, vi, w) {
+function responseMatrix(st, heroIdx, action, vi, w, asIs = false) {
   const s2 = structuredClone(st);
-  try { applyAction(s2, action); } catch { return null; }
+  if (!asIs) try { applyAction(s2, action); } catch { return null; }
   if (s2.done || s2.awaitingDeal || s2.players[vi].folded || s2.players[vi].allIn) return { ended: true, state: s2 };
   s2.toAct = vi; // multiway: he answers as if next to act (the screen says so)
   const la = legalActions(s2);
@@ -96,6 +96,7 @@ function evalOption(ctx, kind, action) {
     lines.push(`Your equity vs his real range: ${pct(eq.total)} (${eq.combos} combos, ${eq.exact ? 'exact' : `${eq.runouts} sampled runouts`})${R < 1 ? `, ${pct(eqAll)} after realization` : ''}.`);
     lines.push(`${pct(eqAll)} ${eqAll >= need ? '≥' : '<'} ${pct(need)} → EV = ${pct(eqAll)} × ${usd(P + t)} − ${usd(t)} = ${usd(opt.ev)}.`);
     if (st.street !== 'river' && ctx.shares) opt.next = `you see the next card against this same range: ${topClasses(ctx.shares)}.`;
+    opt.look = lookAhead(ctx, [{ type: 'call' }], w);
     return opt;
   }
   const m = responseMatrix(st, heroIdx, action, vi, w);
@@ -107,6 +108,7 @@ function evalOption(ctx, kind, action) {
     opt.mix = { check: 1 };
     opt.closes = true;
     if (st.street !== 'river' && ctx.shares) opt.next = `a free card, and his range stays ${topClasses(ctx.shares)}.`;
+    opt.look = lookAhead(ctx, [action], w);
     return opt;
   }
   const mix = {};
@@ -142,7 +144,10 @@ function evalOption(ctx, kind, action) {
       opt.vsBet = { e, callEv, b };
     }
     opt.ev = ev;
-    if (m.P.check && st.street !== 'river') opt.next = `when he checks back, his range is ${topClasses(classShares(mul(w, m.P.check), classes))}.`;
+    if (m.P.check && st.street !== 'river') {
+      opt.next = `when he checks back, his range is ${topClasses(classShares(mul(w, m.P.check), classes))}.`;
+      opt.look = lookAhead(ctx, [action, { type: 'check', by: vi }], mul(w, m.P.check));
+    }
     lines.push(`EV of checking ≈ ${usd(ev)}.`);
     return opt;
   }
@@ -160,6 +165,7 @@ function evalOption(ctx, kind, action) {
     opt.eqCalls = e;
     opt.callShares = classShares(mul(w, m.P.call), classes);
     opt.next = `when he calls, his range is ${topClasses(opt.callShares)}, and you have ${pct(e)} against it.`;
+    opt.look = lookAhead(ctx, [action, { type: 'call', by: vi }], mul(w, m.P.call));
     lines.push(`He calls ${pct(pc)} → pot ${usd(T)}; you have ${pct(e)} vs the hands that call: ${pct(e)} × ${usd(T)} − ${usd(add)} = ${usd(each)} → ${pct(pc)} × ${usd(each)} = ${usd(pc * each)}.`);
   }
   const pr = mix.raise || 0;
@@ -177,9 +183,74 @@ function evalOption(ctx, kind, action) {
   return opt;
 }
 
+// ---------------------------------------------------------------- one street ahead
+// After an option that goes to the next street (a call, a check-through, his call of your bet),
+// deal the card that actually came and ask: what does his continuing range do there, and what
+// would you do? His move is his real strategy on that card. Your plan uses the equity
+// thresholds in config/outside-source.js [OUTSIDE SOURCE]. Heads-up only.
+function lookAhead(ctx, actions, wNext) {
+  const { st, heroIdx, vi } = ctx;
+  if (st.street === 'river' || activePlayers(st).length > 2) return null;
+  const s2 = structuredClone(st);
+  try {
+    for (const a of actions) {
+      if (a.by != null) s2.toAct = a.by;
+      applyAction(s2, { type: a.type, to: a.to });
+    }
+    if (!s2.awaitingDeal) return null;
+    dealNextStreet(s2);
+  } catch { return null; }
+  if (s2.done || s2.players[vi].allIn || s2.players[heroIdx].allIn) return null;
+  const card = s2.board[s2.board.length - 1];
+  const w = new Float64Array(wNext.length);
+  for (let k = 0; k < w.length; k++) if (wNext[k] > 0 && COMBOS[k][0] !== card && COMBOS[k][1] !== card) w[k] = wNext[k];
+  const W = wsum(w);
+  if (W <= 0) return null;
+  const hero = s2.players[heroIdx].cards;
+  const eqN = equityVsRange(hero, s2.board, w);
+  const cls = comboClasses(s2.board, s2.street);
+  const T = OUTSIDE_SOURCE.nextPlan || { value: 0.65 };
+  const pot = potTotal(s2);
+  const out = { card: cardPretty(card), street: s2.street, eq: eqN.total, lines: [] };
+  // His betting when it's checked to him (or he's first to act).
+  const hisBets = (state) => {
+    const m = responseMatrix(state, -1, null, vi, w, true);
+    if (!m) return null;
+    const pb = (m.P.bet ? wsum(w, m.P.bet) : 0) / W;
+    return { pb, betW: m.P.bet ? mul(w, m.P.bet) : null, checkW: m.P.check ? mul(w, m.P.check) : null, to: m.to.bet };
+  };
+  const answer = (b, betW) => {
+    if (!betW || wsum(betW) <= 0) return '';
+    const e = equityOver(eqN.eq, betW);
+    const need = b / (pot + 2 * b);
+    return `vs his bets you have ${pct(e)} and need ${pct(need)} to call about ${usd(b)}: ${e >= T.value ? 'raise for value' : e >= need ? 'call' : 'fold'}`;
+  };
+  if (s2.toAct === vi) {
+    const hb = hisBets(s2);
+    if (!hb) return null;
+    out.lines.push(`He's first: he bets about ${pct(hb.pb)}${hb.betW ? ` (his bets: ${topClasses(classShares(hb.betW, cls))})` : ''} and checks ${pct(1 - hb.pb)}.`);
+    const ec = hb.checkW && wsum(hb.checkW) > 0 ? equityOver(eqN.eq, hb.checkW) : null;
+    const plan = [];
+    if (hb.pb > 0.02) plan.push(`if he bets, ${answer(hb.to || pot * 0.5, hb.betW)}`);
+    if (ec != null) plan.push(`if he checks, you have ${pct(ec)}: ${ec >= T.value ? 'bet for value' : 'check behind'}`);
+    out.lines.push(`You next: ${plan.join('; ')}.`);
+  } else {
+    const plan = eqN.total >= T.value ? 'bet for value' : 'check';
+    out.lines.push(`You're first, with ${pct(eqN.total)} vs his range (${topClasses(classShares(w, cls))}): ${plan}.`);
+    if (plan === 'check') {
+      const s3 = structuredClone(s2);
+      try { applyAction(s3, { type: 'check' }); } catch { return out; }
+      const hb = !s3.awaitingDeal && s3.toAct === vi ? hisBets(s3) : null;
+      if (hb) out.lines.push(`After your check he bets about ${pct(hb.pb)}${hb.pb > 0.02 ? `; ${answer(hb.to || pot * 0.5, hb.betW)}` : ''}.`);
+    }
+  }
+  out.tag = '[OUTSIDE SOURCE] plan thresholds, config/outside-source.js; his moves are his strategy on the card that came';
+  return out;
+}
+
 // "38% thick value, 25% high-equity draws, 20% air" (classes above 5%, biggest first).
 function topClasses(shares) {
-  return Object.entries(shares).filter(([, x]) => x >= 0.05).sort((a, b) => b[1] - a[1]).map(([k, x]) => `${pct(x)} ${CLASS_LABEL[k].toLowerCase()}`).join(', ') || 'empty';
+  return Object.entries(shares).filter(([, x]) => x >= 0.05).sort((a, b) => b[1] - a[1]).map(([k, x]) => `${pct(x)} ${k === 'cpfs' ? 'CPFS' : CLASS_LABEL[k].toLowerCase()}`).join(', ') || 'empty';
 }
 
 // Pros and cons from the numbers, not from memory.

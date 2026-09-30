@@ -17,7 +17,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 | 9 | Copy for coach rebuilt around the new format | Done | 2275870 | 55 pass |
 | 10 | "Also from the brain" matcher coverage, in batches | batch 0 02d8446 (13/74), batch 1 b79a031 (24/74), batch 2 6cae08f (43/74), batch 3 4da00db (59/74; the other 15 listed with reasons) | Done | 57 pass |
 | 11 | Reg/pro villain type, 2024 PRO charts, 1/3 and 2/5 mix | Done | 9ef2998 | 59 pass |
-| 12 | 100bb LJ chart when effective stacks are closer to 100bb | Done | (this commit) | 60 pass |
+| 12 | 100bb LJ chart when effective stacks are closer to 100bb | Done | 0d7f722 | 60 pass |
+| 13 | What-ifs look one street ahead | Done | (this commit) | 61 pass |
 
 ## Notes and open issues
 
@@ -46,6 +47,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 - Item 11: new villain type "Reg / pro" at 1/3 (weight 6) and 2/5 (weight 12), never at 1/2. When a pro opens, you're graded against the 2024 PRO charts (both ACTIVE, no 2026 equivalent): [EP VS PRO OPEN] (exact for EP vs an EP pro) and [BTN VS CO PRO OPEN] (exact for BTN vs a CO pro); other seats get the closer one as an [OUTSIDE SOURCE] stand-in, blinds keep the BB charts. BTN vs a CO pro with a fish still to act behind hits the logged "⚖ CONFLICT: Joan to decide" (value 3-bet QQ/JJ/AQs/AK vs flat the middle): not graded, both views shown. JJ/AQs in position vs a pro's 3-bet is ♣ OPEN #3: not graded. Along the way, preflop "Also from the brain" now matches every preflop decision you made (it only looked at the first one, so rules about facing a 3-bet or 4-bet, like your 5-bet-AA-only rule, never showed on the later decision). Pro reads are brain quotes from the 40+ tells video (tops up to the max, $1k chips from a pocket, buys in with $100 chips).
 
 - Item 12: the 100bb LJ open chart [2025-02-18 HHP] is compiled from playbook-preflop.md section 3 (36 hands: no A2s or suited connectors below T9s; ATo, KJo, QJo come in) and used for an LJ open when the effective stack (your stack vs the biggest stack still to act) is under 150bb. It's rare in the current deal (about 4 of 266 LJ opens in a 4,000-hand sample) because you always sit with about 200bb and someone behind is usually deep. The pro still opens the 200bb LJ chart.
+
+- Item 13: every heads-up what-if that goes to the next street (your call, a check-through, his check-back, his call of your bet) now deals the card that actually came and shows what his continuing range does there (his real strategy on that card: bet %, what his bets are made of) and what you'd do next (bet for value, check, call or fold his bet by pot odds, raise for value). It's in the expanded option and one line per option in Copy for coach. Multiway pots and river options have no lookahead. A full sample of every possible next card was about 1 second per decision in the test runner (several seconds on a phone), so it uses the one real card; feedback still builds in about 70ms per hand on average (worst about 320ms) in tests and 150-500ms in the phone-size browser run.
 
 ## Decisions for Joan
 
@@ -76,3 +79,4 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 23. Table mix: reg/pro weight 6 at 1/3 and 12 at 2/5 (about 1 in 17 and 1 in 9 seats). [OUTSIDE SOURCE] in config/table-settings.js, default, Joan to review.
 24. "Fish behind" (for the BTN vs CO pro conflict) = a rec, passive player or whale still to act after you preflop. Default, Joan to review.
 25. Effective stack for choosing the LJ chart = your stack vs the biggest stack still to act behind you; under 150bb uses the 100bb chart. Default, Joan to review. (Your own stack stays 190-210bb, so short-stack LJ spots are rare; say if you want a short-stack drill.)
+26. Lookahead plan rule: with 65%+ equity vs his range on the next card, the plan is "bet for value" (or "raise for value" vs his bet); below that, check, and call his bet only with the pot odds. [OUTSIDE SOURCE] in config/outside-source.js, default, Joan to review. The lookahead uses the one card that actually came, not an average over all cards.
