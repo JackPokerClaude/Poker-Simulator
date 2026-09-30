@@ -27,7 +27,7 @@ test('every hand builds feedback in the fixed order', () => {
   let streets = 0;
   for (const { s, fb } of hands) {
     const html = feedbackHTML(s, fb, { gradeHTML: () => '<div class="grade">g</div>' });
-    const order = ["Opponent's range", 'The questions to ask here', 'Grades: your read, then your action', 'Also from the brain'];
+    const order = ["Opponent's range", 'The questions to ask here', 'Your action', 'Also from the brain'];
     let at = 0;
     for (const t of order) { const k = html.indexOf(t, at); assert.ok(k >= 0, `missing ${t}`); at = k; }
     for (const st of fb.streets) {
@@ -35,7 +35,7 @@ test('every hand builds feedback in the fixed order', () => {
       streets++;
       const k0 = html.indexOf(`What is my opponent's range?`);
       const k1 = html.indexOf('What happens if…?', k0);
-      const k2 = html.indexOf('Grades: your read, then your action', k1);
+      const k2 = html.indexOf('Your action', k1);
       const k3 = html.indexOf('Verdict', k2);
       const k4 = html.indexOf('Also from the brain', k3);
       assert.ok(k0 >= 0 && k1 > k0 && k2 > k1 && k3 > k2 && k4 > k3, 'street steps in order');

@@ -29,7 +29,6 @@ const ASSETS = [
   'js/engine/policy.js',
   'js/range/tracker.js',
   'js/range/whatif.js',
-  'js/predict/predict.js',
   'js/feedback/engine.js',
   'js/feedback/render.js',
   'js/feedback/equity.js',

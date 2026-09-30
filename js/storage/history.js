@@ -66,17 +66,12 @@ export function computeStats(list) {
       }
     }
   }
-  // Your reads (prediction step): range reads within 20 points count as on target.
-  let reads = 0, readsGood = 0;
-  for (const h of list) for (const p of Object.values(h.predictions || {})) {
-    if (p.grade?.range) { reads++; if (p.grade.range.mark === '✅') readsGood++; }
-  }
   const kinds = Object.values(byKind).map((b) => ({ ...b, pct: b.total - b.situational ? Math.round((b.good / (b.total - b.situational)) * 100) : null }));
   kinds.sort((a, b) => b.total - a.total);
   const topMissed = Object.values(missed).sort((a, b) => b.count - a.count).slice(0, 12);
   return {
     hands: list.length, graded, good, pct: graded ? Math.round((good / graded) * 100) : null,
-    sizingChecks, sizingOk, kinds, topMissed, outside, reads, readsGood,
+    sizingChecks, sizingOk, kinds, topMissed, outside,
   };
 }
 

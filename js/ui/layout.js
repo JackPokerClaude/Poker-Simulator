@@ -26,8 +26,7 @@ export const LAYOUTS = {
 // Scale 1 is the phone size the UI was designed at (about 380 x 330).
 export function layoutFor(w, h) {
   const kind = w / h >= 1.35 ? 'wide' : 'tall';
-  // Below 1 only when the table is squeezed (e.g. the prediction panel is open on a phone).
-  const k = Math.max(0.72, Math.min(w / (kind === 'wide' ? 560 : 380), h / 330, 3.2));
+  const k = Math.max(1, Math.min(w / (kind === 'wide' ? 560 : 380), h / 330, 3.2));
   return { kind, k: Math.round(k * 100) / 100, ...LAYOUTS[kind] };
 }
 

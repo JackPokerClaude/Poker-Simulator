@@ -363,33 +363,6 @@ pre.coach { white-space: pre-wrap; word-break: break-word; background: var(--tin
 .glegend .gl { display: inline-flex; align-items: center; gap: 5px; }
 .glegend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; border: 1px solid var(--line); }
 
-/* Prediction panel (replaces the action bar until you lock in your read). Compact so the
-   table keeps its room: buckets in a 2x2 grid, question label beside its buttons. */
-.actionbar.predicting { display: block; padding: 6px 10px calc(8px + var(--safe-b)); max-height: 52vh; overflow-y: auto; }
-.predict { max-width: 680px; margin: 0 auto; color: #fff; display: grid; gap: 6px; }
-.pr-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.pr-head b { font-size: 15px; }
-.pr-head span, .pr-sub { font-size: 12px; color: var(--on-navy-muted); font-weight: 600; }
-.pr-sub em { font-style: normal; color: #fff; margin-left: 6px; }
-.pr-who { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 12.5px; color: var(--on-navy-muted); font-weight: 700; }
-.chipbtn { border: 1px solid var(--navy-line); background: #0d2447; color: #fff; border-radius: 999px; padding: 5px 12px; font-weight: 800; font-size: 13px; min-height: 32px; }
-.chipbtn.on { background: var(--blue); border-color: var(--blue); }
-.pr-range { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-.pr-range .pr-sub { grid-column: 1 / -1; }
-.pr-b { display: flex; gap: 4px; min-width: 0; }
-.pr-add { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: stretch; gap: 3px; background: #0d2447; border: 1px solid var(--navy-line); border-radius: 10px; padding: 5px 8px; color: #fff; min-height: 44px; }
-.pr-l { text-align: left; font-weight: 800; font-size: 13px; }
-.pips { display: grid; grid-template-columns: repeat(10, 1fr); gap: 2px; }
-.pips i { height: 10px; border-radius: 2px; background: #1d3560; }
-.pips i.on.strong { background: #9fc0ff; } .pips i.on.medium { background: #5b95f5; } .pips i.on.draws { background: var(--g-draws); } .pips i.on.air { background: var(--g-air); }
-.pr-minus { width: 36px; flex: none; border-radius: 10px; border: 1px solid var(--navy-line); background: #0d2447; color: #fff; font-size: 18px; font-weight: 800; }
-.pr-minus:disabled { opacity: 0.35; }
-.pr-q { display: grid; grid-template-columns: 118px 1fr; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; }
-.pr-q .seg { display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; gap: 4px; background: none; border-radius: 0; overflow: visible; }
-.pr-q .seg button { background: #0d2447; color: #fff; border: 1px solid var(--navy-line); border-radius: 10px; padding: 8px 2px; font-weight: 800; font-size: 13px; min-height: 38px; }
-.pr-q .seg button.on { background: var(--blue); border-color: var(--blue); }
-#prGo { min-height: 42px; }
-#prGo:disabled { opacity: 0.45; }
 
 /* Feedback screen (Joan's format) */
 .fb-sec { margin: 14px 0 6px; padding-top: 6px; border-top: 1px solid var(--line); }

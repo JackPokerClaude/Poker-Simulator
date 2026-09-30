@@ -17,7 +17,6 @@ import { boardTable } from '../engine/strength.js';
 import { handCode, cardsPretty } from '../engine/cards.js';
 import { trackHand, COMBOS, CODE_OF, total, comboBuckets, bucketShares, BUCKETS, preflopActionMix, gridCells } from '../range/tracker.js';
 import { heroOption, RESPONSE } from '../range/whatif.js';
-import { PREFLOP_BUCKETS } from '../predict/predict.js';
 import { equityVsRange, equityOver } from './equity.js';
 import { spotFeatures, betSizeClass } from './spot.js';
 import { matchBrain } from './match.js';
@@ -103,7 +102,7 @@ function evalOption(ctx, kind, action) {
   opt.byBucket = {};
   for (const b of BUCKETS) {
     const wb = new Float64Array(w.length);
-    for (let k = 0; k < w.length; k++) if (w[k] > 0 && (buckets[k] ?? PREFLOP_BUCKETS[CODE_OF[k]]) === b) wb[k] = w[k];
+    for (let k = 0; k < w.length; k++) if (w[k] > 0 && buckets[k] === b) wb[k] = w[k];
     const tb = wsum(wb);
     if (tb <= 0) continue;
     opt.byBucket[b] = { share: tb / W };
@@ -168,7 +167,7 @@ function bucketSharesOf(w, buckets) {
   let t = 0;
   for (let k = 0; k < w.length; k++) {
     if (!(w[k] > 0)) continue;
-    const b = buckets[k] ?? PREFLOP_BUCKETS[CODE_OF[k]];
+    const b = buckets[k];
     if (!b) continue;
     s[b] += w[k]; t += w[k];
   }
@@ -362,9 +361,7 @@ function edgeText(v) {
 
 // ---------------------------------------------------------------- the whole review
 function mainVillain(h, street, snapState) {
-  const pred = h.predictions?.[street];
   const live = activePlayers(snapState).filter((p) => p.i !== h.heroIdx).map((p) => p.i);
-  if (pred?.target != null && live.includes(pred.target)) return pred.target;
   const agg = [...snapState.log].reverse().find((e) => e.street === street && (e.type === 'bet' || e.type === 'raise') && e.i !== h.heroIdx);
   if (agg && live.includes(agg.i)) return agg.i;
   if (live.includes(snapState.preflopAggressor)) return snapState.preflopAggressor;
@@ -480,14 +477,12 @@ export function buildFeedback(h, { model, brain, history = [] }) {
 
   // ---- PREFLOP
   const preDec = decisions.filter((d) => d.state.street === 'preflop');
-  // The opponent for the preflop section: the villain who stayed in with you (the one you
-  // read, if he did), else whoever you read or who raised.
-  const readT = h.predictions?.preflop?.target;
-  const pv = involved.includes(readT) ? readT
-    : involved.includes(h.preflopAggressor) ? h.preflopAggressor
-      : involved[0] ?? readT ?? (preDec.length ? mainVillain(h, 'preflop', preDec[0].state) : null);
-  const pre = { villain: pv, grids: {}, paragraph: '', questions: null, read: h.predictions?.preflop || null, actions: h.heroDecisions || [], also: { rules: [], conflicts: [] } };
-  const withGrid = [...new Set([...involved, ...(readT != null ? [readT] : []), ...(pv != null ? [pv] : [])])];
+  // The opponent for the preflop section: the villain who stayed in with you (the raiser if
+  // he did), else whoever acted before your decision.
+  const pv = involved.includes(h.preflopAggressor) ? h.preflopAggressor
+    : involved[0] ?? (preDec.length ? mainVillain(h, 'preflop', preDec[0].state) : null);
+  const pre = { villain: pv, grids: {}, paragraph: '', questions: null, actions: h.heroDecisions || [], also: { rules: [], conflicts: [] } };
+  const withGrid = [...new Set([...involved, ...(pv != null ? [pv] : [])])];
   for (const i of withGrid) {
     const acts = R[i].actions.filter((a) => a.street === 'preflop');
     const last = [...acts].reverse().find((a) => a.label !== 'fold') || acts[acts.length - 1];
@@ -531,7 +526,6 @@ export function buildFeedback(h, { model, brain, history = [] }) {
       street, board: deal.board, villain: vi,
       grid: { cells: gridCells({ w: wAt, prev, buckets }), shares },
       paragraph: streetParagraph(h, model, vi, { ...r, actions: r.actions.filter((a) => !sd.length || a.n < sd[0].n) }, street, shares, prev ? bucketShares(prev, buckets) : null),
-      read: h.predictions?.[street] || null,
       decisions: sd.map((d) => decisionAnalysis(h, d, model, brain, vi, tags)),
       catalog: null,
     };
@@ -551,8 +545,7 @@ export function buildFeedback(h, { model, brain, history = [] }) {
   const worst = all.filter((a) => a.grade.mark === '❌').sort((a, b) => (b.grade.loss || 0) - (a.grade.loss || 0))[0]
     || all.find((a) => a.grade.mark === '⚠️');
   const preWrong = pre.conflicted ? null : (h.heroDecisions || []).find((d) => d.verdict === 'wrong');
-  const readMiss = Object.values(h.predictions || {}).find((p) => p.grade?.range?.mark === '❌');
-  const takeaway = takeawayText({ worst, preWrong, readMiss, h });
+  const takeaway = takeawayText({ worst, preWrong, h });
   const known = [];
   if (h.stakes.label !== '1/2' && (leaks.length || preWrong)) {
     const kl = (brain?.knownLeaks || []).find((k) => /loses above it/i.test(k.title));
@@ -570,7 +563,7 @@ export function buildFeedback(h, { model, brain, history = [] }) {
   return out;
 }
 
-function takeawayText({ worst, preWrong, readMiss, h }) {
+function takeawayText({ worst, preWrong, h }) {
   if (worst) {
     const tag = worst.leaks[0];
     const v = worst.verdict.title.toLowerCase();
@@ -587,7 +580,6 @@ function takeawayText({ worst, preWrong, readMiss, h }) {
     return map[tag] || `${cap(worst.actual.title)} on the ${worst.street} was the leak: ${v} is the line.`;
   }
   if (preWrong) return `Preflop is where this went wrong: the chart says ${preWrong.freq || 'something else'} with ${preWrong.code}, you chose ${String(preWrong.heroAction).toLowerCase()}.`;
-  if (readMiss) return `You played it fine but misread him on the ${readMiss.street}: ${BUCKET_NAME[readMiss.grade.range.worst]} was ${readMiss.grade.range.dir}. The read is the skill; the action follows.`;
   void h;
   return 'Clean hand: right read, right line. Now do it 10,000 more times.';
 }

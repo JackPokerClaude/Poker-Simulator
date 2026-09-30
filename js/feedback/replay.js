@@ -1,5 +1,5 @@
 // Saved hands keep what's needed to rebuild them for the full feedback screen later: the deal,
-// the action log, your graded preflop decisions and your reads (the last 50 hands only).
+// the action log and your graded preflop decisions (the last 50 hands only).
 import { createGame, applyAction, dealNextStreet } from '../engine/game.js';
 
 export function packReplay(s) {
@@ -12,8 +12,7 @@ export function packReplay(s) {
   };
 }
 
-// predictions: the saved summaries (grade, blocks, answers, questions, shares).
-export function rebuildHand(rep, predictions = {}) {
+export function rebuildHand(rep) {
   const init = rep.initial;
   const s = createGame({ stakes: init.stakes, players: init.players.map((p) => ({ ...p, cards: [...p.cards], meta: { ...p.meta } })), runout: [...init.runout] });
   Object.assign(s, { heroIdx: rep.heroIdx, drill: rep.drill, spot: rep.spot, heroCode: rep.heroCode, initial: init, heroDecisions: rep.heroDecisions || [] });
@@ -22,6 +21,5 @@ export function rebuildHand(rep, predictions = {}) {
     if (e.type === 'deal') { dealNextStreet(s); continue; }
     applyAction(s, { type: e.type, to: e.to, meta: e.meta });
   }
-  s.predictions = Object.fromEntries(Object.entries(predictions).map(([k, p]) => [k, { ...p, street: k, truth: p.shares ? { shares: p.shares } : null }]));
   return s;
 }

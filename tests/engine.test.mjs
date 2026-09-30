@@ -171,7 +171,7 @@ test('sizing checks: iso and 4-bet', () => {
 test('coach text has the exact section order', () => {
   const s = createHand({ drill: 'random', ranges });
   playOut(s);
-  const lines = coachText(s).split('\n').filter((l) => !/^\w+ read \(vs /.test(l));
+  const lines = coachText(s).split('\n');
   const labels = ['Stakes / venue:', 'Effective stack ($):', 'Hero seat + cards:', 'Villain(s):', 'Preflop:', 'Flop', 'Turn', 'River', 'Result:', 'My question: Review every decision street by street.'];
   labels.forEach((l, k) => assert.ok(lines[k].startsWith(l), `line ${k}: ${lines[k]}`));
   assert.match(lines[0], /Simulator/);
@@ -299,7 +299,7 @@ test('coach text keeps its exact section order and other $ amounts', () => {
   folds(s, 1);
   applyAction(s, { type: 'raise', to: 35 });
   folds(s, 1);
-  const lines = coachText(s).split('\n').filter((l) => !/^\w+ read \(vs /.test(l));
+  const lines = coachText(s).split('\n');
   ['Stakes / venue:', 'Effective stack ($):', 'Hero seat + cards:', 'Villain(s):', 'Preflop:', 'Flop', 'Turn', 'River', 'Result:', 'My question:'].forEach((l, k) => assert.ok(lines[k].startsWith(l), lines[k]));
   assert.match(lines[4], /BTN opens to \$10.*Hero \(BB\) 3-bets to \$35/);
 });

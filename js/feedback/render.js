@@ -1,6 +1,7 @@
 // HTML for the feedback screen, in Joan's order. Pure string building (no DOM access).
 import { gridHTML } from '../ui/grid.js';
-import { BUCKETS, BUCKET_LABEL } from '../predict/predict.js';
+const BUCKETS = ['strong', 'medium', 'draws', 'air'];
+const BUCKET_LABEL = { strong: 'Strong', medium: 'Medium', draws: 'Draws', air: 'Air' };
 import { cardsPretty } from '../engine/cards.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -34,23 +35,6 @@ export function mdHTML(text) {
 
 const step = (n, title, body) => `<div class="fb-step"><div class="fb-n">${n}</div><div class="fb-b"><div class="fb-t">${title}</div>${body}</div></div>`;
 
-function readGradeHTML(h, p) {
-  if (!p) return '<div class="fb-line muted">No read this street (predictions were off, or there was no one to read).</div>';
-  const g = p.grade || {};
-  const out = [];
-  const who = p.target != null ? h.players[p.target].pos : 'the table';
-  if (g.range && p.truth?.shares) {
-    out.push(`<div class="fb-line">${g.range.mark} <b>Your read of ${esc(who)}'s range:</b> ${BUCKETS.map((b) => `${p.blocks[b] * 10}% ${BUCKET_LABEL[b]}`).join(', ')}. Real: ${BUCKETS.map((b) => `${pct(p.truth.shares[b])} ${BUCKET_LABEL[b]}`).join(', ')}. Off by ${g.range.off} points: ${BUCKET_LABEL[g.range.worst]} ${g.range.dir}.</div>`);
-  }
-  for (const q of p.questions || []) {
-    const a = g.answers?.[q.id];
-    if (!a) continue;
-    const name = (v) => ((q.options.find((o) => o[0] === v) || [v, v])[1]).toLowerCase();
-    out.push(`<div class="fb-line">${a.mark} <b>${esc(q.ask)}</b> you said ${esc(name(a.pick))}: ${pct(a.p)} of his range does. His most likely answer: ${esc(name(a.top))} (${pct(a.pTop)}).</div>`);
-  }
-  return out.join('') || '<div class="fb-line muted">No read to grade.</div>';
-}
-
 function alsoHTML(also) {
   const items = [];
   for (const r of also?.rules || []) items.push(`<div class="fb-also"><b>${esc(r.title)}:</b> “${esc(r.quote)}” <span class="tag">${esc(r.tag)}</span></div>`);
@@ -83,14 +67,14 @@ function optionHTML(o) {
 const ord = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'}`;
 const evText = (x) => (Math.abs(x) < 0.05 ? '$0' : `${x < 0 ? '−' : '+'}$${Math.abs(x).toFixed(Math.abs(x) < 10 ? 1 : 0)}`);
 
-function decisionHTML(a, first, readHTML = '') {
+function decisionHTML(a, first) {
   const order = a.opts;
   const wIf = order.map((o) => optionHTML({ ...o, open: false })).join('');
   const actualExtra = order.includes(a.actual) ? '' : optionHTML({ ...a.actual, title: `What you did: ${a.actual.title}` });
   const verdictSize = a.verdict.size ? `<div class="fb-line"><b>Size:</b> his range is ${esc(a.verdict.size.why)}. “${esc(a.verdict.size.quote)}” <span class="tag">${esc(a.verdict.size.tag)}</span></div>` : '';
   return `${first ? '' : `<div class="fb-sub">Then: ${esc(a.actual.title)}</div>`}
     ${step(2, 'What happens if…?', `${a.multiway ? '<div class="fb-line muted">Multiway: his answers treat him as next to act.</div>' : ''}<div class="fb-line">Your equity vs his real range: <b>${pct(a.eq.total)}</b> (${a.eq.combos} combos, ${a.eq.exact ? 'exact' : `${a.eq.runouts} sampled runouts`}).</div>${wIf}${actualExtra}`)}
-    ${step(3, first ? 'Grades: your read, then your action' : 'Your action', `${first ? `${readHTML}<div class="fb-gap"></div>` : ''}<div class="fb-line">${a.grade.mark} <b>You: ${esc(a.actual.title)}.</b> ${esc(a.grade.text)}</div>`)}
+    ${step(3, 'Your action', `<div class="fb-line">${a.grade.mark} <b>You: ${esc(a.actual.title)}.</b> ${esc(a.grade.text)}</div>`)}
     ${step(4, 'Verdict', `<div class="fb-line"><b>${esc(a.verdict.title)}.</b> ${esc(a.verdict.why)} <span class="tag">${esc(a.verdict.source)}</span></div>${verdictSize}${a.verdict.math ? `<div class="fb-line muted">${esc(a.verdict.math)}</div>` : ''}`)}
     ${step(5, 'Also from the brain', alsoHTML(a.also))}`;
 }
@@ -106,12 +90,12 @@ export function feedbackHTML(h, fb, { resultLine = '', handsHTML = '', gradeHTML
   const preSection = `<section class="fb-sec"><h3>Preflop${pv != null ? ` · vs ${esc(h.players[pv].pos)}` : ''}</h3>
     ${step(1, "Opponent's range", preGrid + (others.length ? `<details class="fb-more"><summary>Also in the hand: ${others.map((i) => esc(h.players[i].pos)).join(', ')}</summary>${others.map((i) => `<div class="fb-sub">${esc(h.players[i].pos)}</div>${gridHTML(pre.grids[i].cells, { mode: 'action' })}<div class="fb-p">${esc(pre.grids[i].paragraph)}</div>`).join('')}</details>` : ''))}
     ${step(2, 'The questions to ask here', qHTML)}
-    ${step(3, 'Grades: your read, then your action', `${readGradeHTML(h, pre.read)}<div class="fb-gap"></div>${pre.conflicted ? '<div class="fb-line"><b>⚖ Not graded:</b> this spot is an open conflict in your playbook (below). The chart grade is shown for reference only.</div>' : ''}${preAction}`)}
+    ${step(3, 'Your action', `${pre.conflicted ? '<div class="fb-line"><b>⚖ Not graded:</b> this spot is an open conflict in your playbook (below). The chart grade is shown for reference only.</div>' : ''}${preAction}`)}
     ${step(4, 'Also from the brain', alsoHTML(pre.also))}</section>`;
 
   const streets = fb.streets.map((s) => {
     const title = `${cap(s.street)} ${cardsPretty(s.board)} · vs ${h.players[s.villain].pos}`;
-    const decs = s.decisions.length ? s.decisions.map((a, k) => decisionHTML(a, k === 0, readGradeHTML(h, s.read))).join('') : `${step(2, 'What happens if…?', '<div class="fb-line muted">You had no decision on this street.</div>')}`;
+    const decs = s.decisions.length ? s.decisions.map((a, k) => decisionHTML(a, k === 0)).join('') : `${step(2, 'What happens if…?', '<div class="fb-line muted">You had no decision on this street.</div>')}`;
     return `<section class="fb-sec"><h3>${esc(title)}</h3>
       ${step(1, 'What is my opponent\'s range?', `${gridHTML(s.grid.cells, { mode: 'bucket', shares: s.grid.shares })}<div class="fb-p">${esc(s.paragraph)}</div>`)}
       ${decs}</section>`;
