@@ -588,7 +588,7 @@ export function buildFeedback(h, { model, brain, history = [] }) {
   const preDec = decisions.filter((d) => d.state.street === 'preflop');
   const pv = involved.includes(h.preflopAggressor) ? h.preflopAggressor
     : involved[0] ?? (preDec.length ? villainAt(h, preDec[0].state) : null);
-  const pre = { villain: pv, points: [], questions: preflopQuestions(h, model, h.spot, pv), also: { rules: [], conflicts: [] } };
+  const pre = { villain: pv, points: [], questions: null, also: { rules: [], conflicts: [] } };
   let lastN = -1;
   preDec.forEach((d, k) => {
     const vi = villainAt(h, d.state);
@@ -609,6 +609,8 @@ export function buildFeedback(h, { model, brain, history = [] }) {
     lastN = d.n;
     pre.points.push(pt);
   });
+  // The six questions are about the moment of your first decision: whoever had acted by then.
+  pre.questions = preflopQuestions(h, model, h.spot, pre.points[0]?.vi ?? null);
   if (preDec.length) {
     const st = preDec[0].state;
     const firstLimper = st.log.find((e) => e.street === 'preflop' && e.type === 'call' && e.level === 1);

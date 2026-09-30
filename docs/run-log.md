@@ -10,7 +10,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 | 2 | Range chart at every decision, narrowed by what he did | Done | e7c75f2 | 50 pass |
 | 3 | HHP's seven hand classes | Done | b72b81e | 51 pass |
 | 4 | Every decision in the five-step order | Done | 6a551cc | 51 pass |
-| 5 | OOP realization factor, math-only close calls | Done | (this commit) | 52 pass |
+| 5 | OOP realization factor, math-only close calls | Done | b8ea613 | 52 pass |
+| 6 | Preflop card: ✅/⚠️/❌ + one-line reason | Done | (this commit) | 52 pass |
 
 ## Notes and open issues
 
@@ -20,6 +21,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 
 - Item 3, your A-Q-J question: the old colors used a cut-off at the 88th percentile of hands vs random cards, which is why A5-A9 fell on one side and A4 on the other. It had no brain basis and is gone. Now on A-Q-J: AK and AT are thick value (top pair with the best or second-best kicker still available: K, then T), and A9 through A2 are all thin value (top pair, weaker kicker), per "TPTK, an overpair" (thick) and "KQ, AQ, weaker queens" (thin).
 - Item 3: claim re-check with the seven classes (400 hands): whale stabs keep >=15% air in 32 of 45 cases; aggro folder flop raises reached 49% strong value (claim says 50%+) in 1 of 5.
+
+- Item 3's deploy run went red on a GitHub Pages server error (HTTP 502 while creating the deployment; tests had passed). Item 4's deploy right after it went green, so the live site was never broken.
 
 ## Decisions for Joan
 
@@ -36,3 +39,4 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 9. Trips made with one hole card on a paired board count as CPFS, whatever the kicker. Default, Joan to review.
 10. Out-of-position equity realization = 80% on the flop and turn, not applied on the river (no later street to lose equity on). Applied to every EV in the math, whether or not a brain rule decides the verdict. [OUTSIDE SOURCE] in config/outside-source.js.
 11. "Math only, close" = the math-best line beats your action by less than 5% of the pot, when no brain rule or sizing rule decided the verdict. [OUTSIDE SOURCE] in config/outside-source.js.
+12. Preflop card marks: chart play ✅; a mixed (non-situational) chart cell where you picked one of the mixed actions ✅ (it counts as correct in your stats too); situational cell ⚠️ (Mark's rule decides, not graded either way); off chart ❌; [OUTSIDE SOURCE] bracket opens: good ✅, borderline ⚠️, mistake ❌. Default, Joan to review.
