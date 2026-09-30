@@ -72,7 +72,7 @@ function evalOption(ctx, kind, action) {
   const P = potTotal(st);
   const W = wsum(w);
   const lines = [];
-  const opt = { kind, action, lines, ev: 0 };
+  const opt = { kind, action, lines, ev: 0, eqAll: eq.total };
   const eqAll = eq.total;
   if (kind === 'fold') {
     opt.ev = 0;
@@ -88,6 +88,7 @@ function evalOption(ctx, kind, action) {
     lines.push(`Pot odds: call ${usd(t)} to win ${usd(P)} → you need ${usd(t)} / ${usd(P + t)} = ${pct(need)} equity.`);
     lines.push(`Your equity vs his real range: ${pct(eqAll)} (${eq.combos} combos, ${eq.exact ? `every ${eq.runouts === 1 ? 'hand' : `one of ${eq.runouts} river cards`}` : `${eq.runouts} sampled runouts`}).`);
     lines.push(`${pct(eqAll)} ${eqAll >= need ? '≥' : '<'} ${pct(need)} → EV = ${pct(eqAll)} × ${usd(P + t)} − ${usd(t)} = ${usd(opt.ev)}.`);
+    if (st.street !== 'river' && ctx.shares) opt.next = `you see the next card against this same range: ${topClasses(ctx.shares)}.`;
     return opt;
   }
   const m = responseMatrix(st, heroIdx, action, vi, w);
@@ -97,6 +98,8 @@ function evalOption(ctx, kind, action) {
     opt.ev = eqAll * P;
     lines.push(`It checks through: your ${pct(eqAll)} of the ${usd(P)} pot ≈ ${usd(opt.ev)}.`);
     opt.mix = { check: 1 };
+    opt.closes = true;
+    if (st.street !== 'river' && ctx.shares) opt.next = `a free card, and his range stays ${topClasses(ctx.shares)}.`;
     return opt;
   }
   const mix = {};
@@ -132,6 +135,7 @@ function evalOption(ctx, kind, action) {
       opt.vsBet = { e, callEv, b };
     }
     opt.ev = ev;
+    if (m.P.check && st.street !== 'river') opt.next = `when he checks back, his range is ${topClasses(classShares(mul(w, m.P.check), classes))}.`;
     lines.push(`EV of checking ≈ ${usd(ev)}.`);
     return opt;
   }
@@ -148,6 +152,7 @@ function evalOption(ctx, kind, action) {
     ev += pc * each;
     opt.eqCalls = e;
     opt.callShares = classShares(mul(w, m.P.call), classes);
+    opt.next = `when he calls, his range is ${topClasses(opt.callShares)}, and you have ${pct(e)} against it.`;
     lines.push(`He calls ${pct(pc)} → pot ${usd(T)}; you have ${pct(e)} vs the hands that call: ${pct(e)} × ${usd(T)} − ${usd(add)} = ${usd(each)} → ${pct(pc)} × ${usd(each)} = ${usd(pc * each)}.`);
   }
   const pr = mix.raise || 0;
@@ -163,6 +168,11 @@ function evalOption(ctx, kind, action) {
   opt.ev = ev;
   lines.push(`EV ≈ ${usd(ev)} (one-street model: it stops at his answer and doesn't play out later streets).`);
   return opt;
+}
+
+// "38% thick value, 25% high-equity draws, 20% air" (classes above 5%, biggest first).
+function topClasses(shares) {
+  return Object.entries(shares).filter(([, x]) => x >= 0.05).sort((a, b) => b[1] - a[1]).map(([k, x]) => `${pct(x)} ${CLASS_LABEL[k].toLowerCase()}`).join(', ') || 'empty';
 }
 
 // Pros and cons from the numbers, not from memory.

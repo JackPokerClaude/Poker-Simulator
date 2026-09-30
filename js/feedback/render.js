@@ -46,18 +46,22 @@ function alsoHTML(also) {
   return items.join('') || '<div class="fb-line muted">Nothing else in the brain covers this spot.</div>';
 }
 
+// One summary line per option (his answer + EV); tap to expand the class-by-class breakdown.
 function optionHTML(o) {
-  const mix = o.mix ? Object.entries(o.mix).filter(([, p]) => p > 0.005).map(([r, p]) => `${RESP[r] || r} ${pct(p)}`).join(' · ') : '';
+  const mix = o.mix ? Object.entries(o.mix).filter(([, p]) => p > 0.005).sort((a, b) => b[1] - a[1]).map(([r, p]) => `${RESP[r] || r} ${pct(p)}`).join(', ') : '';
+  const VERB = { fold: 'folds', call: 'calls', raise: 'raises', check: 'checks', bet: 'bets' };
+  const said = o.mix ? Object.entries(o.mix).filter(([, p]) => p > 0.005).sort((a, b) => b[1] - a[1]).map(([r, p]) => `${VERB[r] || r} ${pct(p)}`).join(', ') : '';
+  const summary = o.kind === 'fold' ? 'you give up the pot' : o.kind === 'call' ? `you need ${pct(o.need)}, you have ${pct(o.eqAll)}` : o.closes ? 'it checks through' : said ? `he ${said}` : '';
   const rows = o.byClass ? CLASSES.filter((c) => o.byClass[c.key]).map((c) => {
     const x = o.byClass[c.key];
     const cells = ['fold', 'call', 'raise', 'check', 'bet'].filter((r) => x[r] > 0.005).map((r) => `${RESP[r]} ${pct(x[r])}`).join(', ');
-    return `<tr><td><i class="dot" style="background:${c.color}"></i>${esc(c.label)} <span class="muted">${pct(x.share)}</span></td><td>${cells}</td></tr>`;
+    return `<tr><td><i class="dot" style="background:${c.color}"></i>${esc(c.label)}</td><td class="num">${pct(x.share)}</td><td>${cells}</td></tr>`;
   }).join('') : '';
-  return `<details class="fb-opt"${o.open ? ' open' : ''}><summary><b>${esc(o.title)}</b><span class="ev">EV ${esc(evText(o.ev))}</span></summary>
-    ${mix ? `<div class="fb-line">His answer: ${esc(mix)}</div>` : ''}
-    ${rows ? `<table class="fb-bt">${rows}</table>` : ''}
+  const next = o.next ? `<div class="fb-line"><b>Next street:</b> ${esc(o.next)}</div>` : '';
+  return `<details class="fb-opt"${o.open ? ' open' : ''}><summary><span class="ot"><b>${esc(o.title)}</b><span class="os">${esc(summary)}</span></span><span class="ev">EV ${esc(evText(o.ev))}</span></summary>
+    ${rows ? `<table class="fb-bt"><tr><th>His class</th><th>Share</th><th>What it does</th></tr>${rows}</table>` : ''}
     ${o.wantCalls ? `<div class="fb-line"><b>Do you want the calls?</b> ${esc(o.wantCalls)}</div>` : ''}
-    ${o.callShares ? `<div class="fb-line"><b>Later streets:</b> his calls are ${CLASS_KEYS.filter((k) => o.callShares[k] > 0.005).map((k) => `${pct(o.callShares[k])} ${CLASS_LABEL[k].toLowerCase()}`).join(', ')}.</div>` : ''}
+    ${next}
     ${o.pros?.length ? `<div class="fb-line"><b>Pros:</b> ${o.pros.map(esc).join(' ')}</div>` : ''}
     ${o.cons?.length ? `<div class="fb-line"><b>Cons:</b> ${o.cons.map(esc).join(' ')}</div>` : ''}
     <div class="fb-math">${o.lines.map((l) => `<div>${esc(l)}</div>`).join('')}</div>

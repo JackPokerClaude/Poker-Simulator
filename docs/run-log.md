@@ -8,7 +8,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 |---|------|--------|--------|-------|
 | 1 | Remove the prediction step | Done | b256886 (+ test fix efb582b) | 48 pass |
 | 2 | Range chart at every decision, narrowed by what he did | Done | e7c75f2 | 50 pass |
-| 3 | HHP's seven hand classes | Done | (this commit) | 51 pass |
+| 3 | HHP's seven hand classes | Done | b72b81e | 51 pass |
+| 4 | Every decision in the five-step order | Done | (this commit) | 51 pass |
 
 ## Notes and open issues
 
