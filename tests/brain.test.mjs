@@ -166,3 +166,16 @@ test('every browser file parses (catches errors tests never import, like app.js)
     execFileSync(process.execPath, ['--check', new URL(f, root).pathname], { stdio: 'pipe' });
   }
 });
+
+test('matcher coverage: every postflop topic is covered or has a reason', async () => {
+  const { matcherCoverage } = await import('../js/brain/coverage.js');
+  const { resolveCompiled } = await import('../js/brain/compiled.js');
+  const { UNCOVERED_REASONS } = await import('../config/matcher-uncovered.js');
+  const texts = {};
+  for (const f of manifest.files) texts[f.name] = readFileSync(new URL(`brain/${f.name}`, root), 'utf8');
+  const resolved = resolveCompiled(JSON.parse(readFileSync(new URL('brain-compiled/behavior.json', root), 'utf8')), texts);
+  const c = matcherCoverage(texts, resolved, UNCOVERED_REASONS);
+  assert.ok(c.total > 50, `only ${c.total} topics found`);
+  for (const t of c.uncovered) assert.ok(t.reason, `no rule and no reason: ${t.file} › ${t.title}`);
+  console.log(`# matcher coverage ${c.covered}/${c.total}`);
+});

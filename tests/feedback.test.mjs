@@ -187,3 +187,13 @@ test('Copy for coach follows the feedback: range, options, action, verdict, leak
     for (const m of t.matchAll(/Leak tags(?: \(hand\))?: (.+)/g)) if (m[1] !== 'none') for (const tag of m[1].split(', ')) assert.ok(allowed.has(tag.replace(/ \(\d+x in last 50\)$/, '')), tag);
   }
 });
+
+test('when matching brain rules point at different lines, none decides: the math does', () => {
+  for (const { fb } of hands) for (const pt of points(fb)) {
+    const v = pt.analysis?.verdict;
+    if (!v?.split) continue;
+    assert.equal(v.rule, undefined);
+    assert.match(v.source, /^\[OUTSIDE SOURCE\] math/);
+    assert.ok(new Set(v.split.map((x) => x.line)).size > 1);
+  }
+});

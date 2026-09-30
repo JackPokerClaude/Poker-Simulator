@@ -558,10 +558,17 @@ function decisionAnalysis(h, d, model, brain, vi, tags, w, classes, shares) {
 
   // Verdict: a brain rule's line wins; otherwise the math. Bet sizes follow the [08-04] rule.
   const mathBest = opts.reduce((a, b) => (b.ev > a.ev ? b : a), opts[0]);
-  const ruleRec = matched.rules.find((r) => r.recommend && opts.some((o) => o.line === r.recommend || (r.recommend === 'bet' && o.line.startsWith('bet'))));
+  // Every matching rule that points at a line you could take. If they disagree (the playbook
+  // says both without a ⚖), none of them decides: the math does, and both stay on screen.
+  const recs = matched.rules.filter((r) => r.recommend && opts.some((o) => o.line === r.recommend || (r.recommend === 'bet' && o.line.startsWith('bet'))));
+  const specific = [...new Set(recs.map((r) => r.recommend).filter((x) => x !== 'bet'))];
+  const family = new Set(recs.map((r) => (r.recommend.startsWith('bet') ? 'bet' : r.recommend)));
+  const agree = family.size <= 1 && specific.length <= 1;
+  const ruleRec = agree ? (recs.find((r) => r.recommend === specific[0]) || recs[0]) : null;
   let verdict;
   if (ruleRec) verdict = { line: ruleRec.recommend, source: ruleRec.tag, why: `“${ruleRec.quote}”`, rule: ruleRec.key };
   else verdict = { line: mathBest.line, source: '[OUTSIDE SOURCE] math vs his real range (one-street EV)', why: `${mathBest.title} has the best EV: ${usd(mathBest.ev)}.` };
+  if (!agree) verdict.split = recs.map((r) => ({ title: r.title, line: LINE_LABEL[r.recommend] || r.recommend, tag: r.tag }));
   if (verdict.line === 'bet' || verdict.line.startsWith('bet')) {
     const sz = street === 'preflop' ? null : sizingByRule(model, shares, opts, feat.heroBucket);
     if (sz && (verdict.line === 'bet' || !ruleRec || ruleRec.recommend === 'bet')) {

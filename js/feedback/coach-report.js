@@ -48,6 +48,7 @@ function decisionLines(pt, h, k, out) {
   out.push(`  Your action: ${a.grade.mark} ${a.actual.title}. ${a.grade.text}`);
   out.push(`  Verdict: ${a.verdict.title}. ${a.verdict.why} ${a.verdict.source}`);
   if (a.verdict.size) out.push(`  Size: his range is ${a.verdict.size.why}. "${a.verdict.size.quote}" ${a.verdict.size.tag}`);
+  if (a.verdict.split) out.push(`  Brain lines disagree here (no ⚖), so the math decides: ${a.verdict.split.map((x) => `${x.title} → ${x.line.toLowerCase()} ${x.tag}`).join('; ')}.`);
   if (a.verdict.math) out.push(`  ${a.verdict.math}`);
   for (const c of a.also?.conflicts || []) out.push(`  ${c.kind === 'open' ? '♣ Open question' : '⚖ Conflict'} (not graded): ${c.title}`);
   out.push(`  Leak tags: ${a.leaks.length ? a.leaks.join(', ') : 'none'}`);

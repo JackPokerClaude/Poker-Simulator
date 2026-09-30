@@ -5080,6 +5080,1948 @@
    },
    "fb": null
   },
+  "rules.bbVsBtnMissedDraws": {
+   "v": {
+    "title": "BB vs a BTN opener: his range is full of missed draws",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "heroPos": [
+      "BB"
+     ],
+     "villainPos": [
+      "BTN"
+     ],
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-07-28",
+    "quote": "when his range is wide and full of missed draws (BTN open vs your BB defend)"
+   },
+   "fb": null
+  },
+  "rules.pfrCheckBackTurnRaise": {
+   "v": {
+    "title": "He checked back the flop, then raised your turn bet",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "villainAction": [
+      "raise"
+     ],
+     "villainPFR": true,
+     "heroIP": false,
+     "heroBucket": [
+      "medium",
+      "strong"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-03",
+    "quote": "PFR check-back on the flop, then a turn raise (\"massively under-bluffed\": aggressive air would have bet the flop, and fear pushes the traps in now). Fold JJ-type hands."
+   },
+   "fb": null
+  },
+  "rules.aceTurnChicken": {
+   "v": {
+    "title": "Ace-x turn: he double-barrels too much",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "villainPFR": true,
+     "board": {
+      "aceHigh": true
+     },
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-03",
+    "quote": "he double barrels too much, \"play fifth street chicken\" (call the turn, he gives up the river a lot)."
+   },
+   "fb": null
+  },
+  "rules.oopCheckRangeStab": {
+   "v": {
+    "title": "Checked your range out of position: call the stab",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "heroIP": false,
+     "heroPFR": true,
+     "multiway": false,
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-03",
+    "quote": "check the entire range OOP to most live players and call the stab with showdown value."
+   },
+   "fb": null
+  },
+  "rules.blankTurnCheckTwice": {
+   "v": {
+    "title": "Blank turn out of position: check twice, then check-raise",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "heroIP": false,
+     "heroPFR": false,
+     "potType": [
+      "srp"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-03",
+    "quote": "check twice with value AND bluffs, then check-raise (5-high, for example)"
+   },
+   "fb": null
+  },
+  "rules.donkRiverYourself": {
+   "v": {
+    "title": "Leading the river yourself",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "heroIP": false,
+     "heroPFR": false,
+     "heroBucket": [
+      "strong"
+     ],
+     "villainType": [
+      "rec",
+      "passive",
+      "whale"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2024-11-12",
+    "quote": "When you donk the river yourself (OOP): strong hands on nut-changing rivers, only vs fish who won't bet thin and massively under-bluff."
+   },
+   "fb": null
+  },
+  "rules.maniacNoDonk": {
+   "v": {
+    "title": "Vs a maniac: don't lead your strong hands",
+    "when": {
+     "street": [
+      "flop",
+      "turn",
+      "river"
+     ],
+     "facing": false,
+     "heroPFR": false,
+     "heroIP": false,
+     "villainPFR": true,
+     "villainStyle": [
+      "aggroCaller"
+     ],
+     "heroBucket": [
+      "strong"
+     ]
+    },
+    "recommend": "check"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "2026-08-18",
+    "quote": "Don't donk strong hands; check them [08-18]"
+   },
+   "fb": null
+  },
+  "rules.bigCbetOverfold": {
+   "v": {
+    "title": "A pot-size c-bet: overfold",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "villainPFR": true,
+     "betSize": [
+      "big"
+     ],
+     "multiway": false,
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-03",
+    "quote": "A pot-size flop c-bet: overfold, even an overpair to the board (55) or second pair."
+   },
+   "fb": null
+  },
+  "rules.fishHugeCbet": {
+   "v": {
+    "title": "Overfold a fish's huge c-bet",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "villainPFR": true,
+     "betSize": [
+      "big"
+     ],
+     "villainType": [
+      "rec",
+      "passive",
+      "whale"
+     ],
+     "heroBucket": [
+      "medium",
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "2025-02-25",
+    "quote": "Fish exploit number one: overfold a fish's huge c-bet, especially in 3-bet pots"
+   },
+   "fb": null
+  },
+  "rules.smallCbetCall": {
+   "v": {
+    "title": "A small c-bet range is too weak: call with showdown value",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "villainPFR": true,
+     "betSize": [
+      "small"
+     ],
+     "multiway": false,
+     "board": {
+      "dry": false
+     },
+     "heroBucket": [
+      "medium"
+     ]
+    },
+    "recommend": "call"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-03",
+    "quote": "a small c-bet range is \"a little bit too weak\" (he throws paper 40% too often): call every time with showdown value"
+   },
+   "fb": null
+  },
+  "rules.smallCbetWetCheckRaise": {
+   "v": {
+    "title": "Small c-bet on a wet board: check-raise your non-showdown hands small",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "villainPFR": true,
+     "betSize": [
+      "small"
+     ],
+     "heroIP": false,
+     "board": {
+      "wet": true
+     },
+     "heroBucket": [
+      "air",
+      "draws"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-03",
+    "quote": "check-raise non-showdown hands with a small size on wet boards"
+   },
+   "fb": null
+  },
+  "rules.huSmallDonk": {
+   "v": {
+    "title": "A heads-up small donk: call, don't raise",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "villainAction": [
+      "donk"
+     ],
+     "betSize": [
+      "small"
+     ],
+     "multiway": false,
+     "heroPFR": true,
+     "potType": [
+      "srp"
+     ],
+     "heroBucket": [
+      "strong",
+      "medium",
+      "draws"
+     ]
+    },
+    "recommend": "call"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-03",
+    "quote": "call with value AND bluffs (76, QT). Don't raise, you don't want the garbage to fold."
+   },
+   "fb": null
+  },
+  "rules.ipSmallTurnStab": {
+   "v": {
+    "title": "Small turn stab after you checked back an ace-high flop",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "heroIP": true,
+     "heroPFR": true,
+     "betSize": [
+      "small"
+     ],
+     "board": {
+      "aceHigh": true
+     },
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-03",
+    "quote": "call linear (9x, 8x, 7x, even 66 beat K-high/J-high), and continue vs a river half pot."
+   },
+   "fb": null
+  },
+  "rules.bestLineTurn": {
+   "v": {
+    "title": "\"The best line in all of poker\"",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "heroIP": true,
+     "heroPFR": true,
+     "heroClass": [
+      "sdv"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-03",
+    "quote": "\"The best line in all of poker\": c-bet small on the flop, check back the turn with showdown value, bluff-catch the river."
+   },
+   "fb": null
+  },
+  "rules.thinValueCheckBack": {
+   "v": {
+    "title": "Thin value in position: check back the turn",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "heroIP": true,
+     "multiway": false,
+     "heroClass": [
+      "thin"
+     ]
+    },
+    "recommend": "check"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-07-28",
+    "quote": "Thin value in position: check back the turn [07-28]."
+   },
+   "fb": null
+  },
+  "rules.turnRaiseBrick": {
+   "v": {
+    "title": "He raised your turn bet on a brick",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "villainAction": [
+      "raise"
+     ],
+     "heroIP": false,
+     "potType": [
+      "srp"
+     ],
+     "board": {
+      "wet": false
+     }
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-01-20",
+    "quote": "The flop checks through, you bet the turn, he raises in position: still \"massively under-bluffed\" on a brick turn."
+   },
+   "fb": null
+  },
+  "rules.turnRaiseWet": {
+   "v": {
+    "title": "He raised your turn bet on a wet board",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "villainAction": [
+      "raise"
+     ],
+     "heroIP": false,
+     "potType": [
+      "srp"
+     ],
+     "board": {
+      "wet": true
+     }
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-01-20",
+    "quote": "On a wet turn (lots of new draws), especially with a 3x raise, you can start picking them off."
+   },
+   "fb": null
+  },
+  "rules.pairingTurnFloat": {
+   "v": {
+    "title": "A pairing turn: bluff-catch a rec's barrel",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "heroPFR": true,
+     "board": {
+      "paired": true,
+      "wet": true
+     },
+     "villainType": [
+      "rec",
+      "passive",
+      "whale"
+     ],
+     "heroBucket": [
+      "medium",
+      "draws"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-01-20",
+    "quote": "Float a rec's wet-board flop check-raise and bluff-catch the pairing-turn barrel."
+   },
+   "fb": null
+  },
+  "rules.turnCheckRaiseTopPair": {
+   "v": {
+    "title": "A turn check-raise vs your top-pair bet",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "villainAction": [
+      "raise"
+     ],
+     "heroIP": true,
+     "heroClass": [
+      "thin",
+      "thick"
+     ],
+     "villainType": [
+      "passive",
+      "tight",
+      "rec",
+      "whale"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-12-16",
+    "quote": "Under-bluffed: a river check-raise after your triple barrel, a turn check-raise vs your small top-pair bet."
+   },
+   "fb": null
+  },
+  "rules.passiveFolderTurnCall": {
+   "v": {
+    "title": "Vs a passive folder: call the turn wider",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "villainStyle": [
+      "passiveFolder"
+     ],
+     "betSize": [
+      "big"
+     ],
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-02-17",
+    "quote": "Vs a passive FOLDER who double-barrels draws but gives up rivers: call the turn wider (99 vs a big double barrel)"
+   },
+   "fb": null
+  },
+  "rules.nit3betCbet": {
+   "v": {
+    "title": "A nit 3-bettor's huge c-bet: you can fold",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "potType": [
+      "3bet"
+     ],
+     "villainPFR": true,
+     "betSize": [
+      "big"
+     ],
+     "villainType": [
+      "tight",
+      "passive"
+     ],
+     "heroClass": [
+      "thick",
+      "thin",
+      "sdv"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-02-17",
+    "quote": "Vs a passive caller / nit 3-bettor's huge c-bet in a 3-bet pot: TT can fold."
+   },
+   "fb": null
+  },
+  "rules.fish3betBarrels": {
+   "v": {
+    "title": "Fish don't bluff big 3-bet-pot barrels",
+    "when": {
+     "street": [
+      "turn",
+      "river"
+     ],
+     "facing": true,
+     "potType": [
+      "3bet"
+     ],
+     "betSize": [
+      "big"
+     ],
+     "villainType": [
+      "rec",
+      "passive",
+      "whale"
+     ],
+     "heroBucket": [
+      "medium",
+      "air"
+     ]
+    },
+    "recommend": "fold"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "2025-08-19",
+    "quote": "fish under-bluff big 3-bet-pot stabs and barrels: overfold"
+   },
+   "fb": null
+  },
+  "rules.wideCbet3betCheckRaise": {
+   "v": {
+    "title": "Wide-vs-wide 3-bet pot: check-raise his range c-bet",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "potType": [
+      "3bet"
+     ],
+     "villainPFR": true,
+     "heroIP": false,
+     "tightConfig": false,
+     "heroBucket": [
+      "air",
+      "draws"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-03",
+    "quote": "check-raise pretty much any two cards without showdown value, even a small 3x."
+   },
+   "fb": null
+  },
+  "rules.recTurnRaise3bet": {
+   "v": {
+    "title": "A rec raises your tiny turn bet in a 3-bet pot",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": true,
+     "villainAction": [
+      "raise"
+     ],
+     "potType": [
+      "3bet"
+     ],
+     "villainPFR": true,
+     "heroIP": false,
+     "board": {
+      "aceHigh": true
+     },
+     "villainType": [
+      "rec",
+      "thinking"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-01-28",
+    "quote": "The plan is to call, then jam river blanks (Q, J, T, 3, not K or A) to target Kx"
+   },
+   "fb": null
+  },
+  "rules.pairedTurn88": {
+   "v": {
+    "title": "Underpair facing a 3-bet-pot river jam on a paired board",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "potType": [
+      "3bet"
+     ],
+     "heroPFR": false,
+     "board": {
+      "paired": true
+     },
+     "betSize": [
+      "big"
+     ],
+     "heroClass": [
+      "sdv"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-07-28",
+    "quote": "Only \"consider\" the call vs the right player: it's a spot where \"less and less of the pool will bluff.\""
+   },
+   "fb": null
+  },
+  "rules.tightConfigDrawsGotThere": {
+   "v": {
+    "title": "Tight config and the draws got there",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "tightConfig": true,
+     "potType": [
+      "3bet"
+     ],
+     "heroClass": [
+      "thick",
+      "thin",
+      "sdv"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-05-12",
+    "quote": "A tight config where the draws got there (EP vs EP 3-bet pot, QQ)"
+   },
+   "fb": null
+  },
+  "rules.recRiverJam3betAceHigh": {
+   "v": {
+    "title": "A rec's big river jam in a 3-bet pot on an A-high board",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "potType": [
+      "3bet"
+     ],
+     "board": {
+      "aceHigh": true
+     },
+     "betSize": [
+      "big"
+     ],
+     "villainType": [
+      "rec",
+      "passive",
+      "whale"
+     ],
+     "heroClass": [
+      "thin",
+      "thick"
+     ]
+    },
+    "recommend": "fold"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-03-04",
+    "quote": "top pair vs a REC's big 3-bet-pot river jam on an A-high board (a rec, not a reg: under-bluffs)"
+   },
+   "fb": null
+  },
+  "rules.ip3betTurnCheckedRiverBet": {
+   "v": {
+    "title": "3-bet pot in position, turn checked back, he bets the river",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "potType": [
+      "3bet"
+     ],
+     "heroIP": true,
+     "heroPFR": true,
+     "turnCheckedThrough": true,
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-04-08",
+    "quote": "3-bet pot in position, small c-bet, turn checked back, he bets the river: call [2025-04-08 HHP]."
+   },
+   "fb": null
+  },
+  "rules.ag4betJam": {
+   "v": {
+    "title": "An aggressive BTN 4-bettor's river jam",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "potType": [
+      "4bet"
+     ],
+     "villainPFR": true,
+     "villainPos": [
+      "BTN"
+     ],
+     "villainType": [
+      "aggressive"
+     ],
+     "turnCheckedThrough": true,
+     "betSize": [
+      "big"
+     ],
+     "heroClass": [
+      "sdv"
+     ]
+    },
+    "recommend": "call"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-06-30",
+    "quote": "An aggressive BTN 4-bettor's river jam after the turn checks through: it's air (A5, A6, Kxs)."
+   },
+   "fb": null
+  },
+  "rules.cold4betBluff": {
+   "v": {
+    "title": "Cold 4-bet pot vs a pro: a small river bluff",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "potType": [
+      "4bet"
+     ],
+     "heroPFR": true,
+     "turnCheckedThrough": true,
+     "villainType": [
+      "thinking",
+      "aggressive"
+     ],
+     "heroClass": [
+      "sdv"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-06-30",
+    "quote": "A cold 4-bet pot vs a pro, TT, turn checks through: bet about 1/3 pot as a bluff."
+   },
+   "fb": null
+  },
+  "rules.aa3betDry": {
+   "v": {
+    "title": "AA in a 3-bet pot on a dry board: bet, bet, bet",
+    "when": {
+     "street": [
+      "flop",
+      "turn",
+      "river"
+     ],
+     "facing": false,
+     "potType": [
+      "3bet"
+     ],
+     "heroPFR": true,
+     "board": {
+      "dry": true
+     },
+     "heroClass": [
+      "thick"
+     ]
+    },
+    "recommend": "bet"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "10. Strong hands",
+    "date": "2026-08-25",
+    "quote": "AA in a 3-bet pot on a dry, static board: bet, bet, bet [08-25, 08-11]."
+   },
+   "fb": null
+  },
+  "rules.multiwayUnderBluffed": {
+   "v": {
+    "title": "Multiway pots are under-bluffed",
+    "when": {
+     "street": [
+      "turn",
+      "river"
+     ],
+     "facing": true,
+     "multiway": true,
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-09-30",
+    "quote": "more heads-up (multiway pots are \"massively\" under-bluffed)"
+   },
+   "fb": null
+  },
+  "rules.multiwaySmallStab": {
+   "v": {
+    "title": "A small river stab after it checks through multiway",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "multiway": true,
+     "turnCheckedThrough": true,
+     "betSize": [
+      "small"
+     ],
+     "heroBucket": [
+      "medium",
+      "air"
+     ]
+    },
+    "recommend": "fold"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-03",
+    "quote": "A small river stab after it checks through multiway (AK, two callers, the BB stabs $35): fold every time."
+   },
+   "fb": null
+  },
+  "rules.multiwayDonkOverfold": {
+   "v": {
+    "title": "A multiway flop donk: overfold",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "multiway": true,
+     "villainAction": [
+      "donk"
+     ],
+     "heroBucket": [
+      "medium"
+     ]
+    },
+    "recommend": "fold"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-03",
+    "quote": "(JJ/QQ/KK \"all the time\"): overfold, TT included."
+   },
+   "fb": null
+  },
+  "rules.multiwayBigRiver": {
+   "v": {
+    "title": "A big river bet into several players",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "multiway": true,
+     "betSize": [
+      "big"
+     ],
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-08-11",
+    "quote": "A big river bet into 3 players after the draw came in [08-11]."
+   },
+   "fb": null
+  },
+  "rules.multiwayWetSet": {
+   "v": {
+    "title": "Multiway, wet board, a set: get it in now",
+    "when": {
+     "street": [
+      "flop",
+      "turn"
+     ],
+     "facing": true,
+     "multiway": true,
+     "betSize": [
+      "big"
+     ],
+     "board": {
+      "wet": true
+     },
+     "heroClass": [
+      "cpfs"
+     ]
+    },
+    "recommend": "raise"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "10. Strong hands",
+    "date": "2026-08-04",
+    "quote": "Multiway on a wet board, bottom set, overbet plus a call: get it all in now."
+   },
+   "fb": null
+  },
+  "rules.nextToActCheckRaise": {
+   "v": {
+    "title": "A check-raise from next to act with a player behind",
+    "when": {
+     "street": [
+      "flop",
+      "turn",
+      "river"
+     ],
+     "facing": true,
+     "multiway": true,
+     "villainAction": [
+      "raise"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "10. Strong hands",
+    "date": "2026-09-15",
+    "quote": "Facing a check-raise from next to act with a player behind: sets and two pair."
+   },
+   "fb": null
+  },
+  "rules.checklistRiver": {
+   "v": {
+    "title": "Bluff-catching: think about his range",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-09-30",
+    "quote": "Bluff-catching is about HIS range, not your hand's strength, so you'll call some weak hands and fold some strong ones."
+   },
+   "fb": null
+  },
+  "rules.giveRope": {
+   "v": {
+    "title": "Did you give rope?",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "turnCheckedThrough": true,
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-07-28",
+    "quote": "Did we give rope? (We bet small, checked back, or checked out of position as the PFR.)"
+   },
+   "fb": null
+  },
+  "rules.underBluffLead": {
+   "v": {
+    "title": "Vs an under-bluffer, fold bluff catchers",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "villainType": [
+      "tight"
+     ],
+     "heroBucket": [
+      "medium",
+      "strong"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2024-10-08",
+    "quote": "\"If a player massively under-bluffs, every bluff catcher is better as a fold than a call.\""
+   },
+   "fb": null
+  },
+  "rules.tightRecCheckRaise": {
+   "v": {
+    "title": "A tight rec's river check-raise",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "villainAction": [
+      "raise"
+     ],
+     "villainType": [
+      "tight"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2024-12-17",
+    "quote": "\"call is the worst, then fold, so shove.\""
+   },
+   "fb": null
+  },
+  "rules.riverDonkAfterStrength": {
+   "v": {
+    "title": "A big river donk after you showed only strength",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "villainAction": [
+      "donk"
+     ],
+     "betSize": [
+      "big"
+     ],
+     "heroPFR": true,
+     "villainType": [
+      "rec",
+      "passive",
+      "whale"
+     ],
+     "heroBucket": [
+      "medium"
+     ]
+    },
+    "recommend": "fold"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2024-11-12",
+    "quote": "He donks, and we showed only strength (3-bet, small c-bet, small turn bet): it is almost never a bluff."
+   },
+   "fb": null
+  },
+  "rules.riverSmallDonk": {
+   "v": {
+    "title": "A small river donk",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "villainAction": [
+      "donk"
+     ],
+     "betSize": [
+      "small"
+     ],
+     "heroPFR": true
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-03",
+    "quote": "A small (25-33%) donk is Kx showdown value, \"still probably under-bluffed.\""
+   },
+   "fb": null
+  },
+  "rules.flushRiverDonkGreedy": {
+   "v": {
+    "title": "A fish donks the river after you c-bet and overbet",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "villainAction": [
+      "donk"
+     ],
+     "heroPFR": true,
+     "villainType": [
+      "rec",
+      "passive",
+      "whale"
+     ],
+     "heroClass": [
+      "cpfs"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-08-11",
+    "quote": "A donk on a flush-completing river after you c-bet and overbet: \"fish getting greedy\""
+   },
+   "fb": null
+  },
+  "rules.riverRaiseAfterFlopCheckBack": {
+   "v": {
+    "title": "Flop check-back, turn call, river raise",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "villainAction": [
+      "raise"
+     ],
+     "heroIP": false,
+     "heroBucket": [
+      "medium",
+      "strong"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-06-16",
+    "quote": "A flop check-back, turn call, then a river raise: \"one of the most under-bluffed lines in poker\""
+   },
+   "fb": null
+  },
+  "rules.checkRaiseAfterAggression": {
+   "v": {
+    "title": "A river check-raise after you showed only aggression",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "villainAction": [
+      "raise"
+     ],
+     "heroIP": true,
+     "heroPFR": true,
+     "villainType": [
+      "passive",
+      "tight",
+      "rec",
+      "whale"
+     ],
+     "heroBucket": [
+      "strong",
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-03",
+    "quote": "\"we can easily throw aces into the muck.\""
+   },
+   "fb": null
+  },
+  "rules.aHighTripleBarrel": {
+   "v": {
+    "title": "An A-high triple barrel",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "villainPFR": true,
+     "board": {
+      "aceHigh": true
+     },
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-03",
+    "quote": "he bets AK/AQ/AT thin (solvers check them back) and doesn't find the unintuitive bluffs (6x, K7hh, K5dd)."
+   },
+   "fb": null
+  },
+  "rules.fishBigBluffRare": {
+   "v": {
+    "title": "A fish's big river bet",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "betSize": [
+      "big"
+     ],
+     "villainType": [
+      "rec",
+      "passive",
+      "whale"
+     ],
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-09-30",
+    "quote": "Many players who can make a small bluff can't make a big one."
+   },
+   "fb": null
+  },
+  "rules.potSizeAfterCheckBack": {
+   "v": {
+    "title": "A pot-size river bet after you checked back the turn",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "turnCheckedThrough": true,
+     "heroIP": true,
+     "potType": [
+      "srp"
+     ],
+     "betSize": [
+      "big"
+     ],
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-04-28",
+    "quote": "Pot size after you checked back the turn: 77 in an SRP. The pool under-bluffs this size [04-28]"
+   },
+   "fb": null
+  },
+  "rules.gethenUnderTwoThirds": {
+   "v": {
+    "title": "Bets under 2/3 pot are good bluff-catch spots",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "betSize": [
+      "small",
+      "inbetween"
+     ],
+     "heroIP": true,
+     "turnCheckedThrough": false,
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-04-28",
+    "quote": "The pool is \"not good at betting thinly for value,\" so bets under 2/3 pot are good bluff-catch spots."
+   },
+   "fb": null
+  },
+  "rules.noRaiseBluffCatcherTrips": {
+   "v": {
+    "title": "Don't raise a bluff catcher into trips",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "heroAction": [
+      "raise"
+     ],
+     "board": {
+      "paired": true
+     },
+     "heroBucket": [
+      "medium"
+     ]
+    },
+    "recommend": "call"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-04-28",
+    "quote": "Don't raise a bluff catcher into trips or flushes [04-28]."
+   },
+   "fb": null
+  },
+  "rules.polarNeverRaiseBC": {
+   "v": {
+    "title": "Vs a polar bet, never raise a bluff catcher",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "heroAction": [
+      "raise"
+     ],
+     "betSize": [
+      "big"
+     ],
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-07-28",
+    "quote": "Call or fold, never raise [all four]"
+   },
+   "fb": null
+  },
+  "rules.polarJamValue": {
+   "v": {
+    "title": "Vs a polar bet, jam your value",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "betSize": [
+      "big"
+     ],
+     "heroClass": [
+      "cpfs"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-07-28",
+    "quote": "Jam. Don't min-raise: his value never folds [all four]"
+   },
+   "fb": null
+  },
+  "rules.topOfRangePassiveJam": {
+   "v": {
+    "title": "Top of range doesn't matter vs a passive player's jam",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "betSize": [
+      "big"
+     ],
+     "villainType": [
+      "passive",
+      "tight"
+     ],
+     "heroBucket": [
+      "strong"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2025-06-24",
+    "quote": "\"It doesn't matter that we are top of range if our opponent is only jamming this river with the nut flush\""
+   },
+   "fb": null
+  },
+  "rules.deepLinearJam": {
+   "v": {
+    "title": "Deep vs a linear range: turn the overpair into a bluff",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "deep": true,
+     "betSize": [
+      "small"
+     ],
+     "heroClass": [
+      "thick"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-07-28",
+    "quote": "AA facing a small river bet at 2/5, 2K deep, after he check-raised and barreled: jam as a bluff to fold his sets."
+   },
+   "fb": null
+  },
+  "rules.recCheckedRiverThin": {
+   "v": {
+    "title": "A capped rec checks the river: value thin and small",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "villainAction": [
+      "check"
+     ],
+     "capped": true,
+     "villainType": [
+      "rec",
+      "passive",
+      "whale"
+     ],
+     "heroBucket": [
+      "strong"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2024-11-12",
+    "quote": "Value bet thin and small, about 125 into 400 (30% pot), even with strong hands like the nut flush, because JJ/TT/9x call it."
+   },
+   "fb": null
+  },
+  "rules.overfolderJam": {
+   "v": {
+    "title": "Vs a river overfolder: jam your no-showdown hands",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "villainStyle": [
+      "passiveFolder",
+      "aggroFolder"
+     ],
+     "heroBucket": [
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "2025-01-21",
+    "quote": "jam every no-showdown-value hand vs a player who folds A6 to a shove, even with bad blockers"
+   },
+   "fb": null
+  },
+  "rules.thinValueNit": {
+   "v": {
+    "title": "The tight \"thin value\" reg: bluff him a lot",
+    "when": {
+     "street": [
+      "turn",
+      "river"
+     ],
+     "facing": false,
+     "villainType": [
+      "tight"
+     ],
+     "heroBucket": [
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "2024-12-10",
+    "quote": "The \"thin value\" player under-bluffs (the tight nit whose bet means he has it and who believes you): bluff him a lot."
+   },
+   "fb": null
+  },
+  "rules.bigBoyBluffsReg": {
+   "v": {
+    "title": "The \"big boy bluffs\" reg: go super thin",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "villainType": [
+      "aggressive"
+     ],
+     "heroClass": [
+      "thin",
+      "thick"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "2024-12-10",
+    "quote": "The \"big boy bluffs\" player never goes thin and stations too much (he thinks everyone plays like him): go super thin for value."
+   },
+   "fb": null
+  },
+  "rules.tryingRecBluff": {
+   "v": {
+    "title": "Trying recs are great to bluff",
+    "when": {
+     "street": [
+      "turn",
+      "river"
+     ],
+     "facing": false,
+     "villainType": [
+      "thinking"
+     ],
+     "heroBucket": [
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "2025-01-28",
+    "quote": "Trying recs are some of the best players to bluff"
+   },
+   "fb": null
+  },
+  "rules.stickyStillBluff": {
+   "v": {
+    "title": "Sticky does not mean never bluff",
+    "when": {
+     "street": [
+      "turn",
+      "river"
+     ],
+     "facing": false,
+     "villainStyle": [
+      "aggroCaller"
+     ],
+     "heroBucket": [
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "2026-04-14",
+    "quote": "Sticky villains don't mean \"never bluff\" [04-14]."
+   },
+   "fb": null
+  },
+  "rules.superStickyThin": {
+   "v": {
+    "title": "Vs a super sticky player: go huge for thin value",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "villainStyle": [
+      "passiveCaller",
+      "whale"
+     ],
+     "heroClass": [
+      "thin"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "2026-08-11",
+    "quote": "Go \"unbelievably large\" for thin value, don't bluff [08-11]"
+   },
+   "fb": null
+  },
+  "rules.aggroCallerRope": {
+   "v": {
+    "title": "Vs an aggro caller: give rope with two pair",
+    "when": {
+     "street": [
+      "turn",
+      "river"
+     ],
+     "facing": false,
+     "villainStyle": [
+      "aggroCaller"
+     ],
+     "heroClass": [
+      "cpfs"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "2026-02-17",
+    "quote": "Give rope with medium-strong hands like two pair [02-17]"
+   },
+   "fb": null
+  },
+  "rules.overFolderBluff": {
+   "v": {
+    "title": "He over-folds: bluff",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "villainStyle": [
+      "passiveFolder",
+      "aggroFolder"
+     ],
+     "heroBucket": [
+      "air"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "2025-04-08",
+    "quote": "he over-folds (wide configs vs capped top pair, huge bets for the game's size, when up on the day): bluff."
+   },
+   "fb": null
+  },
+  "rules.regUnderBluffAceHigh": {
+   "v": {
+    "title": "Regs under-bluff A-high boards",
+    "when": {
+     "street": [
+      "turn",
+      "river"
+     ],
+     "facing": true,
+     "villainType": [
+      "aggressive",
+      "thinking"
+     ],
+     "board": {
+      "aceHigh": true
+     },
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "",
+    "quote": "Regs under-bluff tight configs, A-high boards and 4-bet pots, and over-bluff wide configs, double-broadway boards and SRPs."
+   },
+   "fb": null
+  },
+  "rules.setOnA72Passive": {
+   "v": {
+    "title": "Middle set on A72 vs a passive player: bet",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": false,
+     "board": {
+      "aceHigh": true,
+      "dry": true
+     },
+     "heroClass": [
+      "cpfs"
+     ],
+     "villainType": [
+      "passive"
+     ]
+    },
+    "recommend": "bet"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "2026-06-23",
+    "quote": "Middle set on A72: vs a passive player, bet, since he won't bet his Ax for you."
+   },
+   "fb": null
+  },
+  "rules.setOnA72Stabber": {
+   "v": {
+    "title": "Middle set on A72 vs a stabber: check-raise",
+    "when": {
+     "street": [
+      "flop"
+     ],
+     "facing": true,
+     "heroIP": false,
+     "board": {
+      "aceHigh": true,
+      "dry": true
+     },
+     "heroClass": [
+      "cpfs"
+     ],
+     "villainType": [
+      "aggressive",
+      "whale"
+     ]
+    },
+    "recommend": "raise"
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "2026-06-23",
+    "quote": "Vs a stabber, check-raise."
+   },
+   "fb": null
+  },
+  "rules.aceHighPolar": {
+   "v": {
+    "title": "Ace-high boards: play polarized",
+    "when": {
+     "street": [
+      "flop",
+      "turn"
+     ],
+     "facing": false,
+     "heroPFR": true,
+     "board": {
+      "aceHigh": true,
+      "dry": false
+     }
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "8. Ace-high boards: overbet or check",
+    "date": "2026-09-15",
+    "quote": "Play polarized [09-15, 08-04]. Overbet very strong value and strong draws, plus bottom-pair bluffs."
+   },
+   "fb": null
+  },
+  "rules.aceHighPairingRiver": {
+   "v": {
+    "title": "Ace-high board, pairing river: value under pot",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": false,
+     "riverPairs": true,
+     "board": {
+      "aceHigh": true
+     },
+     "heroBucket": [
+      "strong"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "8. Ace-high boards: overbet or check",
+    "date": "2026-08-04",
+    "quote": "On a pairing river he's elastic: value-bet under about pot [08-04]."
+   },
+   "fb": null
+  },
+  "rules.utgLimpCallerAx": {
+   "v": {
+    "title": "UTG limp-callers are mostly Ax",
+    "when": {
+     "street": [
+      "flop",
+      "turn"
+     ],
+     "facing": false,
+     "heroPFR": true,
+     "villainPFR": false,
+     "villainPos": [
+      "UTG",
+      "UTG+1"
+     ],
+     "board": {
+      "aceHigh": true
+     }
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "8. Ace-high boards: overbet or check",
+    "date": "2026-09-15",
+    "quote": "UTG limp-callers are mostly Ax that check-calls."
+   },
+   "fb": null
+  },
   "conflicts.a72": {
    "v": {
     "title": "A72 as the preflop raiser: c-bet the range or check back?",
@@ -5763,6 +7705,56 @@
     "section": "6. Bluffing: air vs showdown value",
     "date": "",
     "quote": "Shove as a bluff into a tight old rec's river check-raise: [2024-12-17 HHP] shove vs [08-04] / [2025-06-10 HHP] don't try to fold flushes."
+   },
+   "fb": null
+  },
+  "conflicts.regTripleBarrel": {
+   "v": {
+    "title": "A reg's triple barrel in a wide config: call, or give credit?",
+    "find": "Calling a triple barrel vs a REG in a wide config",
+    "when": {
+     "street": [
+      "river"
+     ],
+     "facing": true,
+     "villainType": [
+      "aggressive",
+      "thinking"
+     ],
+     "heroBucket": [
+      "medium"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "7. Bluff-catching and river raises",
+    "date": "",
+    "quote": "Calling a triple barrel vs a REG in a wide config"
+   },
+   "fb": null
+  },
+  "conflicts.flopXXTurnLead": {
+   "v": {
+    "title": "Out of position, flop checked through, strong hand: lead the turn or check-raise?",
+    "find": "LEADS the value hand but check-raises the bluff",
+    "when": {
+     "street": [
+      "turn"
+     ],
+     "facing": false,
+     "heroIP": false,
+     "flopCheckedThrough": true,
+     "heroBucket": [
+      "strong"
+     ]
+    }
+   },
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "5. Out of position, as the preflop caller [08-18]",
+    "date": "",
+    "quote": "extends the same table: [2025-01-28 HHP] LEADS the value hand but check-raises the bluff."
    },
    "fb": null
   },
