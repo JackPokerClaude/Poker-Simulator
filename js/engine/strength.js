@@ -64,23 +64,74 @@ export function drawInfo(hole, board) {
   return out;
 }
 
-// Classify for the AI: monster / strong / medium / weak(air), plus draw info.
-export function assess(hole, board, opponents = 1) {
-  const rawHs = madeStrength(hole, board);
-  const draws = drawInfo(hole, board);
-  const cat = categoryOf(evaluate([...hole, ...board]));
+// ---------- fast per-board strength (the villain policy and the range tracker share it) ----------
+// Every two-card hand's value on this board, sorted, so any hand's percentile vs random hands
+// is a binary search. Same number madeStrength() gives (minus tiny card-removal effects).
+const tableCache = new Map();
+export function boardTable(board) {
+  const key = board.join(',');
+  let t = tableCache.get(key);
+  if (t) return t;
+  const used = new Set(board);
+  const deck = [];
+  for (let c = 0; c < 52; c++) if (!used.has(c)) deck.push(c);
+  const vals = [];
+  const b = [...board, 0, 0];
+  const L = board.length;
+  for (let x = 0; x < deck.length; x++) {
+    b[L] = deck[x];
+    for (let y = x + 1; y < deck.length; y++) { b[L + 1] = deck[y]; vals.push(evaluate(b)); }
+  }
+  const sorted = Int32Array.from(vals).sort();
+  t = { sorted, boardCat: categoryOf(evaluate(board)) };
+  if (tableCache.size > 24) tableCache.delete(tableCache.keys().next().value);
+  tableCache.set(key, t);
+  return t;
+}
+
+function percentile(sorted, v) {
+  let lo = 0, hi = sorted.length;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (sorted[m] < v) lo = m + 1; else hi = m; }
+  const below = lo;
+  hi = sorted.length;
+  while (lo < hi) { const m = (lo + hi) >> 1; if (sorted[m] <= v) lo = m + 1; else hi = m; }
+  return (below + (lo - below) / 2) / sorted.length;
+}
+
+// Everything the policy needs to know about one hand on one board.
+export function features(hole, board, table = boardTable(board)) {
+  const v = evaluate([...hole, ...board]);
+  const rawHs = percentile(table.sorted, v);
+  const cat = categoryOf(v);
   // Does the hand use a hole card to make a pair or better (vs. playing the board)?
-  const boardCat = categoryOf(evaluate(board));
-  const hasPair = cat >= 1 && cat > boardCat;
+  const hasPair = cat >= 1 && cat > table.boardCat;
   // Strength vs random hands overrates unpaired hands; ranges that bet/call are stronger.
   const hs = hasPair ? rawHs : rawHs * 0.55;
-  const eqMulti = Math.pow(hs, Math.max(1, opponents));
-  let cls;
-  if (eqMulti > 0.9 || (hs > 0.97)) cls = 'monster';
-  else if (eqMulti > 0.72) cls = 'strong';
-  else if (eqMulti > 0.55 || (hasPair && opponents <= 2 && hs > 0.6)) cls = 'medium';
-  else cls = 'air';
-  const drawEq = board.length === 3 ? draws.outs * 0.04 : board.length === 4 ? draws.outs * 0.02 : 0;
-  const isDraw = draws.outs >= 8;
-  return { hs, rawHs, eq: eqMulti, cls, draws, drawEq, isDraw, hasPair, cat };
+  return { v, rawHs, hs, cat, hasPair, draws: drawInfo(hole, board) };
+}
+
+// AI hand class (monster / strong / medium / air), tighter with more opponents.
+export function aiClass(f, opponents = 1) {
+  const eq = f.hs ** Math.max(1, opponents);
+  if (eq > 0.9 || f.hs > 0.97) return 'monster';
+  if (eq > 0.72) return 'strong';
+  if (eq > 0.55 || (f.hasPair && opponents <= 2 && f.hs > 0.6)) return 'medium';
+  return 'air';
+}
+
+// HHP range buckets, heads-up: Strong (can play for stacks + thick value), Medium (thin value
+// + showdown value), Draws, Air. A made medium hand with a draw counts as Medium.
+export function bucketOf(f, street) {
+  const c = aiClass(f, 1);
+  if (c === 'monster' || c === 'strong') return 'strong';
+  if (c === 'medium') return 'medium';
+  if (street !== 'river' && f.draws.outs >= 4) return 'draws';
+  return 'air';
+}
+
+// Classify for the AI: monster / strong / medium / weak(air), plus draw info.
+export function assess(hole, board, opponents = 1) {
+  const f = features(hole, board);
+  const drawEq = board.length === 3 ? f.draws.outs * 0.04 : board.length === 4 ? f.draws.outs * 0.02 : 0;
+  return { hs: f.hs, rawHs: f.rawHs, eq: f.hs ** Math.max(1, opponents), cls: aiClass(f, opponents), draws: f.draws, drawEq, isDraw: f.draws.outs >= 8, hasPair: f.hasPair, cat: f.cat };
 }

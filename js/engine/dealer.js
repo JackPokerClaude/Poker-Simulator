@@ -1,7 +1,9 @@
 // Builds a realistic live hand up to hero's first decision, only dealing hero hands
 // the HHP chart plays in that spot, and filtered by drill mode.
-import { VILLAIN_CONFIG } from '../../config/villains.js';
-import { shuffledDeck, handCode, weightedPick, randInt, rand, pick, HAND_PCT, expandRange } from './cards.js';
+import { TABLE_SETTINGS } from '../../config/table-settings.js';
+import { getModel } from '../villains/model.js';
+import { shuffledDeck, handCode, weightedPick, randInt, rand, pick, HAND_PCT } from './cards.js';
+import { inList } from './policy.js';
 import { createGame, applyAction, legalActions, POSITIONS } from './game.js';
 import { villainAct } from './ai.js';
 import { classifySpot } from './scenario.js';
@@ -30,15 +32,15 @@ function villainStack(bb) {
   return rand() < 0.6 ? Math.round(raw / 5) * 5 : Math.round(raw);
 }
 
-function makeReads(type) {
-  const pool = [...VILLAIN_CONFIG.reads[type]];
+// One or two live clues from the brain for this villain's type and style (never the label).
+function makeReads(type, style) {
+  const M = getModel();
+  const seen = new Set();
+  const pool = [...(M.reads[type] || []), ...(M.reads[style] || [])].filter((r) => !seen.has(r.text) && seen.add(r.text));
   const n = rand() < 0.55 ? 2 : 1;
   const out = [];
-  for (let k = 0; k < n && pool.length; k++) {
-    const t = pool.splice(randInt(pool.length), 1)[0];
-    out.push(t.replace('{n}', String(2 + randInt(3))));
-  }
-  return out;
+  for (let k = 0; k < n && pool.length; k++) out.push(pool.splice(randInt(pool.length), 1)[0]);
+  return { reads: out.map((r) => r.text), readKeys: out.map((r) => r.key) };
 }
 
 function heroSeatFor(drill) {
@@ -47,15 +49,15 @@ function heroSeatFor(drill) {
   return randInt(8);
 }
 
+// A hand from this type's 3-bet range (the same range his policy 3-bets with).
 function sample3betHand(type, deckSpare) {
-  const cfg = VILLAIN_CONFIG.types[type].preflop;
-  const set = cfg.threeBet ? expandRange(cfg.threeBet) : null;
+  const cfg = getModel().types[type].pre;
+  const in3 = (code) => (cfg.threeBet ? inList(cfg.threeBet, code) : HAND_PCT[code] <= (cfg.threeBetPct || 0) / 100) || inList(cfg.threeBetLight, code);
   for (let t = 0; t < 400; t++) {
     const a = randInt(deckSpare.length);
-    let b = randInt(deckSpare.length);
+    const b = randInt(deckSpare.length);
     if (a === b) continue;
-    const code = handCode(deckSpare[a], deckSpare[b]);
-    if (set ? set.has(code) : HAND_PCT[code] <= cfg.threeBetPct / 100) return [a, b];
+    if (in3(handCode(deckSpare[a], deckSpare[b]))) return [a, b];
   }
   return null;
 }
@@ -88,16 +90,19 @@ export function createHand({ drill = 'random', ranges }) {
     const stakes = STAKES.find((x) => x.label === stakeLabel);
     const heroIdx = heroSeatFor(drill);
     const deck = shuffledDeck();
-    const mix = VILLAIN_CONFIG.tableMix[stakes.label];
+    const mix = TABLE_SETTINGS.tableMix[stakes.label];
+    const M = getModel();
     const players = POSITIONS.map((pos, i) => {
       const isHero = i === heroIdx;
       const type = isHero ? null : weightedPick(mix);
+      const style = isHero ? null : weightedPick(M.types[type].styleMix || { aggroFolder: 1 });
       return {
         isHero,
         type,
+        style,
         stack: isHero ? Math.round((stakes.bb * (190 + rand() * 20)) / 5) * 5 : villainStack(stakes.bb),
         cards: [deck[i * 2], deck[i * 2 + 1]],
-        reads: isHero ? [] : makeReads(type),
+        ...(isHero ? { reads: [], readKeys: [] } : makeReads(type, style)),
         meta: {},
       };
     });
@@ -133,6 +138,11 @@ export function createHand({ drill = 'random', ranges }) {
     }
     s.spot = spot;
     s.heroCode = code;
+    // Everything needed to replay the hand from the deal (range tracker, feedback).
+    s.initial = {
+      stakes, runout: [...s.runout],
+      players: s.players.map((p) => ({ isHero: p.isHero, type: p.type, style: p.style, stack: p.startStack, cards: [...p.cards], reads: p.reads, readKeys: p.readKeys, meta: { ...p.meta } })),
+    };
     s.attempts = attempt + 1;
     return s;
   }

@@ -18,7 +18,7 @@ export function createGame({ stakes, players, runout }) {
     players: players.map((p, i) => ({
       i, pos: POSITIONS[i], stack: p.stack, startStack: p.stack, committed: 0, total: 0,
       folded: false, allIn: false, acted: false, canRaise: true,
-      cards: p.cards, isHero: !!p.isHero, type: p.type || null, reads: p.reads || [], meta: p.meta || {},
+      cards: p.cards, isHero: !!p.isHero, type: p.type || null, style: p.style || null, reads: p.reads || [], readKeys: p.readKeys || [], meta: p.meta || {},
     })),
     street: 'preflop',
     board: [],

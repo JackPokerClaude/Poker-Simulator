@@ -8,7 +8,8 @@ const ASSETS = [
   'index.html',
   'manifest.webmanifest',
   'css/app.css',
-  'config/villains.js',
+  'config/table-settings.js',
+  'brain-compiled/behavior.json',
   'config/outside-source.js',
   'config/brain-files.json',
   'brain/preflop-ranges.csv',
@@ -23,6 +24,9 @@ const ASSETS = [
   'brain/project-instructions.md',
   'js/brain/parse.js',
   'js/brain/loader.js',
+  'js/brain/compiled.js',
+  'js/villains/model.js',
+  'js/engine/policy.js',
   'js/app.js',
   'js/vendor/pokersolver.js',
   'js/engine/ai.js',
@@ -57,7 +61,7 @@ self.addEventListener('activate', (e) => {
   );
 });
 
-const isBrain = (url) => /\/brain\/[^/]+$/.test(url.pathname) || url.pathname.endsWith('/config/brain-files.json');
+const isBrain = (url) => /\/brain(-compiled)?\/[^/]+$/.test(url.pathname) || url.pathname.endsWith('/config/brain-files.json');
 
 self.addEventListener('fetch', (e) => {
   const url = new URL(e.request.url);

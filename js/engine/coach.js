@@ -1,5 +1,5 @@
 // Builds the "Copy for coach" hand text and the saved history record.
-import { VILLAIN_CONFIG } from '../../config/villains.js';
+import { villainLabel } from '../villains/model.js';
 import { cardsPretty, cardStr } from './cards.js';
 
 const who = (s, i) => (i === s.heroIdx ? `Hero (${s.players[i].pos})` : s.players[i].pos);
@@ -127,8 +127,7 @@ export function coachText(s) {
   const bb = s.stakes.bb;
   const eff = effectiveStack(s);
   const villains = involvedVillains(s).map((p) => {
-    const t = VILLAIN_CONFIG.types[p.type];
-    return `${p.pos}, $${p.startStack} (${Math.round(p.startStack / bb)}bb), ${t.label}, reads: ${p.reads.join('; ')}`;
+    return `${p.pos}, $${p.startStack} (${Math.round(p.startStack / bb)}bb), ${villainLabel(p)}, reads: ${p.reads.join('; ') || 'none'}`;
   });
   const street = (name, n) => {
     const deal = s.log.find((e) => e.type === 'deal' && e.street === name);

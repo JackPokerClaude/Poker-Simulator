@@ -1,0 +1,2016 @@
+{
+ "version": 1,
+ "compiledAt": "2026-09-30",
+ "note": "Compiled from brain/ by tools/build-compiled.mjs. Edit that file, not this one.",
+ "values": {
+  "types.passive.label": {
+   "v": "Passive",
+   "outside": "display name"
+  },
+  "types.tight.label": {
+   "v": "Tight",
+   "outside": "display name"
+  },
+  "types.aggressive.label": {
+   "v": "Aggressive",
+   "outside": "display name"
+  },
+  "types.thinking.label": {
+   "v": "Thinking player",
+   "outside": "display name"
+  },
+  "types.whale.label": {
+   "v": "Whale",
+   "outside": "display name"
+  },
+  "types.rec.label": {
+   "v": "Loose-passive rec",
+   "outside": "display name"
+  },
+  "types.passive.pre.openPct": {
+   "v": 7.5,
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "12. Player types",
+    "date": "",
+    "quote": "Opens about 7-8%, 3-bets about JJ+ and AK"
+   },
+   "fb": 7.5,
+   "interp": "midpoint of 7-8%"
+  },
+  "types.passive.pre.threeBet": {
+   "v": [
+    "JJ+",
+    "AK"
+   ],
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "12. Player types",
+    "date": "",
+    "quote": "Opens about 7-8%, 3-bets about JJ+ and AK"
+   },
+   "fb": [
+    "JJ+",
+    "AK"
+   ]
+  },
+  "types.passive.pre.callVs4bet": {
+   "v": [
+    "QQ",
+    "AK"
+   ],
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "He won't fold QQ to a 4-bet"
+   },
+   "fb": [
+    "QQ",
+    "AK"
+   ],
+   "interp": "QQ from the quote; AK added as the rest of his 3-bet range that isn't a 4-bet"
+  },
+  "types.passive.pre.fourBet": {
+   "v": [
+    "KK+"
+   ],
+   "outside": "no HHP number for a passive player's 4-bet"
+  },
+  "types.passive.pre.fiveBet": {
+   "v": [
+    "AA"
+   ],
+   "outside": "no HHP number"
+  },
+  "types.passive.pre.limpPct": {
+   "v": 10,
+   "outside": "no HHP number for how much a passive player limps"
+  },
+  "types.passive.pre.callOpenPct": {
+   "v": 20,
+   "outside": "no HHP number"
+  },
+  "types.passive.pre.continueVs3betPct": {
+   "v": 12,
+   "outside": "no HHP number"
+  },
+  "types.passive.pre.limpCallPct": {
+   "v": 70,
+   "outside": "no HHP number"
+  },
+  "types.tight.pre.openPct": {
+   "v": 15,
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "12. Player types",
+    "date": "",
+    "quote": "Opens about 15%"
+   },
+   "fb": 15
+  },
+  "types.tight.pre.threeBet": {
+   "v": [
+    "TT+",
+    "AQs+",
+    "AK"
+   ],
+   "outside": "HHP gives the tight type's open size, not his 3-bet range"
+  },
+  "types.tight.pre.fourBet": {
+   "v": [
+    "KK+"
+   ],
+   "outside": "no HHP number"
+  },
+  "types.tight.pre.callVs4bet": {
+   "v": [
+    "QQ",
+    "AK"
+   ],
+   "outside": "no HHP number"
+  },
+  "types.tight.pre.fiveBet": {
+   "v": [
+    "AA"
+   ],
+   "outside": "no HHP number"
+  },
+  "types.tight.pre.limpPct": {
+   "v": 4,
+   "outside": "no HHP number"
+  },
+  "types.tight.pre.callOpenPct": {
+   "v": 14,
+   "outside": "no HHP number"
+  },
+  "types.tight.pre.continueVs3betPct": {
+   "v": 10,
+   "outside": "no HHP number"
+  },
+  "types.tight.pre.limpCallPct": {
+   "v": 60,
+   "outside": "no HHP number"
+  },
+  "types.aggressive.pre.openPct": {
+   "v": 30,
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "12. Player types",
+    "date": "",
+    "quote": "Opens about 30%, 3-bets a lot"
+   },
+   "fb": 30
+  },
+  "types.aggressive.pre.threeBetPct": {
+   "v": 9,
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "12. Player types",
+    "date": "",
+    "quote": "Opens about 30%, 3-bets a lot"
+   },
+   "fb": 9,
+   "interp": "\"3-bets a lot\" has no number: top 9% plus the light list below (default, Joan to review)"
+  },
+  "types.aggressive.pre.threeBetLight": {
+   "v": [
+    "KQs",
+    "A5s",
+    "ATs",
+    "KJs",
+    "QJs",
+    "88"
+   ],
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "wide light 3-bets (KQs, A5s, ATs, KJs, QJs, 88) that won't fold to a 4-bet"
+   },
+   "fb": []
+  },
+  "types.aggressive.pre.callVs4bet": {
+   "v": [
+    "KQs",
+    "A5s",
+    "ATs",
+    "KJs",
+    "QJs",
+    "88",
+    "JJ",
+    "TT",
+    "AQs",
+    "AK"
+   ],
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "wide light 3-bets (KQs, A5s, ATs, KJs, QJs, 88) that won't fold to a 4-bet"
+   },
+   "fb": [
+    "QQ",
+    "JJ",
+    "AK"
+   ],
+   "interp": "the light 3-bets from the quote, plus his strong non-4-bet hands (JJ, TT, AQs, AK)"
+  },
+  "types.aggressive.pre.fourBetPct": {
+   "v": 4,
+   "outside": "no HHP number"
+  },
+  "types.aggressive.pre.fourBetBluffs": {
+   "v": [
+    "A5s",
+    "A4s"
+   ],
+   "outside": "no HHP number"
+  },
+  "types.aggressive.pre.fiveBet": {
+   "v": [
+    "KK+",
+    "AKs"
+   ],
+   "outside": "no HHP number"
+  },
+  "types.aggressive.pre.limpPct": {
+   "v": 2,
+   "outside": "no HHP number"
+  },
+  "types.aggressive.pre.callOpenPct": {
+   "v": 16,
+   "outside": "no HHP number"
+  },
+  "types.aggressive.pre.continueVs3betPct": {
+   "v": 16,
+   "outside": "no HHP number"
+  },
+  "types.aggressive.pre.limpCallPct": {
+   "v": 60,
+   "outside": "no HHP number"
+  },
+  "types.aggressive.pre.bluff3betPct": {
+   "v": 5,
+   "outside": "no HHP number"
+  },
+  "types.thinking.pre.openPct": {
+   "v": 30,
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "12. Player types",
+    "date": "",
+    "quote": "Aggressive but can 3-bet-fold"
+   },
+   "fb": 25,
+   "interp": "\"aggressive\" = the 30% opener from the same table"
+  },
+  "types.thinking.pre.foldToPressure": {
+   "v": 1.35,
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "can three bet fold occasionally"
+   },
+   "fb": 1.2,
+   "interp": "folds to a 4-bet about 35% more often than the aggressive type (the number is a default, Joan to review)"
+  },
+  "types.thinking.pre.threeBetPct": {
+   "v": 10,
+   "outside": "no HHP number (\"3-bets a lot\")"
+  },
+  "types.thinking.pre.fourBetPct": {
+   "v": 3,
+   "outside": "no HHP number"
+  },
+  "types.thinking.pre.fourBetBluffs": {
+   "v": [
+    "A5s"
+   ],
+   "outside": "no HHP number"
+  },
+  "types.thinking.pre.callVs4betPct": {
+   "v": 3,
+   "outside": "no HHP number"
+  },
+  "types.thinking.pre.fiveBet": {
+   "v": [
+    "KK+"
+   ],
+   "outside": "no HHP number"
+  },
+  "types.thinking.pre.limpPct": {
+   "v": 0,
+   "outside": "no HHP number"
+  },
+  "types.thinking.pre.callOpenPct": {
+   "v": 12,
+   "outside": "no HHP number"
+  },
+  "types.thinking.pre.continueVs3betPct": {
+   "v": 10,
+   "outside": "no HHP number"
+  },
+  "types.thinking.pre.limpCallPct": {
+   "v": 50,
+   "outside": "no HHP number"
+  },
+  "types.thinking.pre.bluff3betPct": {
+   "v": 4,
+   "outside": "no HHP number"
+  },
+  "types.whale.pre.vpipPct": {
+   "v": 75,
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "VPIP 70-80%+, isos about 80% of the time"
+   },
+   "fb": 55,
+   "interp": "midpoint of 70-80%"
+  },
+  "types.whale.pre.isoRaiseFreq": {
+   "v": 0.8,
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "VPIP 70-80%+, isos about 80% of the time"
+   },
+   "fb": 0.5
+  },
+  "types.whale.pre.openPct": {
+   "v": 20,
+   "outside": "HHP gives his VPIP, not his raise-first-in share"
+  },
+  "types.whale.pre.callVs4betPct": {
+   "v": 14,
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "\"massively underfolding\" to 4-bets"
+   },
+   "fb": 8,
+   "interp": "\"massively underfolding\": calls a 4-bet with his top 14% (the number is a default, Joan to review)"
+  },
+  "types.whale.pre.callVs5bet": {
+   "v": [
+    "KK",
+    "QQ",
+    "AK"
+   ],
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "Fish and recs don't fold KK, AK or QQ to a 5-bet"
+   },
+   "fb": [
+    "KK",
+    "QQ",
+    "AK"
+   ]
+  },
+  "types.whale.pre.threeBetPct": {
+   "v": 6,
+   "outside": "no HHP number"
+  },
+  "types.whale.pre.fourBetPct": {
+   "v": 3,
+   "outside": "no HHP number"
+  },
+  "types.whale.pre.fiveBet": {
+   "v": [
+    "QQ+",
+    "AK"
+   ],
+   "outside": "no HHP number"
+  },
+  "types.whale.pre.callOpenPct": {
+   "v": 45,
+   "outside": "no HHP number (his VPIP above drives most of it)"
+  },
+  "types.whale.pre.continueVs3betPct": {
+   "v": 30,
+   "outside": "no HHP number"
+  },
+  "types.whale.pre.limpCallPct": {
+   "v": 95,
+   "outside": "no HHP number"
+  },
+  "types.whale.pre.bluff3betPct": {
+   "v": 3,
+   "outside": "no HHP number"
+  },
+  "types.rec.pre.openPct": {
+   "v": 6,
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "When he raises, it's the top 5-7%."
+   },
+   "fb": 6,
+   "interp": "midpoint of 5-7%"
+  },
+  "types.rec.pre.limpList": {
+   "v": [
+    "22+",
+    "A2s+",
+    "KTs+",
+    "QTs+",
+    "JTs"
+   ],
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "limps pairs, suited broadways and suited Ax, and raises only premiums"
+   },
+   "fb": [
+    "22+",
+    "A2s+",
+    "KTs+",
+    "QTs+",
+    "JTs"
+   ],
+   "interp": "pairs, suited Ax, suited broadways (T and up)"
+  },
+  "types.rec.pre.limpPct": {
+   "v": 22,
+   "outside": "extra limps on top of the list above (live recs also limp offsuit broadways and connectors); no HHP number"
+  },
+  "types.rec.pre.threeBet": {
+   "v": [
+    "JJ+",
+    "AK"
+   ],
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "Passive rec 3-bettor: JJ+ and AK."
+   },
+   "fb": [
+    "QQ+",
+    "AK"
+   ]
+  },
+  "types.rec.pre.coldCall3bet": {
+   "v": [
+    "TT",
+    "JJ",
+    "QQ",
+    "AK"
+   ],
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "cold-calls a 3-bet with JJ, AK, QQ and TT instead of cold 4-betting"
+   },
+   "fb": [
+    "JJ",
+    "QQ",
+    "AK"
+   ]
+  },
+  "types.rec.pre.fourBet": {
+   "v": [
+    "KK+"
+   ],
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "often aces and kings, maybe some ace king"
+   },
+   "fb": [
+    "KK+"
+   ]
+  },
+  "types.rec.pre.fourBetPartial": {
+   "v": {
+    "AK": 0.3
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "often aces and kings, maybe some ace king"
+   },
+   "fb": {},
+   "interp": "\"maybe some ace king\": AK 4-bets 30% of the time (default, Joan to review)"
+  },
+  "types.rec.pre.fiveBet": {
+   "v": [
+    "AA"
+   ],
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "13. Red flags",
+    "date": "",
+    "quote": "A rec 5-bets at 200bb+: it's AA."
+   },
+   "fb": [
+    "AA"
+   ]
+  },
+  "types.rec.pre.callVs5bet": {
+   "v": [
+    "KK",
+    "QQ",
+    "AK"
+   ],
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "Fish and recs don't fold KK, AK or QQ to a 5-bet"
+   },
+   "fb": [
+    "KK",
+    "QQ",
+    "AK"
+   ]
+  },
+  "types.rec.pre.callVs4bet": {
+   "v": [
+    "QQ",
+    "AK"
+   ],
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "He won't fold QQ to a 4-bet"
+   },
+   "fb": [
+    "QQ",
+    "AK"
+   ],
+   "interp": "the passive rec 3-bettor keeps QQ (and AK) vs a 4-bet"
+  },
+  "types.rec.pre.bbDefendPct": {
+   "v": 37.5,
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "6. BB defense",
+    "date": "2024-12-31",
+    "quote": "a rec BB defends about 37-38%"
+   },
+   "fb": 30,
+   "interp": "midpoint of 37-38%"
+  },
+  "types.rec.pre.callOpenPct": {
+   "v": 30,
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "12. Player types",
+    "date": "",
+    "quote": "Calls everything"
+   },
+   "fb": 30,
+   "interp": "\"Calls everything\": flats an open with his top 30% (the number is a default, Joan to review)"
+  },
+  "types.rec.pre.continueVs3betPct": {
+   "v": 20,
+   "outside": "no HHP number"
+  },
+  "types.rec.pre.limpCallPct": {
+   "v": 90,
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "12. Player types",
+    "date": "",
+    "quote": "Calls everything"
+   },
+   "fb": 90,
+   "interp": "calls a raise after limping 90% of the time"
+  },
+  "types.rec.pre.isoFactor": {
+   "v": 0.7,
+   "outside": "no HHP number"
+  },
+  "pool.limpReraise": {
+   "v": [
+    "AA",
+    "KK",
+    "AKs"
+   ],
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "13. Red flags",
+    "date": "",
+    "quote": "A limp-reraise: AA, KK, AKs, maybe QQ, with no bluffs"
+   },
+   "fb": [
+    "QQ+",
+    "AK"
+   ]
+  },
+  "pool.limpReraisePartial": {
+   "v": {
+    "QQ": 0.5
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "13. Red flags",
+    "date": "",
+    "quote": "A limp-reraise: AA, KK, AKs, maybe QQ, with no bluffs"
+   },
+   "fb": {},
+   "interp": "\"maybe QQ\": QQ limp-reraises half the time"
+  },
+  "pool.bigOpenPremiums": {
+   "v": [
+    "JJ+",
+    "AK"
+   ],
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "JJ or AK (\"I don't want to see a flop\") or AA/KK (greed)"
+   },
+   "fb": [
+    "QQ+",
+    "AK"
+   ]
+  },
+  "pool.bigOpenMult": {
+   "v": 1.4,
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "13. Red flags",
+    "date": "",
+    "quote": "An unusually large open (30-35 when normal is 20-25): a stronger range."
+   },
+   "fb": 1.4,
+   "interp": "30-35 vs 20-25 is about 1.4x the normal open"
+  },
+  "pool.bigOpenPremiumFreq": {
+   "v": 0.5,
+   "outside": "how often a rec/passive/whale opens his premiums big; HHP says big opens are strong, not how often (default, Joan to review)"
+  },
+  "pool.bigOpenOtherFreq": {
+   "v": 0.04,
+   "outside": "how often a non-premium gets the big open (default, Joan to review)"
+  },
+  "pool.bigOpenTypes": {
+   "v": [
+    "rec",
+    "passive",
+    "whale",
+    "tight"
+   ],
+   "outside": "which types give the big-open tell (HHP describes recs); default, Joan to review"
+  },
+  "pool.normalOpen25": {
+   "v": [
+    20,
+    25
+   ],
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "3. Opening (RFI), 200bb",
+    "date": "",
+    "quote": "he calls a normal rec open 20-25"
+   },
+   "fb": [
+    20,
+    25
+   ]
+  },
+  "pool.blindsNo3betSuitedConnectors": {
+   "v": true,
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "From the SB/BB they still don't 3-bet suited connectors"
+   },
+   "fb": false
+  },
+  "types.passive.styleMix": {
+   "v": {
+    "passiveCaller": 55,
+    "passiveFolder": 45
+   },
+   "outside": "HHP gives both passive styles, not how common each is"
+  },
+  "types.tight.styleMix": {
+   "v": {
+    "passiveCaller": 70,
+    "passiveFolder": 30
+   },
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "Tight preflop players tend to be callers."
+   },
+   "fb": {
+    "passiveCaller": 50,
+    "passiveFolder": 50
+   },
+   "interp": "\"tend to be callers\": 70/30 (default, Joan to review)"
+  },
+  "types.aggressive.styleMix": {
+   "v": {
+    "aggroCaller": 70,
+    "aggroFolder": 30
+   },
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "Loose players fold more rivers as a share of their range (though plenty are still stations)."
+   },
+   "fb": {
+    "aggroCaller": 70,
+    "aggroFolder": 30
+   },
+   "interp": "some loose players fold rivers (the folder share), plenty are stations (the caller share)"
+  },
+  "types.thinking.styleMix": {
+   "v": {
+    "aggroFolder": 70,
+    "aggroCaller": 30
+   },
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "Rare and the toughest."
+   },
+   "fb": {
+    "aggroFolder": 50,
+    "aggroCaller": 50
+   },
+   "interp": "the rare, tough aggro folder mostly plays like the thinking player"
+  },
+  "types.whale.styleMix": {
+   "v": {
+    "whale": 100
+   },
+   "outside": "the whale has his own style below"
+  },
+  "types.rec.styleMix": {
+   "v": {
+    "passiveCaller": 80,
+    "passiveFolder": 20
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "12. Player types",
+    "date": "",
+    "quote": "Calls everything"
+   },
+   "fb": {
+    "passiveCaller": 70,
+    "passiveFolder": 30
+   }
+  },
+  "styles.passiveCaller.label": {
+   "v": "Passive caller",
+   "outside": "display name"
+  },
+  "styles.passiveFolder.label": {
+   "v": "Passive folder",
+   "outside": "display name"
+  },
+  "styles.aggroCaller.label": {
+   "v": "Aggro caller",
+   "outside": "display name"
+  },
+  "styles.aggroFolder.label": {
+   "v": "Aggro folder",
+   "outside": "display name"
+  },
+  "styles.whale.label": {
+   "v": "Whale",
+   "outside": "display name"
+  },
+  "styles.aggroFolder.bet.monster": {
+   "v": 0.7,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.bet.strong": {
+   "v": 0.7,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.bet.medium": {
+   "v": 0.35,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.bet.draw": {
+   "v": 0.5,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.bet.air": {
+   "v": 0.3,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.cbet": {
+   "v": 0.15,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.streetAir.flop": {
+   "v": 1,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.streetAir.turn": {
+   "v": 0.8,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.streetAir.river": {
+   "v": 0.6,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.big.monster": {
+   "v": 0.6,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.big.strong": {
+   "v": 0.5,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.big.medium": {
+   "v": 0.3,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.big.draw": {
+   "v": 0.45,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.big.air": {
+   "v": 0.5,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.raise.monster": {
+   "v": 0.6,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.raise.strong": {
+   "v": 0.15,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.raise.draw": {
+   "v": 0.15,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.raise.air": {
+   "v": 0.05,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.need.flop": {
+   "v": 0.4,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.need.turn": {
+   "v": 0.48,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.need.river": {
+   "v": 0.55,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.sizeSens.flop": {
+   "v": 0.1,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.sizeSens.turn": {
+   "v": 0.12,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.sizeSens.river": {
+   "v": 0.15,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.riverSpaz": {
+   "v": 0,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.callAnyPair": {
+   "v": false,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.sizes.small": {
+   "v": 0.33,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroFolder.sizes.big": {
+   "v": 0.75,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveCaller.bet.monster": {
+   "v": 0.55,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveCaller.bet.strong": {
+   "v": 0.45,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveCaller.bet.medium": {
+   "v": 0.1,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "Won't value-bet thin or bluff enough."
+   },
+   "fb": 0.1,
+   "interp": "rarely bets medium hands for thin value"
+  },
+  "styles.passiveCaller.bet.draw": {
+   "v": 0.12,
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "play draws passively"
+   },
+   "fb": 0.12,
+   "interp": "rarely bets draws"
+  },
+  "styles.passiveCaller.bet.air": {
+   "v": 0.04,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "Won't value-bet thin or bluff enough."
+   },
+   "fb": 0.04,
+   "interp": "almost never bluffs"
+  },
+  "styles.passiveCaller.cbet": {
+   "v": 0.08,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveCaller.streetAir.flop": {
+   "v": 1,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveCaller.streetAir.turn": {
+   "v": 0.6,
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "2025-02-25",
+    "quote": "Fish under-double- and under-triple-barrel bluffs and don't bet thin for value."
+   },
+   "fb": 0.6,
+   "interp": "fewer bluffs each street"
+  },
+  "styles.passiveCaller.streetAir.river": {
+   "v": 0.4,
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "2025-02-25",
+    "quote": "Fish under-double- and under-triple-barrel bluffs and don't bet thin for value."
+   },
+   "fb": 0.4,
+   "interp": "fewer bluffs each street"
+  },
+  "styles.passiveCaller.big.monster": {
+   "v": 0.75,
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "2025-01-07",
+    "quote": "recs telegraph with size"
+   },
+   "fb": 0.75,
+   "interp": "big bets are mostly strong hands"
+  },
+  "styles.passiveCaller.big.strong": {
+   "v": 0.6,
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "2025-01-07",
+    "quote": "recs telegraph with size"
+   },
+   "fb": 0.6,
+   "interp": "big bets are mostly strong hands"
+  },
+  "styles.passiveCaller.big.medium": {
+   "v": 0.1,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveCaller.big.draw": {
+   "v": 0.1,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveCaller.big.air": {
+   "v": 0.1,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveCaller.raise.monster": {
+   "v": 0.3,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveCaller.raise.strong": {
+   "v": 0.02,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "Trips won't raise and bricked draws won't spaz."
+   },
+   "fb": 0.02,
+   "interp": "strong hands just call"
+  },
+  "styles.passiveCaller.raise.draw": {
+   "v": 0.02,
+   "src": {
+    "file": "playbook-postflop-bluffs-and-rivers.md",
+    "section": "9. Adjust by player type",
+    "date": "",
+    "quote": "The pool under-check-raises semibluffs."
+   },
+   "fb": 0.02,
+   "interp": "draws almost never raise"
+  },
+  "styles.passiveCaller.raise.air": {
+   "v": 0,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveCaller.need.flop": {
+   "v": 0.3,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveCaller.need.turn": {
+   "v": 0.36,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveCaller.need.river": {
+   "v": 0.42,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "Just because they're not raising doesn't mean they're ever folding."
+   },
+   "fb": 0.42,
+   "interp": "continues with any decent pair"
+  },
+  "styles.passiveCaller.sizeSens.flop": {
+   "v": 0.03,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveCaller.sizeSens.turn": {
+   "v": 0.03,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "sticky. Won't fold top pair or an overpair in a 3-bet pot."
+   },
+   "fb": 0.03,
+   "interp": "big bets barely move him"
+  },
+  "styles.passiveCaller.sizeSens.river": {
+   "v": 0.04,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "sticky. Won't fold top pair or an overpair in a 3-bet pot."
+   },
+   "fb": 0.04,
+   "interp": "big bets barely move him"
+  },
+  "styles.passiveCaller.riverSpaz": {
+   "v": 0,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "Trips won't raise and bricked draws won't spaz."
+   },
+   "fb": 0,
+   "interp": "busted draws never spaz"
+  },
+  "styles.passiveCaller.callAnyPair": {
+   "v": true,
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "12. Player types",
+    "date": "",
+    "quote": "Calls everything"
+   },
+   "fb": true,
+   "interp": "calls with any pair on the flop and turn"
+  },
+  "styles.passiveCaller.sizes.small": {
+   "v": 0.33,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveCaller.sizes.big": {
+   "v": 0.7,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.bet.monster": {
+   "v": 0.6,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.bet.strong": {
+   "v": 0.5,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.bet.medium": {
+   "v": 0.12,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.bet.draw": {
+   "v": 0.45,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "Double-barrels draws, then gives them up on the river."
+   },
+   "fb": 0.45,
+   "interp": "bets his draws on the flop and turn"
+  },
+  "styles.passiveFolder.bet.air": {
+   "v": 0.05,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.cbet": {
+   "v": 0.1,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.streetAir.flop": {
+   "v": 1,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.streetAir.turn": {
+   "v": 0.9,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "Double-barrels draws, then gives them up on the river."
+   },
+   "fb": 0.9,
+   "interp": "keeps betting draws on the turn"
+  },
+  "styles.passiveFolder.streetAir.river": {
+   "v": 0.05,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "Double-barrels draws, then gives them up on the river."
+   },
+   "fb": 0.05,
+   "interp": "gives up on the river"
+  },
+  "styles.passiveFolder.big.monster": {
+   "v": 0.7,
+   "src": {
+    "file": "playbook-postflop-weakness-and-position.md",
+    "section": "4. Pounce on weakness",
+    "date": "2025-01-07",
+    "quote": "recs telegraph with size"
+   },
+   "fb": 0.7,
+   "interp": "big bets are mostly strong hands"
+  },
+  "styles.passiveFolder.big.strong": {
+   "v": 0.6,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.big.medium": {
+   "v": 0.1,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.big.draw": {
+   "v": 0.3,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.big.air": {
+   "v": 0.2,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.raise.monster": {
+   "v": 0.45,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.raise.strong": {
+   "v": 0.05,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.raise.draw": {
+   "v": 0.02,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "His check-raises have few draws (J9, 22, AJ)."
+   },
+   "fb": 0.02,
+   "interp": "his raises are rarely draws"
+  },
+  "styles.passiveFolder.raise.air": {
+   "v": 0,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.need.flop": {
+   "v": 0.34,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "he folds least early in the hand"
+   },
+   "fb": 0.34,
+   "interp": "continues fairly wide early"
+  },
+  "styles.passiveFolder.need.turn": {
+   "v": 0.42,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.need.river": {
+   "v": 0.62,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "folds most on the RIVER, once aces, straights or flushes can come."
+   },
+   "fb": 0.62,
+   "interp": "folds a lot of his range on the river"
+  },
+  "styles.passiveFolder.sizeSens.flop": {
+   "v": 0.06,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.sizeSens.turn": {
+   "v": 0.1,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.sizeSens.river": {
+   "v": 0.25,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "folds most on the RIVER, once aces, straights or flushes can come."
+   },
+   "fb": 0.25,
+   "interp": "big river bets fold him"
+  },
+  "styles.passiveFolder.riverSpaz": {
+   "v": 0,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.callAnyPair": {
+   "v": false,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.sizes.small": {
+   "v": 0.33,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.passiveFolder.sizes.big": {
+   "v": 0.7,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.bet.monster": {
+   "v": 0.75,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.bet.strong": {
+   "v": 0.75,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.bet.medium": {
+   "v": 0.5,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "Value-bets thin and keeps bluffing if given rope."
+   },
+   "fb": 0.5,
+   "interp": "bets thin value"
+  },
+  "styles.aggroCaller.bet.draw": {
+   "v": 0.65,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.bet.air": {
+   "v": 0.4,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "Value-bets thin and keeps bluffing if given rope."
+   },
+   "fb": 0.4,
+   "interp": "bluffs often"
+  },
+  "styles.aggroCaller.cbet": {
+   "v": 0.2,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.streetAir.flop": {
+   "v": 1,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.streetAir.turn": {
+   "v": 0.9,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "Value-bets thin and keeps bluffing if given rope."
+   },
+   "fb": 0.9,
+   "interp": "keeps bluffing"
+  },
+  "styles.aggroCaller.streetAir.river": {
+   "v": 0.8,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "Value-bets thin and keeps bluffing if given rope."
+   },
+   "fb": 0.8,
+   "interp": "keeps bluffing"
+  },
+  "styles.aggroCaller.big.monster": {
+   "v": 0.6,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.big.strong": {
+   "v": 0.5,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.big.medium": {
+   "v": 0.4,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.big.draw": {
+   "v": 0.5,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.big.air": {
+   "v": 0.5,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.raise.monster": {
+   "v": 0.65,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.raise.strong": {
+   "v": 0.25,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.raise.draw": {
+   "v": 0.25,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.raise.air": {
+   "v": 0.08,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.need.flop": {
+   "v": 0.32,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.need.turn": {
+   "v": 0.36,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "his turn hands are inelastic. On the river trips call and busted draws fold."
+   },
+   "fb": 0.36,
+   "interp": "rarely folds the turn"
+  },
+  "styles.aggroCaller.need.river": {
+   "v": 0.48,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "his turn hands are inelastic. On the river trips call and busted draws fold."
+   },
+   "fb": 0.48,
+   "interp": "made hands call the river, busted draws fold"
+  },
+  "styles.aggroCaller.sizeSens.flop": {
+   "v": 0.06,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.sizeSens.turn": {
+   "v": 0.03,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "his turn hands are inelastic. On the river trips call and busted draws fold."
+   },
+   "fb": 0.03,
+   "interp": "turn size barely matters"
+  },
+  "styles.aggroCaller.sizeSens.river": {
+   "v": 0.1,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.riverSpaz": {
+   "v": 0.25,
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "trips put in more money; busted draws may check-raise and spaz."
+   },
+   "fb": 0.25,
+   "interp": "busted draws raise a small river bet 25% of the time"
+  },
+  "styles.aggroCaller.callAnyPair": {
+   "v": false,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.sizes.small": {
+   "v": 0.4,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.aggroCaller.sizes.big": {
+   "v": 0.8,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.bet.monster": {
+   "v": 0.7,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.bet.strong": {
+   "v": 0.6,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.bet.medium": {
+   "v": 0.45,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.bet.draw": {
+   "v": 0.55,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.bet.air": {
+   "v": 0.45,
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "over-stabs the flop and turn, then usually gives up the river"
+   },
+   "fb": 0.45,
+   "interp": "stabs a lot"
+  },
+  "styles.whale.cbet": {
+   "v": 0.05,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.streetAir.flop": {
+   "v": 1,
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "over-stabs the flop and turn, then usually gives up the river"
+   },
+   "fb": 1,
+   "interp": "stabs the flop"
+  },
+  "styles.whale.streetAir.turn": {
+   "v": 1,
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "over-stabs the flop and turn, then usually gives up the river"
+   },
+   "fb": 1,
+   "interp": "stabs the turn"
+  },
+  "styles.whale.streetAir.river": {
+   "v": 0.25,
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "over-stabs the flop and turn, then usually gives up the river"
+   },
+   "fb": 0.25,
+   "interp": "usually gives up the river"
+  },
+  "styles.whale.big.monster": {
+   "v": 0.6,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.big.strong": {
+   "v": 0.5,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.big.medium": {
+   "v": 0.5,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.big.draw": {
+   "v": 0.5,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.big.air": {
+   "v": 0.5,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.raise.monster": {
+   "v": 0.5,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.raise.strong": {
+   "v": 0.25,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.raise.draw": {
+   "v": 0.2,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.raise.air": {
+   "v": 0.06,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.need.flop": {
+   "v": 0.1,
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "floats \"incredibly way too wide\""
+   },
+   "fb": 0.1,
+   "interp": "continues with almost anything on the flop"
+  },
+  "styles.whale.need.turn": {
+   "v": 0.16,
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "He floats weak Tx, 99 and A-high for two streets, then folds them to a small river bet."
+   },
+   "fb": 0.16,
+   "interp": "floats weak hands on the turn"
+  },
+  "styles.whale.need.river": {
+   "v": 0.45,
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "He floats weak Tx, 99 and A-high for two streets, then folds them to a small river bet."
+   },
+   "fb": 0.45,
+   "interp": "folds weak pairs and A-high on the river"
+  },
+  "styles.whale.sizeSens.flop": {
+   "v": 0.02,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.sizeSens.turn": {
+   "v": 0.02,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.sizeSens.river": {
+   "v": 0.05,
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "won't fold strong hands"
+   },
+   "fb": 0.05,
+   "interp": "big bets don't fold his strong hands"
+  },
+  "styles.whale.riverSpaz": {
+   "v": 0.05,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.callAnyPair": {
+   "v": true,
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "Top pair can be a stack-off hand for him."
+   },
+   "fb": true,
+   "interp": "calls with any pair on the flop and turn"
+  },
+  "styles.whale.sizes.small": {
+   "v": 0.4,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "styles.whale.sizes.big": {
+   "v": 0.85,
+   "outside": "number is a default; HHP gives only the direction, if anything (Joan to review)"
+  },
+  "buckets.order": {
+   "v": [
+    "strong",
+    "medium",
+    "draws",
+    "air"
+   ],
+   "src": {
+    "file": "playbook-postflop.md",
+    "section": "2. Bet sizing: small or big, never in between",
+    "date": "2026-08-18",
+    "quote": "can play for stacks > thick value > thin value > draws > showdown value > air"
+   },
+   "fb": [
+    "strong",
+    "medium",
+    "draws",
+    "air"
+   ],
+   "interp": "Strong = can play for stacks + thick value; Medium = thin value + showdown value; Draws; Air"
+  },
+  "reads.passive.0": {
+   "v": "Very neat chip stacks",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "very neat chip stacks"
+   },
+   "fb": null
+  },
+  "reads.passive.1": {
+   "v": "Waits for the BB instead of posting",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "waits for the BB to post"
+   },
+   "fb": null
+  },
+  "reads.passive.2": {
+   "v": "Complains the game is too tight",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "complains the game is too tight"
+   },
+   "fb": null
+  },
+  "reads.passive.3": {
+   "v": "A rules nit",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "a rules nit"
+   },
+   "fb": null
+  },
+  "reads.passive.4": {
+   "v": "Flatted JJ preflop and showed it down",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "flats TT/JJ/AK preflop"
+   },
+   "fb": null
+  },
+  "reads.passive.5": {
+   "v": "Checked back a clear thin value bet at showdown",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "checks back clear thin value"
+   },
+   "fb": null
+  },
+  "reads.passive.6": {
+   "v": "Gave up with 7-high on the river",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "gives up 6-high/7-high on the river"
+   },
+   "fb": null
+  },
+  "reads.aggressive.0": {
+   "v": "Messy chip piles",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "messy piles"
+   },
+   "fb": null
+  },
+  "reads.aggressive.1": {
+   "v": "Plays lots of pots",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "plays lots of pots"
+   },
+   "fb": null
+  },
+  "reads.aggressive.2": {
+   "v": "Posted or straddled instead of waiting",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "posts or straddles instead of waiting"
+   },
+   "fb": null
+  },
+  "reads.aggressive.3": {
+   "v": "Says \"I usually play bigger\"",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "\"I usually play bigger.\""
+   },
+   "fb": null
+  },
+  "reads.aggressive.4": {
+   "v": "3-bet suited connectors and showed them",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "3-bets suited connectors (weak clue)"
+   },
+   "fb": null
+  },
+  "reads.aggressive.5": {
+   "v": "Kept betting two pair when the draw came in",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "keeps betting two pair when the draw comes in"
+   },
+   "fb": null
+  },
+  "reads.aggressive.6": {
+   "v": "Turned third pair into a bluff at showdown",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "turns second or third pair into a bluff (the strongest clue)"
+   },
+   "fb": null
+  },
+  "reads.passiveCaller.0": {
+   "v": "Paid off the table nit with a weak hand",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "a \"non-believer\" who pays off the table nit"
+   },
+   "fb": null
+  },
+  "reads.aggroCaller.0": {
+   "v": "Paid off the table nit with a weak hand",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "a \"non-believer\" who pays off the table nit"
+   },
+   "fb": null
+  },
+  "reads.passiveFolder.0": {
+   "v": "Flashed top pair and mucked it",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "flashes top pair and mucks it"
+   },
+   "fb": null
+  },
+  "reads.aggroFolder.0": {
+   "v": "Flashed top pair and mucked it",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "flashes top pair and mucks it"
+   },
+   "fb": null
+  },
+  "reads.passiveFolder.1": {
+   "v": "\"I folded a flush, I knew I was behind\"",
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "\"I folded a flush, I knew I was behind.\""
+   },
+   "fb": null
+  },
+  "reads.whale.0": {
+   "v": "\"Dealer, can I bet this?\" (holding up a car key)",
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "\"Dealer, can I bet this [Bentley key]?\""
+   },
+   "fb": null
+  },
+  "reads.whale.1": {
+   "v": "Half the room is on the list for his table",
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "half the casino is on the table-change list for his table"
+   },
+   "fb": null
+  },
+  "reads.whale.2": {
+   "v": "In almost every pot",
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "VPIP 70-80%+, isos about 80% of the time"
+   },
+   "fb": null
+  },
+  "reads.tight.0": {
+   "v": "Waits for the bad-beat jackpot",
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "waits for the bad-beat jackpot"
+   },
+   "fb": null
+  },
+  "reads.tight.1": {
+   "v": "Says \"back in my day\"",
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "\"back in my day.\""
+   },
+   "fb": null
+  },
+  "reads.tight.2": {
+   "v": "Very neat chip stacks",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "very neat chip stacks"
+   },
+   "fb": null
+  },
+  "reads.rec.0": {
+   "v": "Limps pairs and suited hands, raises only premiums",
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "limps pairs, suited broadways and suited Ax, and raises only premiums"
+   },
+   "fb": null
+  },
+  "reads.rec.1": {
+   "v": "Limps a lot from early position",
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "Habitual EP limper: limps suited broadways and small pairs."
+   },
+   "fb": null
+  },
+  "reads.rec.2": {
+   "v": "Here to have a good time",
+   "src": {
+    "file": "playbook-villains-oldest-videos.md",
+    "section": "The 9 live player types",
+    "date": "2025-10-28",
+    "quote": "Donker (\"here to have a good time\")"
+   },
+   "fb": null
+  },
+  "reads.thinking.0": {
+   "v": "Has 3-bet a lot, folded to a 4-bet once",
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "14. Villain reads",
+    "date": "",
+    "quote": "can three bet fold occasionally"
+   },
+   "fb": null
+  },
+  "reads.thinking.1": {
+   "v": "Plays lots of pots",
+   "src": {
+    "file": "playbook-villains.md",
+    "section": "The four player types",
+    "date": "2026-02-17",
+    "quote": "plays lots of pots"
+   },
+   "fb": null
+  },
+  "charts.LJ OPEN - 200BB": {
+   "v": {
+    "name": "LJ OPEN - 200BB (2025-02-18 HHP)",
+    "heroPosition": "LJ",
+    "scenario": "open",
+    "seat": "LJ",
+    "source": "playbook-preflop.md › 3. Opening (RFI), 200bb · 2025-02-18 HHP (compiled)",
+    "date": "2025-02-18",
+    "opens": [
+     "AKs",
+     "AQs",
+     "AJs",
+     "ATs",
+     "A9s",
+     "A8s",
+     "A7s",
+     "A6s",
+     "A5s",
+     "A4s",
+     "A3s",
+     "A2s",
+     "AA",
+     "AKo",
+     "AQo",
+     "AJo",
+     "KK",
+     "KQs",
+     "KJs",
+     "KTs",
+     "K9s",
+     "K8s",
+     "K7s",
+     "KQo",
+     "QQ",
+     "QJs",
+     "QTs",
+     "Q9s",
+     "Q8s",
+     "JJ",
+     "JTs",
+     "J9s",
+     "J8s",
+     "TT",
+     "T9s",
+     "T8s",
+     "99",
+     "98s",
+     "88",
+     "87s",
+     "77",
+     "76s",
+     "66",
+     "65s"
+    ]
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "3. Opening (RFI), 200bb",
+    "date": "2025-02-18",
+    "quote": "200bb LJ (44 hands): all suited aces A2s-AKs; AA, AKo, AQo, AJo; KK, KQs-K7s, KQo; QQ, QJs-Q8s; JJ, JTs-J8s; TT, T9s, T8s; 99, 98s; 88, 87s; 77, 76s; 66, 65s."
+   },
+   "fb": null
+  }
+ }
+}

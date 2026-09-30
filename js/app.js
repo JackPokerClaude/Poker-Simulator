@@ -4,7 +4,7 @@ import { RANKS, SUITS, SUIT_SYMBOLS, rankOf, suitOf, cardsPretty } from './engin
 import { describeAction, buildRecord, winnerLine, isInvolved, statusOf } from './engine/coach.js';
 import { quickSizes, clampTo, sliderToAmount, amountToSlider, potPercent, SLIDER_MAX } from './ui/sizing.js';
 import { layoutFor, chipCenter } from './ui/layout.js';
-import { VILLAIN_CONFIG } from '../config/villains.js';
+import { buildModel, setModel, villainLabel, getModel } from './villains/model.js';
 import { loadHistory, addHand, clearHistory, computeStats, exportCSV, importCSV } from './storage/history.js';
 import { loadBrain, browserFetchText, browserLastGood, missingCharts } from './brain/loader.js';
 import { CHARTS_USED } from './engine/scenario.js';
@@ -25,6 +25,7 @@ const SPEEDS = { normal: { act: 650, deal: 700 }, fast: { act: 260, deal: 380 },
 // ---------- state ----------
 let ranges = null;
 let brain = null;
+let model = null;
 let hand = null;
 let handToken = 0;
 let pendingTo = null;
@@ -165,6 +166,13 @@ function logHTML() {
   return lines.join('');
 }
 
+// "[HHP] playbook-villains.md · 2026-02-17" for a read, short enough for the card.
+function readTag(key) {
+  const rec = key && getModel().rec(key);
+  if (!rec) return '';
+  return rec.tag === 'HHP' ? `[HHP] ${rec.src.file}${rec.src.date ? ` · ${rec.src.date}` : ''}` : '[OUTSIDE SOURCE]';
+}
+
 // One full-width card per villain (Reads sheet): players still in the hand first.
 function readsHTML(flashSeat) {
   const h = hand;
@@ -173,11 +181,11 @@ function readsHTML(flashSeat) {
   const ordered = [...seats.filter((p) => !p.folded), ...seats.filter((p) => p.folded)];
   return ordered.map((p) => {
     const status = p.folded ? 'Folded' : p.allIn ? 'All-in' : 'In hand';
-    const type = h.done ? `<div class="rc-type">${esc(VILLAIN_CONFIG.types[p.type].label)}</div>` : '';
+    const type = h.done ? `<div class="rc-type">${esc(villainLabel(p))}</div>` : '';
     return `<div class="read-card${p.folded ? ' out' : ''}${flashSeat === p.i ? ' flash' : ''}" id="read-${p.i}">
       <div class="rc-top"><span class="rc-pos">${p.pos}</span><span class="rc-stack">$${shownStack(p)} · ${Math.round(shownStack(p) / h.stakes.bb)}bb</span><span class="rc-status">${status}</span></div>
       ${type}
-      <div class="rc-read">${p.reads.map(esc).join('<br>')}</div>
+      <div class="rc-read">${p.reads.map((r, k) => `${esc(r)}<span class="rc-src">${esc(readTag(p.readKeys?.[k]))}</span>`).join('<br>') || 'No reads yet.'}</div>
     </div>`;
   }).join('');
 }
@@ -483,7 +491,7 @@ function showFeedback() {
   const handsHTML = order.map((i) => {
     const p = h.players[i];
     const win = r.won[i] > 0;
-    const type = p.isHero ? 'You' : VILLAIN_CONFIG.types[p.type].label;
+    const type = p.isHero ? 'You' : villainLabel(p);
     return `<div class="hand-row${win ? ' win' : ''}${p.folded ? ' fold' : ''}">
       <div class="cs">${p.cards.map((c) => cardHTML(c, 'sm')).join('')}</div>
       <div class="who">${p.pos}${win ? ' · Won' : ''}<span class="ty">${esc(type)}</span><span class="hd">${esc(statusOf(h, i).replace(/^won, /, ''))}</span></div>
@@ -606,7 +614,17 @@ function brainStatusHTML() {
     <div class="about">Loaded ${esc(new Date(brain.loadedAt).toLocaleString())}. ${full} conflicts and ${brain.openQuestions.length} open questions, all Undecided: never applied, never graded.</div>
     ${notes.map((n) => `<div class="bnote">${esc(n)}</div>`).join('')}
     <div class="bfiles">${rows}</div>
-    <div class="about">Compiled layer (the numbers villains play by): not built yet. That's step 2.</div>`;
+    ${compiledStatusHTML()}`;
+}
+
+function compiledStatusHTML() {
+  if (!model) return '';
+  const c = model.resolved.counts;
+  const stale = model.resolved.stale;
+  return `<h3>Compiled layer</h3>
+    <div class="about">The numbers villains play by (compiled ${esc(model.resolved.compiledAt)}): ${c.total} values. ${c.sourced} quote the brain [HHP] (${c.interpreted} of those turn words into a number), ${c.outside} are [OUTSIDE SOURCE] defaults.</div>
+    ${stale.length ? `<div class="bnote">${stale.length} compiled value${stale.length > 1 ? 's are' : ' is'} stale: the playbook text ${stale.length > 1 ? 'they quote' : 'it quotes'} changed, so ${stale.length > 1 ? 'they use' : 'it uses'} [OUTSIDE SOURCE] defaults. Open a session and say "recompile brain".</div>
+      <div class="bfiles">${stale.slice(0, 12).map((x) => `<div class="bfile fallback"><div class="bn"><b>${esc(x.key)}</b></div><div class="bc">${esc(x.file)}: "${esc(x.quote)}"</div></div>`).join('')}</div>` : '<div class="about">Nothing stale.</div>'}`;
 }
 
 function showMenu() {
@@ -621,7 +639,7 @@ function showMenu() {
       <p>Every hand is a real 52-card shuffle. You only get dealt hands the HHP chart plays in your spot. Villain types are hidden until the hand ends. The reads are your clues.</p>
       <p>Preflop gets graded against the charts and HHP sizing rules. Postflop is for your coach: tap <b>Copy for coach</b>.</p>
       <p>Everything runs on your phone. Hands are saved on this device only, so export a CSV to back them up.</p>
-      <p>Villain tendencies: <code>config/villains.js</code>. Charts: <code>brain/preflop-ranges.csv</code>, read fresh every time the app opens.</p>
+      <p>Villains play from the brain through <code>brain-compiled/behavior.json</code>; table mix and open sizes are in <code>config/table-settings.js</code> [OUTSIDE SOURCE]. Charts: <code>brain/preflop-ranges.csv</code>, read fresh every time the app opens.</p>
     </div>
     ${brainStatusHTML()}`);
   document.querySelectorAll('.seg button').forEach((b) => (b.onclick = () => {
@@ -737,7 +755,15 @@ async function boot() {
   fitTable();
   try {
     const manifest = await (await fetch('config/brain-files.json', { cache: 'no-cache' })).json();
-    brain = await loadBrain({ manifest, fetchText: browserFetchText, lastGood: browserLastGood() });
+    const [b, compiled] = await Promise.all([
+      loadBrain({ manifest, fetchText: browserFetchText, lastGood: browserLastGood() }),
+      fetch('brain-compiled/behavior.json', { cache: 'no-cache' }).then((r) => r.json()),
+    ]);
+    brain = b;
+    model = buildModel(compiled, brain.texts);
+    setModel(model);
+    // Compiled charts (the LJ open) join the CSV charts.
+    Object.assign(brain.charts.charts, model.charts);
     brain.missing = missingCharts(brain, CHARTS_USED);
     ranges = brain.charts;
   } catch (e) {

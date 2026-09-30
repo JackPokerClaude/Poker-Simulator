@@ -43,6 +43,7 @@ export async function loadBrain({ manifest, fetchText, lastGood }) {
   const dir = manifest.dir || 'brain/';
   const files = [];
   const parsed = {};
+  const texts = {}; // raw text of each file in use, for the compiled-layer quote check
   const notices = [];
 
   await Promise.all(manifest.files.map(async ({ name, kind }) => {
@@ -54,6 +55,7 @@ export async function loadBrain({ manifest, fetchText, lastGood }) {
     try {
       const text = await fetchText(dir + name);
       parsed[name] = parse(text, name);
+      texts[name] = text;
       f.status = 'ok';
       f.bytes = text.length;
       await lastGood.save(name, text);
@@ -65,6 +67,7 @@ export async function loadBrain({ manifest, fetchText, lastGood }) {
     if (old != null) {
       try {
         parsed[name] = parse(old, name);
+        texts[name] = old;
         f.status = 'fallback';
         f.bytes = old.length;
         f.error = freshError;
@@ -100,6 +103,7 @@ export async function loadBrain({ manifest, fetchText, lastGood }) {
   return {
     loadedAt: new Date().toISOString(),
     files,
+    texts,
     notices,
     warnings: [...instr.warnings],
     charts,
