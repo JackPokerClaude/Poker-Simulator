@@ -8,7 +8,7 @@ import { createGame, legalActions, dealNextStreet, applyAction, POSITIONS } from
 import { villainAct } from '../js/engine/ai.js';
 import { villainPolicy } from '../js/engine/policy.js';
 import { createHand } from '../js/engine/dealer.js';
-import { classifySpot, LJ_CHART } from '../js/engine/scenario.js';
+import { classifySpot, LJ_CHART, LJ_CHART_100, openEffectiveBB } from '../js/engine/scenario.js';
 import { gradeDecision } from '../js/grading/grade.js';
 import { shuffledDeck, weightedPick, handCode, ALL_CODES, combosOf, RANKS } from '../js/engine/cards.js';
 
@@ -124,7 +124,7 @@ test('LJ opens use the compiled HHP chart [2025-02-18 HHP]', () => {
   }
   assert.ok(found, 'dealt an LJ open');
   const spot = classifySpot(found, found.heroIdx);
-  assert.equal(spot.chart, LJ_CHART);
+  assert.equal(spot.chart, openEffectiveBB(found, found.heroIdx) < 150 ? LJ_CHART_100 : LJ_CHART);
   assert.equal(spot.exact, true);
   const g = gradeDecision({ ranges, spot, code: found.heroCode, action: 'raise' });
   assert.equal(g.source, 'HHP');
@@ -177,4 +177,24 @@ test('the reg/pro opens exactly HHP\'s own RFI chart in the seats that have one,
       assert.ok(Math.abs(raise - rows[code][0] / 100) < 1e-9, `${pos} ${code}: ${raise} vs chart ${rows[code][0]}%`);
     }
   }
+});
+
+test('LJ at about 100bb effective uses the 100bb LJ chart [2025-02-18 HHP]', () => {
+  const c = ranges.charts[LJ_CHART_100];
+  assert.ok(c, 'compiled 100bb LJ chart loaded');
+  assert.equal(Object.values(c.hands).filter((h) => h[0] === 100).length, 36);
+  for (const [code, v] of [['A2s', 0], ['ATo', 100], ['KJo', 100], ['QJo', 100], ['98s', 0], ['55', 0], ['66', 100]]) assert.equal(c.hands[code][0], v, code);
+  let short = null, deep = null;
+  for (let k = 0; k < 6000 && !(short && deep); k++) {
+    const s = createHand({ drill: 'random', ranges });
+    if (s.players[s.heroIdx].pos !== 'LJ' || s.spot.kind !== 'RFI') continue;
+    if (openEffectiveBB(s, s.heroIdx) < 150) short ||= s; else deep ||= s;
+  }
+  // Force a short table if the random deal didn't give one: everyone behind at 100bb.
+  if (!short && deep) {
+    short = structuredClone(deep);
+    for (const p of short.players) if (p.i !== short.heroIdx) p.stack = Math.min(p.stack, 100 * short.stakes.bb - p.committed);
+  }
+  assert.equal(classifySpot(short, short.heroIdx).chart, LJ_CHART_100);
+  if (deep) assert.equal(classifySpot(deep, deep.heroIdx).chart, LJ_CHART);
 });

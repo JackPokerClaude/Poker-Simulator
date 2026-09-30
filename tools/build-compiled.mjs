@@ -313,6 +313,14 @@ hhp('charts.LJ OPEN - 200BB', {
 }, src('playbook-preflop.md', '3. Opening (RFI), 200bb', '2025-02-18')('200bb LJ (44 hands): all suited aces A2s-AKs; AA, AKo, AQo, AJo; KK, KQs-K7s, KQo; QQ, QJs-Q8s; JJ, JTs-J8s; TT, T9s, T8s; 99, 98s; 88, 87s; 77, 76s; 66, 65s.'),
 { fb: null });
 
+hhp('charts.LJ OPEN - 100BB', {
+  name: 'LJ OPEN - 100BB (2025-02-18 HHP)', heroPosition: 'LJ', scenario: 'open', seat: 'LJ',
+  source: 'playbook-preflop.md › 3. Opening (RFI), 200bb · 2025-02-18 HHP (compiled)', date: '2025-02-18',
+  opens: ['AKs', 'AQs', 'AJs', 'ATs', 'A9s', 'A8s', 'A7s', 'A6s', 'A5s', 'A4s', 'A3s', 'AA', 'AKo', 'AQo', 'AJo', 'ATo',
+    'KK', 'KQs', 'KJs', 'KTs', 'K9s', 'KQo', 'KJo', 'QQ', 'QJs', 'QTs', 'Q9s', 'QJo', 'JJ', 'JTs', 'TT', 'T9s',
+    '99', '88', '77', '66'],
+}, src('playbook-preflop.md', '3. Opening (RFI), 200bb', '2025-02-18')('100bb LJ: A3s-AKs (no A2s); AA, AKo, AQo, AJo, ATo; KK, KQs-K9s, KQo, KJo; QQ, QJs-Q9s, QJo; JJ, JTs; TT, T9s; 99, 88, 77, 66.'), { fb: null });
+
 // ---------------------------------------------------------------- "Also from the brain" rules
 // Each rule shows its own quote, and only when its conditions match the spot (js/feedback/match.js).
 // when keys: street, spot, facing, heroBucket, villainType, villainStyle, multiway, heroIP, heroPFR,

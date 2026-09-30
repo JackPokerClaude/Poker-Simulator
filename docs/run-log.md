@@ -16,7 +16,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 | 8 | Range paragraphs: HHP base vs seat widening, sources for every number | Done | 843d35a | 54 pass |
 | 9 | Copy for coach rebuilt around the new format | Done | 2275870 | 55 pass |
 | 10 | "Also from the brain" matcher coverage, in batches | batch 0 02d8446 (13/74), batch 1 b79a031 (24/74), batch 2 6cae08f (43/74), batch 3 4da00db (59/74; the other 15 listed with reasons) | Done | 57 pass |
-| 11 | Reg/pro villain type, 2024 PRO charts, 1/3 and 2/5 mix | Done | (this commit) | 59 pass |
+| 11 | Reg/pro villain type, 2024 PRO charts, 1/3 and 2/5 mix | Done | 9ef2998 | 59 pass |
+| 12 | 100bb LJ chart when effective stacks are closer to 100bb | Done | (this commit) | 60 pass |
 
 ## Notes and open issues
 
@@ -43,6 +44,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 - Found while merging batch 3: new rules sometimes point at a different line than an existing rule in the same spot (e.g. vs a whale in a 3-bet pot: "he over-bluffs: over-call" vs "fish don't bluff big 3-bet-pot barrels: fold"). Before, whichever rule was defined first silently decided the verdict. Now, when matching rules disagree, none decides: the math does, and the screen and coach text say "Brain lines disagree here (no ⚖)" and list both with sources. About 8 of 523 decisions in a 300-hand run. Ungraded (⚖) decisions after batch 3: about 23%.
 
 - Item 11: new villain type "Reg / pro" at 1/3 (weight 6) and 2/5 (weight 12), never at 1/2. When a pro opens, you're graded against the 2024 PRO charts (both ACTIVE, no 2026 equivalent): [EP VS PRO OPEN] (exact for EP vs an EP pro) and [BTN VS CO PRO OPEN] (exact for BTN vs a CO pro); other seats get the closer one as an [OUTSIDE SOURCE] stand-in, blinds keep the BB charts. BTN vs a CO pro with a fish still to act behind hits the logged "⚖ CONFLICT: Joan to decide" (value 3-bet QQ/JJ/AQs/AK vs flat the middle): not graded, both views shown. JJ/AQs in position vs a pro's 3-bet is ♣ OPEN #3: not graded. Along the way, preflop "Also from the brain" now matches every preflop decision you made (it only looked at the first one, so rules about facing a 3-bet or 4-bet, like your 5-bet-AA-only rule, never showed on the later decision). Pro reads are brain quotes from the 40+ tells video (tops up to the max, $1k chips from a pocket, buys in with $100 chips).
+
+- Item 12: the 100bb LJ open chart [2025-02-18 HHP] is compiled from playbook-preflop.md section 3 (36 hands: no A2s or suited connectors below T9s; ATo, KJo, QJo come in) and used for an LJ open when the effective stack (your stack vs the biggest stack still to act) is under 150bb. It's rare in the current deal (about 4 of 266 LJ opens in a 4,000-hand sample) because you always sit with about 200bb and someone behind is usually deep. The pro still opens the 200bb LJ chart.
 
 ## Decisions for Joan
 
@@ -72,3 +75,4 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 22. The pro opens like HHP's own RFI charts (EP chart for UTG/UTG+1, the compiled LJ chart, HJ, BTN); CO and SB, which have no HHP chart, open his top 22% times the seat factor (CO about 30%). His other preflop numbers are [OUTSIDE SOURCE] except "rarely cold-calls a 3-bet" (HHP: "The regs play 4-bet-or-fold and rarely cold-call", read as a tenth of his normal calling). Postflop he's always an aggressive style ("More aggressive, thin value bets, empties the clip with bluffs"), 55% aggro folder / 45% aggro caller. Default, Joan to review.
 23. Table mix: reg/pro weight 6 at 1/3 and 12 at 2/5 (about 1 in 17 and 1 in 9 seats). [OUTSIDE SOURCE] in config/table-settings.js, default, Joan to review.
 24. "Fish behind" (for the BTN vs CO pro conflict) = a rec, passive player or whale still to act after you preflop. Default, Joan to review.
+25. Effective stack for choosing the LJ chart = your stack vs the biggest stack still to act behind you; under 150bb uses the 100bb chart. Default, Joan to review. (Your own stack stays 190-210bb, so short-stack LJ spots are rare; say if you want a short-stack drill.)

@@ -2142,6 +2142,61 @@
    },
    "fb": null
   },
+  "charts.LJ OPEN - 100BB": {
+   "v": {
+    "name": "LJ OPEN - 100BB (2025-02-18 HHP)",
+    "heroPosition": "LJ",
+    "scenario": "open",
+    "seat": "LJ",
+    "source": "playbook-preflop.md › 3. Opening (RFI), 200bb · 2025-02-18 HHP (compiled)",
+    "date": "2025-02-18",
+    "opens": [
+     "AKs",
+     "AQs",
+     "AJs",
+     "ATs",
+     "A9s",
+     "A8s",
+     "A7s",
+     "A6s",
+     "A5s",
+     "A4s",
+     "A3s",
+     "AA",
+     "AKo",
+     "AQo",
+     "AJo",
+     "ATo",
+     "KK",
+     "KQs",
+     "KJs",
+     "KTs",
+     "K9s",
+     "KQo",
+     "KJo",
+     "QQ",
+     "QJs",
+     "QTs",
+     "Q9s",
+     "QJo",
+     "JJ",
+     "JTs",
+     "TT",
+     "T9s",
+     "99",
+     "88",
+     "77",
+     "66"
+    ]
+   },
+   "src": {
+    "file": "playbook-preflop.md",
+    "section": "3. Opening (RFI), 200bb",
+    "date": "2025-02-18",
+    "quote": "100bb LJ: A3s-AKs (no A2s); AA, AKo, AQo, AJo, ATo; KK, KQs-K9s, KQo, KJo; QQ, QJs-Q9s, QJo; JJ, JTs; TT, T9s; 99, 88, 77, 66."
+   },
+   "fb": null
+  },
   "rules.neverLimp": {
    "v": {
     "title": "Never open-limp",

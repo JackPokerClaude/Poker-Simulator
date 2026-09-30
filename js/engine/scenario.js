@@ -5,6 +5,15 @@ import { getModel } from '../villains/model.js';
 
 // The LJ open chart compiled from playbook-preflop.md section 3 [2025-02-18 HHP].
 export const LJ_CHART = 'LJ OPEN - 200BB (2025-02-18 HHP)';
+export const LJ_CHART_100 = 'LJ OPEN - 100BB (2025-02-18 HHP)';
+// Effective stack for an open, in big blinds: your stack vs the biggest stack still to act.
+export function openEffectiveBB(s, heroIdx) {
+  const hero = s.players[heroIdx];
+  const behind = s.players.filter((p) => p.i !== heroIdx && !p.folded && !s.log.some((e) => e.street === 'preflop' && e.i === p.i && e.type !== 'post'));
+  const mine = hero.stack + hero.committed;
+  const biggest = behind.length ? Math.max(...behind.map((p) => p.stack + p.committed)) : mine;
+  return Math.min(mine, biggest) / s.stakes.bb;
+}
 const compiledChart = (name) => { try { return !!getModel().charts[name]; } catch { return false; } };
 
 // Which villain types each opponent-specific chart was drawn for. Only these count as an
@@ -98,7 +107,12 @@ export function classifySpot(s, heroIdx) {
       if (!limpers.length) {
         if (hp === 'EP') return spot('RFI', 'RFI - EP - 200BB', true);
         if (hp === 'HJ') return spot('RFI', 'RFI - HJ - 200BB', true);
-        if (hero.pos === 'LJ' && compiledChart(LJ_CHART)) return spot('RFI', LJ_CHART, true);
+        if (hero.pos === 'LJ') {
+          // Closer to 100bb than to 200bb: the 100bb LJ chart (under 150bb effective).
+          const eff = openEffectiveBB(s, heroIdx);
+          if (eff < 150 && compiledChart(LJ_CHART_100)) return spot('RFI', LJ_CHART_100, true, { effBB: Math.round(eff) });
+          if (compiledChart(LJ_CHART)) return spot('RFI', LJ_CHART, true, { effBB: Math.round(eff) });
+        }
         if (hp === 'BTN') {
           const fish = isFish(P(6).type) && isFish(P(7).type);
           return spot('RFI', fish ? 'RFI - BTN - 200BB (vs two fish in blinds)' : 'RFI - BTN - 200BB', true);
