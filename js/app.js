@@ -8,6 +8,8 @@ import { buildModel, setModel, villainLabel, getModel } from './villains/model.j
 import { loadHistory, addHand, clearHistory, computeStats, exportCSV, importCSV } from './storage/history.js';
 import { loadBrain, browserFetchText, browserLastGood, missingCharts } from './brain/loader.js';
 import { CHARTS_USED } from './engine/scenario.js';
+import { rangeViews } from './feedback/rangeview.js';
+import { gridHTML } from './ui/grid.js';
 
 const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -481,6 +483,13 @@ function gradeHTML(d) {
   </div>`;
 }
 
+function rangesHTML(h) {
+  let rv;
+  try { rv = rangeViews(h); } catch (e) { return `<div class="about">Range view unavailable: ${esc(e.message)}</div>`; }
+  return rv.villains.map((v) => `<h3>${esc(v.pos)}'s range</h3>${v.views.map((x) => `<div class="rv"><b>${x.street[0].toUpperCase()}${x.street.slice(1)}</b>
+    ${gridHTML(x.cells, { mode: x.mode, shares: x.shares })}</div>`).join('')}`).join('');
+}
+
 // Feedback screen: opens only when "See feedback" is tapped. No won/lost amounts, and only
 // involved players' cards.
 function showFeedback() {
@@ -505,6 +514,7 @@ function showFeedback() {
     <div class="hands-grid">${handsHTML}</div>
     <h3>Preflop feedback</h3>
     ${grades}
+    ${rangesHTML(h)}
     <div class="about" style="margin-top:6px">Postflop isn't graded here. Send it to your coach.</div>
     <div class="sheet-actions">
       <button class="btn secondary" id="copyBtn2">Copy for coach</button>

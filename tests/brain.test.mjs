@@ -149,3 +149,11 @@ test('opens with no HHP chart (CO) are graded [OUTSIDE SOURCE] between HJ and BT
   assert.equal(hj.source, 'HHP');
   assert.match(hj.sourceTag, /^\[HHP\] RFI - HJ - 200BB · Live Poker Preflop Guide \(2026\) 2026-01-06$/);
 });
+
+test('the offline cache lists every app file', async () => {
+  const { readdirSync, statSync } = await import('node:fs');
+  const sw = readFileSync(new URL('sw.js', root), 'utf8');
+  const walk = (dir) => readdirSync(new URL(dir, root)).flatMap((f) => (statSync(new URL(`${dir}/${f}`, root)).isDirectory() ? walk(`${dir}/${f}`) : [`${dir}/${f}`]));
+  const files = [...walk('js'), ...walk('config'), 'brain-compiled/behavior.json'].filter((f) => /\.(js|json)$/.test(f));
+  for (const f of files) assert.ok(sw.includes(`'${f}'`), `${f} missing from sw.js ASSETS`);
+});

@@ -62,6 +62,12 @@ function finish(opts) {
   return out;
 }
 
+// The planted 3-bettor's range in the 3-bet drill (the tracker uses the same test).
+export function threeBetRangeHas(type, code) {
+  const cfg = getModel().types[type].pre;
+  return (cfg.threeBet ? inList(cfg.threeBet, code) : HAND_PCT[code] <= (cfg.threeBetPct || 0) / 100) || inList(cfg.threeBetLight, code);
+}
+
 // ---------------------------------------------------------------- preflop
 export function preflopPolicy(s, i, hole) {
   const M = getModel();

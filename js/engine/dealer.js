@@ -2,8 +2,8 @@
 // the HHP chart plays in that spot, and filtered by drill mode.
 import { TABLE_SETTINGS } from '../../config/table-settings.js';
 import { getModel } from '../villains/model.js';
-import { shuffledDeck, handCode, weightedPick, randInt, rand, pick, HAND_PCT } from './cards.js';
-import { inList } from './policy.js';
+import { shuffledDeck, handCode, weightedPick, randInt, rand, pick } from './cards.js';
+import { threeBetRangeHas } from './policy.js';
 import { createGame, applyAction, legalActions, POSITIONS } from './game.js';
 import { villainAct } from './ai.js';
 import { classifySpot } from './scenario.js';
@@ -49,15 +49,13 @@ function heroSeatFor(drill) {
   return randInt(8);
 }
 
-// A hand from this type's 3-bet range (the same range his policy 3-bets with).
+// A hand from this type's 3-bet range (the same test the range tracker uses).
 function sample3betHand(type, deckSpare) {
-  const cfg = getModel().types[type].pre;
-  const in3 = (code) => (cfg.threeBet ? inList(cfg.threeBet, code) : HAND_PCT[code] <= (cfg.threeBetPct || 0) / 100) || inList(cfg.threeBetLight, code);
   for (let t = 0; t < 400; t++) {
     const a = randInt(deckSpare.length);
     const b = randInt(deckSpare.length);
     if (a === b) continue;
-    if (in3(handCode(deckSpare[a], deckSpare[b]))) return [a, b];
+    if (threeBetRangeHas(type, handCode(deckSpare[a], deckSpare[b]))) return [a, b];
   }
   return null;
 }

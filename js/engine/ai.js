@@ -19,7 +19,7 @@ export function chooseAction(s, i) {
   // 3-bet drill: a planted 3-bettor 3-bets with the hand he was dealt from his 3-bet range.
   if (s.street === 'preflop' && s.raiseLevel === 2 && p.meta.force3bet && la.canRaise) {
     const ip = s.lastAggressor >= 0 && !['SB', 'BB'].includes(p.pos) && p.i > s.lastAggressor;
-    return { type: 'raise', to: finalizeTo(s, la, s.currentBet * (ip ? 3 : 4)), meta: { label: 'raise' } };
+    return { type: 'raise', to: finalizeTo(s, la, s.currentBet * (ip ? 3 : 4)), meta: { label: 'raise', forced: true } };
   }
   const o = sample(villainPolicy(s, i, p.cards));
   const act = { ...o.act, meta: { label: o.label } };
