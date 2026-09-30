@@ -56,6 +56,8 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 
 - Final pass: 40 hands played in the browser at iPhone 13 size across the Random, Big pots, Blinds, Limpers and 3-bet drills, opening feedback every hand. Automated checks each hand: no sideways scroll on the table or the feedback sheet, no "undefined"/"NaN"/"null" text, no [HHP] tag without a source, no console or page errors. All clean. Feedback opened in 103ms median, 256ms at the 90th percentile, 423ms worst. Device storage after 40 hands was about 384K characters (replay data and full coach text are kept for the last 50 hands only). One layout fix from reading the screenshots: villain labels in the Hands cards were cut off with "…" on the phone ("Tight · pa…"); they now wrap. Nothing else looked wrong in the screenshots or the sampled full text.
 
+- Item 14's deploy run went red: the item 12 LJ test picked a random LJ open, and about 1 time in 70 that hand is short-stacked, so it (correctly) used the 100bb chart while the test still expected the 200bb source tag. The deploy step was skipped, so the live site stayed on item 13's build and never broke. Fixed by making that test pick a deep LJ open (the 100bb chart has its own test); the suite ran clean 5 times in a row before the push.
+
 ## Decisions for Joan
 
 (defaults picked while you were away; each is [OUTSIDE SOURCE] or "default, Joan to review")

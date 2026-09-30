@@ -120,11 +120,12 @@ test('LJ opens use the compiled HHP chart [2025-02-18 HHP]', () => {
   let found = null;
   for (let k = 0; k < 3000 && !found; k++) {
     const s = createHand({ drill: 'random', ranges });
-    if (s.players[s.heroIdx].pos === 'LJ' && s.spot.kind === 'RFI') found = s;
+    // A deep one (the 100bb chart has its own test below).
+    if (s.players[s.heroIdx].pos === 'LJ' && s.spot.kind === 'RFI' && openEffectiveBB(s, s.heroIdx) >= 150) found = s;
   }
-  assert.ok(found, 'dealt an LJ open');
+  assert.ok(found, 'dealt a deep LJ open');
   const spot = classifySpot(found, found.heroIdx);
-  assert.equal(spot.chart, openEffectiveBB(found, found.heroIdx) < 150 ? LJ_CHART_100 : LJ_CHART);
+  assert.equal(spot.chart, LJ_CHART);
   assert.equal(spot.exact, true);
   const g = gradeDecision({ ranges, spot, code: found.heroCode, action: 'raise' });
   assert.equal(g.source, 'HHP');
