@@ -453,3 +453,4 @@ details.coach-d > summary { cursor: pointer; font-weight: 600; color: var(--blue
 .fb-qi .qs { font-weight: 800; color: var(--blue); }
 .fb-qi .qv { font-weight: 700; }
 .fb-verdict { font-size: 14.5px; }
+.fb-known { border-left: 3px solid var(--amber); padding-left: 8px; }

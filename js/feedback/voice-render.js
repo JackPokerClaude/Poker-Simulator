@@ -7,7 +7,7 @@ import { CLASSES, CLASS_KEYS, CLASS_LABEL } from '../range/classes.js';
 import { cardsPretty } from '../engine/cards.js';
 import {
   voiceFor, HTML, openerText, villainPhrase, rangeQuestion, preflopRangeText, streetRangeText, bucketsText, changeText, whyText, widenText, claimText, versusText,
-  whatIfIntro, alsoIntro, alsoRuleText, alsoCatalogText, alsoNothing, gradeText, youDid, verdictText, sizeText, splitText, mathNoteText, quickTakeHead, optionTitle, optionSummary, classLines, whoDoesWhat, wantCallsText, nextText, lookHead, prosText, consText,
+  whatIfIntro, knownLeakText, alsoIntro, alsoRuleText, alsoCatalogText, alsoNothing, gradeText, youDid, verdictText, sizeText, splitText, mathNoteText, quickTakeHead, optionTitle, optionSummary, classLines, whoDoesWhat, wantCallsText, nextText, lookHead, prosText, consText,
 } from './voice.js';
 import { coachReport } from './coach-report.js';
 import { preflopMark } from './marks.js';
@@ -124,13 +124,13 @@ function decisionHTML(pt, h, k, v) {
     ${step(5, 'Something else worth remembering', alsoVoice(a.also, v, slot))}</div>`;
 }
 
-function endSectionHTML(fb) {
+function endSectionHTML(h, fb, v) {
   const e = fb.end;
   const leakHTML = e.leaks.length ? e.leaks.map((l) => `<span class="leak">${esc(l.tag)}${l.repeats ? ` <b>🔁 ${ord(l.repeats + 1)} time in your last 50 hands</b>` : ''}</span>`).join('') : '<span class="muted">No leaks this hand.</span>';
   return `<section class="fb-sec fb-end"><h3>End of hand</h3>
     <div class="fb-take">${esc(e.takeaway)}</div>
     <div class="fb-line"><b>Leak tags:</b> ${leakHTML}</div>
-    ${e.known.map((k) => `<div class="fb-line"><b>Your known leak: ${esc(k.title)}.</b> ${esc(k.text)} <span class="tag">${esc(k.tag)}</span></div>`).join('')}
+    ${e.known.map((k, n) => `<div class="fb-line fb-known">${knownLeakText(HTML, v, `end.k${n}`, k, `$${h.stakes.sb}/$${h.stakes.bb}`)}</div>`).join('')}
     ${e.whole.map((x) => `<details class="fb-more"><summary><b>For the whole hand:</b> ${esc(x.title)}</summary>${x.fields.map((f) => `<div class="fb-line"><b>${esc(f.name)}:</b> ${esc(f.text)}</div>`).join('')}<div class="tag">${esc(x.tag)}</div></details>`).join('')}
   </section>`;
 }
@@ -159,7 +159,7 @@ export function voiceFeedbackHTML(h, fb, { resultLine = '', handsHTML = '', grad
   const quick = qt.length ? `<div class="fb-quick"><div class="fb-qh">${esc(quickTakeHead(v))}</div>${qt.map((x) => `<div class="fb-qi"><span class="qs">${esc(x.street)}</span> ${x.mark} you ${esc(x.did)} <span class="qv">→ ${esc(x.verdict)}</span></div>`).join('')}</div>` : '';
   return `<div class="fb-voice"><div class="fb-open">${openerText(HTML, v, openerData(h, fb))}</div>${quick}<div class="resultbox">${esc(resultLine)}</div>
     <h3>Hands</h3><div class="hands-grid">${handsHTML}</div>
-    ${preflopSectionHTML(h, fb, v, gradeHTML)}${streets}${endSectionHTML(fb)}</div>`;
+    ${preflopSectionHTML(h, fb, v, gradeHTML)}${streets}${endSectionHTML(h, fb, v)}</div>`;
 }
 
 // Copy for coach in the voice: the hand data plus the spoken review.

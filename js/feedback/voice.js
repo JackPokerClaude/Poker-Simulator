@@ -260,3 +260,10 @@ export const alsoIntro = (v, slot, n) => (n > 1
 export const alsoRuleText = (f, r) => `${f.b(`${r.title}.`)} ${f.q(r.quote)}${f.tag(r.tag)}`;
 export const alsoCatalogText = (f, c) => `${f.b(`Your read on a ${c.name.replace(/\s*\(.*$/, '').toLowerCase()}, ${c.field.toLowerCase()}:`)} ${f.t(c.text)}${f.tag(c.tag)}`;
 export const alsoNothing = (v, slot) => v.pick(`${slot}.an`, ['Nothing else in the brain covers this spot.', 'That\'s it, nothing else in the brain on this one.', 'Nothing more from the brain here.']);
+
+// ---------------------------------------------------------------- g) your known leak ([YOUR LOG], never HHP)
+// Your own pattern from your own session log: a heads-up, not coaching content.
+export function knownLeakText(f, v, slot, k, stakes) {
+  const lead = v.pick(`${slot}.kl`, ['Heads up, this one\'s about you, from your own log:', 'Real talk, from your own session log:', 'Quick heads-up about your pattern (your log, not HHP):']);
+  return `${lead} ${f.b(`${k.title}.`)} ${f.t(k.text)}${f.tag(k.tag)} ${v.pick(`${slot}.ks`, ['This hand is at {s}, the stakes your log flags.', 'And this one\'s at {s}.', 'This hand: {s}.']).replace('{s}', f.t(stakes))}`;
+}
