@@ -1,5 +1,5 @@
 // Prints coach-voice reviews of fixture hands, one line per block, grids left out.
-//   node tools/voice-sample.mjs [indexes, e.g. 0,3,6] [--forty] [--coach]
+//   node tools/voice-sample.mjs [indexes, e.g. 0,3,6] [--forty] [--coach] [--plain]
 import { model, brainTexts } from '../tests/setup.mjs';
 import { readFileSync } from 'node:fs';
 import { buildFeedback } from '../js/feedback/engine.js';
@@ -7,6 +7,7 @@ import { rebuildHand } from '../js/feedback/replay.js';
 import { loadBrain, memoryLastGood } from '../js/brain/loader.js';
 import { loadFixtures } from '../tests/fixture-utils.mjs';
 import { voiceFeedbackHTML, voiceCoachReport } from '../js/feedback/voice-render.js';
+import { feedbackHTML } from '../js/feedback/render.js';
 import { gradeHTML } from '../js/feedback/preflop-card.js';
 
 const manifest = JSON.parse(readFileSync(new URL('../config/brain-files.json', import.meta.url), 'utf8'));
@@ -27,5 +28,5 @@ for (const k of which) {
   const h = rebuildHand(x.replay);
   const fb = buildFeedback(h, { model, brain });
   console.log(`===== ${x.why}`);
-  console.log(args.includes('--coach') ? voiceCoachReport(h, fb) : text(voiceFeedbackHTML(h, fb, { gradeHTML })));
+  console.log(args.includes('--coach') ? voiceCoachReport(h, fb) : text((args.includes('--plain') ? feedbackHTML : voiceFeedbackHTML)(h, fb, { gradeHTML })));
 }

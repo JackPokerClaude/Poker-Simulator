@@ -144,3 +144,14 @@ test('voice Copy for coach: hand facts, then per decision his range, options, yo
     }
   }
 });
+
+test('voice: a ⚖ spot never gets "the play" or "what I\'d do" in its verdict step', () => {
+  let n = 0;
+  for (const x of [...varied, ...forty]) for (const s of x.fb.streets) for (const pt of s.points) {
+    if (pt.analysis?.grade.mark !== '⚖') continue;
+    n++;
+    const html = voiceFeedbackHTML(x.h, x.fb, { gradeHTML });
+    for (const m of html.matchAll(/<div class="fb-line fb-verdict">([\s\S]*?)<\/div>/g)) if (m[1].includes('⚖ below')) assert.doesNotMatch(m[1], /the play|what I'd do|the math decides|we go with/i);
+  }
+  assert.ok(n > 0);
+});

@@ -61,7 +61,7 @@ function optionVoice(o, v, slot, isActual = false) {
   const f = HTML;
   const body = [];
   const cl = classLines(f, o, CLASSES, pct);
-  if (cl.length) body.push(`<div class="fb-line"><b>${esc(whoDoesWhat(v, slot))}</b></div><ul class="fb-cls">${cl.map((x) => `<li>${x}</li>`).join('')}</ul>`);
+  if (cl.length) body.push(`<div class="fb-line"><b>${esc(whoDoesWhat(v, slot, o.kind === 'check'))}</b></div><ul class="fb-cls">${cl.map((x) => `<li>${x}</li>`).join('')}</ul>`);
   if (o.wantCalls) body.push(line(wantCallsText(f, v, slot, o.wantCalls)));
   if (o.next) body.push(line(nextText(f, v, slot, o.next)));
   if (o.look) body.push(`<div class="fb-look">${line(lookHead(f, v, slot, o.look))}${o.look.lines.map((l) => line(esc(l))).join('')}<div class="tag">${esc(o.look.tag)}</div></div>`);
@@ -98,7 +98,7 @@ function preflopCardVoice(d, v, slot) {
   const msg = d.verdict === 'situational' ? `<b>HHP's rule:</b> ${esc(noCoachName(d.message).replace(/^SITUATIONAL \(HHP\):\s*/i, ''))}` : esc(noCoachName(d.message));
   return `<div class="grade">
     <div class="row1"><div class="spot">${esc(d.label)}</div><span class="badge ${d.verdict}">${(d.source === 'OUTSIDE' ? OUTSIDE_LABEL : VERDICT_LABEL)[d.verdict]}</span></div>
-    <div class="pmark">${m.mark} ${esc(preflopReact(v, slot, m.mark))} ${esc(m.reason)}</div>
+    <div class="pmark">${m.mark} ${esc(preflopReact(v, slot, m.mark))} ${esc(m.reason)}${/[.!?)]$/.test(m.reason) ? '' : '.'}</div>
     <div class="you">${preflopYouText(f, d)}</div>
     <div class="chart">Chart: ${chartLine}</div>
     <div class="msg">${msg}</div>
@@ -110,7 +110,7 @@ function preflopCardVoice(d, v, slot) {
 function preflopSectionHTML(h, fb, v) {
   const pre = fb.preflop;
   const qs = pre.questions;
-  const qHTML = `<ol class="fb-q">${qs.list.map((x) => `<li><b>${esc(x.q)}</b> ${esc(x.a || '')}</li>`).join('')}</ol><div class="tag">${esc(qs.tag)}</div>${qs.extra.map((x) => `<div class="fb-line"><b>${esc(x.q)}</b> ${esc(x.a)} <span class="tag">${esc(x.tag)}</span></div>`).join('')}`;
+  const qHTML = `${line(esc(v.pick('pre.qs', ['Before you act, run the questions. Here they are, answered for this hand:', 'The checklist, answered for this spot:', 'Same questions every time. Here\'s this hand:'])))}<ol class="fb-q">${qs.list.map((x) => `<li><b>${esc(x.q)}</b> ${esc(x.a || '')}</li>`).join('')}</ol><div class="tag">${esc(qs.tag)}</div>${qs.extra.map((x) => `<div class="fb-line"><b>${esc(x.q)}</b> ${esc(x.a)} <span class="tag">${esc(x.tag)}</span></div>`).join('')}`;
   const points = pre.points.map((pt, k) => {
     const pos = pt.vi != null ? h.players[pt.vi].pos : null;
     const range = pos ? rangeStepVoice(pt, pos, v, `pre${k}`) : `<div class="fb-line muted">${esc(v.pick('pre.nobody', ["Nobody's put money in yet, so everyone behind you still has a full range.", 'Nobody has put money in yet: everyone behind you has a full range.']))}</div>`;
@@ -133,7 +133,7 @@ function decisionHTML(pt, h, k, v) {
   const wIf = a.opts.map((o, n) => optionVoice(o, v, `${slot}.o${n}`)).join('');
   const actualExtra = a.opts.includes(a.actual) ? '' : optionVoice(a.actual, v, `${slot}.oa`, true);
   const vd = a.verdict;
-  const verdict = line(verdictText(HTML, v, slot, vd), 'fb-line fb-verdict')
+  const verdict = line(verdictText(HTML, v, slot, vd, a.grade.mark === '⚖'), 'fb-line fb-verdict')
     + (vd.size ? line(sizeText(HTML, v, slot, vd.size)) : '')
     + (vd.split ? line(splitText(HTML, vd.split)) : '')
     + (vd.math ? line(mathNoteText(HTML, v, slot, vd.math), 'fb-line muted') : '');
@@ -260,7 +260,7 @@ export function voiceCoachReport(h, fb, rulings = {}) {
       a.opts.forEach((o) => opt(o, false));
       if (!a.opts.includes(a.actual)) opt(a.actual, true);
       out.push(`  Your action: ${gradeText(f, v, slot, a, pct)}`);
-      out.push(`  Verdict: ${verdictText(f, v, slot, a.verdict)}`);
+      out.push(`  Verdict: ${verdictText(f, v, slot, a.verdict, a.grade.mark === '⚖')}`);
       if (a.verdict.size) out.push(`  ${sizeText(f, v, slot, a.verdict.size)}`);
       if (a.verdict.split) out.push(`  ${splitText(f, a.verdict.split)}`);
       if (a.verdict.math) out.push(`  ${mathNoteText(f, v, slot, a.verdict.math)}`);

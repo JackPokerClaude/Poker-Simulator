@@ -116,10 +116,12 @@ const SHORT = { cpfs: 'CPFS', thick: 'thick value', thin: 'thin value', highDraw
 export function preflopRangeText(f, v, slot, info) {
   const out = [];
   const [type, style] = info.label.split(' · ');
-  out.push(`${f.t(info.pos)} is ${an(type)} ${f.t(lower1(type))}${style ? ` (${an(style)} ${f.t(style)} after the flop)` : ''}.`);
-  if (info.typeQuote) out.push(`${v.pick(`${slot}.type`, ['Here\'s how HHP sums up this type:', 'HHP on this type:', 'What HHP says about guys like this:'])} ${f.q(info.typeQuote.quote)}${f.tag(info.typeQuote.tag)}.`);
+  const t = lower1(type);
+  const tl = /^(passive|tight|aggressive)$/.test(t) ? `${t} player` : t;
+  out.push(`${f.t(info.pos)} is ${an(tl)} ${f.t(tl)}${style ? ` (${an(style)} ${f.t(style)} after the flop)` : ''}.`);
+  if (info.typeQuote) out.push(`${v.pick(`${slot}.type`, ['Here\'s how HHP sums up this type:', 'HHP on this type:', 'What HHP says about guys like this:'])} ${f.q(info.typeQuote.quote)}${f.tag(info.typeQuote.tag)}`);
   if (info.keep) out.push(`He ${f.t(info.words.join(', then '))}, ${v.pick(`${slot}.keep`, ['and that leaves him about', 'which keeps about', 'so he\'s down to about'])} ${f.t(info.keep.pct)} of all hands (${f.t(`${info.keep.combos} of ${info.keep.full}`)} combos).`);
-  if (info.bigOpen) out.push(`And look at the size, his open was unusually big: ${f.q(info.bigOpen.quote)}${f.tag(info.bigOpen.tag)}.`);
+  if (info.bigOpen) out.push(`And look at the size, his open was unusually big: ${f.q(info.bigOpen.quote)}${f.tag(info.bigOpen.tag)}`);
   out.push(v.pick(`${slot}.grid`, ['The grid is his own strategy replayed, so it\'s the range he\'s actually playing.', 'The grid replays his own strategy, the one he actually plays from.', 'That grid is his real strategy replayed, not a guess.']));
   return out.join(' ');
 }
@@ -130,7 +132,7 @@ export function streetRangeText(f, v, slot, info) {
   if (!info.acted) out.push(`He hasn't acted on the ${f.t(info.street)} yet when you decide, so this is still his range from the ${info.street === 'flop' ? 'preflop action' : 'last street'}.`);
   for (const m of info.moves) out.push(`${v.pick(`${slot}.move`, ['When', 'After'])} ${f.t(m.what)}, the big mover is ${f.t(classWord(m.label))}: ${f.t(`${m.from} → ${m.to}`)}.`);
   const [a, b] = info.top;
-  out.push(`${v.pick(`${slot}.top`, ['So he\'s mostly', 'Bottom line, he\'s mostly', 'That makes him mostly'])} ${f.t(classWord(a.label))} (${f.t(a.share)}) and ${f.t(classWord(b.label))} (${f.t(b.share)}), with ${f.t(info.combosLeft)} weighted combos left.`);
+  out.push(`${v.pick(`${slot}.top`, ['Net result: he\'s mostly', 'Bottom line, he\'s mostly', 'That makes him mostly'])} ${f.t(classWord(a.label))} (${f.t(a.share)}) and ${f.t(classWord(b.label))} (${f.t(b.share)}), with ${f.t(info.combosLeft)} weighted combos left.`);
   return out.join(' ');
 }
 
@@ -143,7 +145,7 @@ export function bucketsText(f, v, slot, shares, keys) {
 // One of his actions: combos before → after, the class shifts, why, the brain line behind it.
 export function changeText(f, v, slot, c, moved) {
   const shift = moved.length ? ` ${v.pick(`${slot}.shift`, ['Watch the buckets move:', 'Here\'s what that does to his buckets:', 'Buckets:'])} ${f.t(moved.join(', '))}.` : '';
-  return `${f.b(`${c.what}.`)} ${v.pick(`${slot}.combos`, ['His range goes', 'That moves him', 'Combos go'])} ${f.t(`${Math.round(c.combos[0])} → ${Math.round(c.combos[1])}`)} combos (${f.t(`${Math.round(c.pctStart * 100)}%`)} of his starting range).${shift}`;
+  return `${f.b(`${c.what}.`)} ${v.pick(`${slot}.combos`, ['His range goes', 'That moves him', 'That takes him'])} ${f.t(`${Math.round(c.combos[0])} → ${Math.round(c.combos[1])}`)} combos (${f.t(`${Math.round(c.pctStart * 100)}%`)} of his starting range).${shift}`;
 }
 export function whyText(f, v, slot, reason) {
   const quote = reason.quote ? ` ${v.pick(`${slot}.bq`, ['The brain backs it:', 'Straight from the brain:', 'The brain:'])} ${f.q(reason.quote)}` : '';
@@ -162,7 +164,7 @@ const VERB = { fold: 'folds', call: 'calls', raise: 'raises', check: 'checks', b
 export function whatIfIntro(f, v, slot, { eq, combos, exact, runouts, multiway, pct }) {
   const mw = multiway ? `${v.pick(`${slot}.mw`, ['It\'s multiway, so heads up:', 'Multiway pot, so keep in mind:'])} his answers treat him as next to act. ` : '';
   const how = exact ? 'exact' : `${runouts} sampled runouts`;
-  return `${mw}${v.pick(`${slot}.wi`, ['Now the fun part: what happens if...?', 'So, what happens if...?', 'Let\'s run the options.', 'Okay, what happens if you...'])} Your equity vs this range: ${f.b(pct(eq))} (${f.t(`${combos} combos, ${how}`)}).`;
+  return `${mw}${v.pick(`${slot}.wi`, ['Now the fun part.', 'Let\'s run the options.', 'Okay, let\'s play it out.', 'Each option, one at a time.'])} Your equity vs this range: ${f.b(pct(eq))} (${f.t(`${combos} combos, ${how}`)}).`;
 }
 // "If you bet small ($35, 35% pot)" / "What you actually did: bet an in-between size ($59)"
 export function optionTitle(title, isActual) {
@@ -183,7 +185,9 @@ export function classLines(f, o, classes, pct) {
     return `His ${f.t(name)} (${f.t(pct(x.share))} of his range): ${f.t(acts.join(', ') || 'does nothing')}.`;
   });
 }
-export const whoDoesWhat = (v, slot) => v.pick(`${slot}.who`, ['Who does what:', 'Here\'s who calls, who folds, who raises:', 'Class by class:']);
+export const whoDoesWhat = (v, slot, check = false) => v.pick(`${slot}.who`, check
+  ? ['Who bets, who checks:', 'Class by class:', 'What each class does when you check:']
+  : ['Who does what:', 'Here\'s who calls, who folds, who raises:', 'Class by class:']);
 export const wantCallsText = (f, v, slot, t) => `${v.pick(`${slot}.wc`, ['Do you even want the calls?', 'Do you want the calls?', 'Ask yourself: do you want the calls?'])} ${f.t(t)}`;
 export const nextText = (f, v, slot, t) => `${v.pick(`${slot}.nx`, ['Next street:', 'Then, next street:', 'Looking one street ahead:'])} ${f.t(t)}`;
 export const lookHead = (f, v, slot, look) => `${v.pick(`${slot}.lk`, ['And on the', 'Now, on the', 'On the'])} ${f.t(look.street)} that actually came (${f.b(look.card)}):`;
@@ -204,7 +208,7 @@ const REACT = {
   close: ['This one\'s close, so don\'t lose sleep over it.', 'This was close, here\'s why.', 'Honestly? Close spot.', 'Not a big deal either way, it\'s close.'],
   sizing: ['Right idea, wrong size.', 'Love the idea, not the size.', 'Half right.', 'Close, but the size is off.'],
   '⚠️': ['Close, but not quite.', 'Not bad, but not the line.', 'Hmm, close one.', 'I don\'t hate it, but it\'s not the line.'],
-  '❌': ['Okay, this one hurts a little.', 'We have to talk about this one.', 'Hold on, hold on.', 'I don\'t like it.', 'Yeah, no.', 'This is the one to fix.'],
+  '❌': ['Okay, this one hurts.', 'We have to talk about this one.', 'Hold on, hold on.', 'I don\'t like it.', 'Yeah, no.', 'This is the one to fix.'],
   '⚖': ['No grade on this one, on purpose.', 'This one doesn\'t get a grade.', 'No grade here.'],
 };
 // The specific thing that was right, from the verdict's own source.
@@ -226,9 +230,12 @@ export function gradeText(f, v, slot, a, pct) {
 
 // ---------------------------------------------------------------- e) the verdict, with its source
 // An [HHP] verdict is "the play" with the brain's words; a math verdict says the math decides.
-export function verdictText(f, v, slot, vd) {
+// In a ⚖ / ♣ spot the line is shown for reference only, with a neutral lead: no "the play".
+export function verdictText(f, v, slot, vd, conflicted = false) {
   const hhp = /^\[HHP\]/.test(vd.source);
-  const lead = hhp
+  const lead = conflicted
+    ? v.pick(`${slot}.vd`, ['No grade, and the ⚖ below stays open. For reference only, the verdict line:', 'For reference only (the ⚖ below is still open, so nothing is graded):'])
+    : hhp
     ? v.pick(`${slot}.vd`, ['Here\'s what I\'d do:', 'Here\'s the play:', 'The play here:'])
     : vd.size
       ? v.pick(`${slot}.vd`, ['The math says bet, and the brain\'s sizing rule picks the size:', 'No HHP line on whether to bet, so the math decides that; the brain\'s sizing rule picks the size:'])

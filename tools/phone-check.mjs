@@ -67,7 +67,11 @@ for (let n = 0; n < N; n++) {
     if (r.width && r.right > vw + 1 && !el.closest('.mdt, .fb-bt')) { bad.push(`sticks out: ${el.tagName}.${el.className} (${Math.round(r.right)}px)`); break; }
   }
   const text = body.innerText;
-  if (/\bundefined\b|\bNaN\b|\bnull\b/.test(text)) bad.push(`bad text: ${/.{0,30}(undefined|NaN|null).{0,30}/.exec(text)[0]}`);
+  // Playbook text shown verbatim (conflict boxes) can use these words on purpose; check the rest.
+  const own = body.cloneNode(true);
+  own.querySelectorAll('.fb-cbody, .fb-conflict .mdp, .fb-conflict .mdli, .mdt').forEach((x) => x.remove());
+  const ownText = own.textContent;
+  if (/\bundefined\b|\bNaN\b|\bnull\b/.test(ownText)) bad.push(`bad text: ${/.{0,30}(undefined|NaN|null).{0,30}/.exec(ownText)[0]}`);
   if (/\[HHP\](?!\s+\S)/.test(text)) bad.push('[HHP] tag without a source');
   if (view === 'voice' && quick && quickBottom > window.innerHeight) bad.push(`quick take ends below the first screen (${Math.round(quickBottom)}px)`);
   results.push({ n, drill: DRILLS[n % DRILLS.length], ms: Math.round(ms), chars: text.length, quickBottom: quickBottom && Math.round(quickBottom), bad });
