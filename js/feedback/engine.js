@@ -290,7 +290,7 @@ const lineOf = (kind, action, pot) => {
   if (action?.type === 'bet') { const c = betSizeClass(action.to, pot); return c === 'small' ? 'bet-small' : c === 'big' ? 'bet-big' : 'bet-inbetween'; }
   return action?.type || kind;
 };
-const LINE_LABEL = { fold: 'Fold', call: 'Call', check: 'Check', raise: 'Raise', 'bet-small': 'Bet small', 'bet-big': 'Bet big', 'bet-inbetween': 'Bet an in-between size', bet: 'Bet' };
+export const LINE_LABEL = { fold: 'Fold', call: 'Call', check: 'Check', raise: 'Raise', 'bet-small': 'Bet small', 'bet-big': 'Bet big', 'bet-inbetween': 'Bet an in-between size', bet: 'Bet' };
 
 function sizingByRule(model, shares, opts, heroBucket) {
   const strong = shares ? groupShare(shares, 'strongValue') : 1;
@@ -527,33 +527,41 @@ function versusRange(hero, board, w) {
   return { beat: win / t, lose: lose / t, chop: tie / t };
 }
 
-function preflopParagraph(h, model, vi, acts, full) {
+// The paragraph string (plain view) and its parts (the voice layer speaks them).
+function preflopParts(h, model, vi, acts, full) {
   const p = h.players[vi];
   const last = [...acts].reverse().find((a) => a.label !== 'fold') || acts[acts.length - 1];
   const tq = typeQuote(model, p.type);
+  const info = { pos: p.pos, label: villainLabel(p), type: p.type, typeQuote: tq, words: acts.map((a) => ACT_WORD[a.label] || a.label), keep: null, bigOpen: null };
   const parts = [`${p.pos} is a ${villainLabel(p)}.`];
   if (tq) parts.push(`HHP on this type: “${tq.quote}” ${tq.tag}.`);
-  if (last) parts.push(`He ${acts.map((a) => ACT_WORD[a.label] || a.label).join(', then ')}: that keeps about ${pct(total(last.after) / full)} of all hands (${Math.round(total(last.after))} of ${Math.round(full)} combos).`);
+  if (last) {
+    info.keep = { pct: pct(total(last.after) / full), combos: Math.round(total(last.after)), full: Math.round(full) };
+    parts.push(`He ${acts.map((a) => ACT_WORD[a.label] || a.label).join(', then ')}: that keeps about ${info.keep.pct} of all hands (${info.keep.combos} of ${info.keep.full} combos).`);
+  }
   if (acts.some((a) => a.label === 'raise-big')) {
     const rr = model.rec('rules.bigOpen');
-    if (rr?.tag === 'HHP') parts.push(`His open was unusually big: “${rr.src.quote}” ${sourceTag(rr)}.`);
+    if (rr?.tag === 'HHP') { info.bigOpen = { quote: rr.src.quote, tag: sourceTag(rr) }; parts.push(`His open was unusually big: “${rr.src.quote}” ${sourceTag(rr)}.`); }
   }
   parts.push('The grid replays his own strategy, the one he actually plays from.');
-  return parts.join(' ');
+  return { text: parts.join(' '), info };
 }
 
-function streetParagraph(h, vi, changes, shares, street, combosLeft) {
+function streetParts(h, vi, changes, shares, street, combosLeft) {
   const p = h.players[vi];
   const parts = [];
   const mine = changes.filter((c) => c.street === street);
+  const info = { pos: p.pos, street, acted: mine.length > 0, moves: [], top: [], combosLeft };
   if (!mine.length) parts.push(`${p.pos} hasn't acted on the ${street} yet when you decide, so this is his range from the ${street === 'flop' ? 'preflop action' : 'last street'}.`);
   for (const c of mine) {
     const big = CLASS_KEYS.reduce((m, x) => (Math.abs(c.after[x] - c.before[x]) > Math.abs(c.after[m] - c.before[m]) ? x : m), CLASS_KEYS[0]);
+    info.moves.push({ what: c.what, cls: big, label: CLASS_LABEL[big], from: pct(c.before[big]), to: pct(c.after[big]) });
     parts.push(`${c.what}: ${CLASS_LABEL[big]} ${pct(c.before[big])} → ${pct(c.after[big])}.`);
   }
   const top = [...CLASS_KEYS].sort((a, b) => shares[b] - shares[a]).slice(0, 2);
+  info.top = top.map((k) => ({ cls: k, label: CLASS_LABEL[k], share: pct(shares[k]) }));
   parts.push(`Mostly ${CLASS_LABEL[top[0]].toLowerCase()} (${pct(shares[top[0]])}) and ${CLASS_LABEL[top[1]].toLowerCase()} (${pct(shares[top[1]])}); ${combosLeft} weighted combos left.`);
-  return parts.join(' ');
+  return { text: parts.join(' '), info };
 }
 
 // HHP's six questions, answered for this hand.
@@ -740,7 +748,9 @@ export function buildFeedback(h, { model, brain, history = [] }) {
       if (last) {
         const mix = preflopActionMix(last);
         pt.grid = { mode: 'action', cells: actionCells({ mix, before: last.before, dead }), combos: `${Math.round(total(last.after))} combos (${pct(total(last.after) / full)} of his hands)`, detail: { actionMix: mix, before: last.before, dead } };
-        pt.paragraph = preflopParagraph(h, model, vi, acts, full);
+        const pp = preflopParts(h, model, vi, acts, full);
+        pt.paragraph = pp.text;
+        pt.para = pp.info;
       } else pt.paragraph = `${h.players[vi].pos} hasn't acted yet: his range is every hand.`;
       pt.changes = rangeChanges(h, model, vi, r, lastN, d.n, null);
     } else pt.paragraph = 'Nobody has put money in yet: everyone behind you has a full range.';
@@ -797,7 +807,7 @@ export function buildFeedback(h, { model, brain, history = [] }) {
       const pt = {
         street, vi, n: toN, shares, changes,
         grid: { mode: 'class', cells: rangeCells({ w, prev, classes, dead }), shares, combos: `${left} weighted combos left (${pct(total(w) / total(r.start.preflop))} of his starting range)`, detail: { w, prev, classes, dead } },
-        paragraph: streetParagraph(h, vi, changes, shares, street, left),
+        ...(() => { const sp = streetParts(h, vi, changes, shares, street, left); return { paragraph: sp.text, para: sp.info }; })(),
         versus: versusRange(heroCards, deal.board, w),
       };
       if (d) pt.analysis = decisionAnalysis(h, d, model, brain, vi, tags, w, classes, shares);
