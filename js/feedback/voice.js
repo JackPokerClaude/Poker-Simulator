@@ -156,3 +156,36 @@ export function claimText(f, x) {
     : `⚖ Here the brain and his strategy don't agree, and this review doesn't pick one (not resolved). The brain says ${f.q(x.quote)}${f.tag(x.tag)}; his strategy gives ${f.t(x.got)}.`;
 }
 export const versusText = (f, v, slot, vs, pct) => `${v.pick(`${slot}.vs`, ['Where do you stand right now?', 'And your hand against all that?', 'How does your hand stack up right now?'])} You beat ${f.t(pct(vs.beat))} of his range, lose to ${f.t(pct(vs.lose))}, chop ${f.t(pct(vs.chop))}.`;
+
+// ---------------------------------------------------------------- c) what happens if
+const VERB = { fold: 'folds', call: 'calls', raise: 'raises', check: 'checks', bet: 'bets' };
+export function whatIfIntro(f, v, slot, { eq, combos, exact, runouts, multiway, pct }) {
+  const mw = multiway ? `${v.pick(`${slot}.mw`, ['It\'s multiway, so heads up:', 'Multiway pot, so keep in mind:'])} his answers treat him as next to act. ` : '';
+  const how = exact ? 'exact' : `${runouts} sampled runouts`;
+  return `${mw}${v.pick(`${slot}.wi`, ['Now the fun part: what happens if...?', 'So, what happens if...?', 'Let\'s run the options.', 'Okay, what happens if you...'])} Your equity vs this range: ${f.b(pct(eq))} (${f.t(`${combos} combos, ${how}`)}).`;
+}
+// "If you bet small ($35, 35% pot)" / "What you actually did: bet an in-between size ($59)"
+export function optionTitle(title, isActual) {
+  if (isActual) return `What you actually did: ${lower1(title)}`;
+  return `If you ${lower1(title)}`;
+}
+export function optionSummary(o, pct) {
+  const said = o.mix ? Object.entries(o.mix).filter(([, p]) => p > 0.005).sort((a, b) => b[1] - a[1]).map(([r, p]) => `${VERB[r] || r} ${pct(p)}`).join(', ') : '';
+  return o.kind === 'fold' ? 'you give up the pot' : o.kind === 'call' ? `you need ${pct(o.need)}, you have ${pct(o.eqAll)}` : o.closes ? 'it checks through' : said ? `he ${said}` : '';
+}
+// One line per class: "His air (40% of his range): folds 80%, calls 20%."
+export function classLines(f, o, classes, pct) {
+  if (!o.byClass) return [];
+  return classes.filter((c) => o.byClass[c.key]).map((c) => {
+    const x = o.byClass[c.key];
+    const acts = ['fold', 'call', 'raise', 'check', 'bet'].filter((r) => x[r] > 0.005).map((r) => `${VERB[r]} ${pct(x[r])}`);
+    const name = /CPFS/.test(c.label) ? 'can-play-for-stacks hands' : c.label.toLowerCase();
+    return `His ${f.t(name)} (${f.t(pct(x.share))} of his range): ${f.t(acts.join(', ') || 'does nothing')}.`;
+  });
+}
+export const whoDoesWhat = (v, slot) => v.pick(`${slot}.who`, ['Who does what:', 'Here\'s who calls, who folds, who raises:', 'Class by class:']);
+export const wantCallsText = (f, v, slot, t) => `${v.pick(`${slot}.wc`, ['Do you even want the calls?', 'Do you want the calls?', 'Ask yourself: do you want the calls?'])} ${f.t(t)}`;
+export const nextText = (f, v, slot, t) => `${v.pick(`${slot}.nx`, ['Next street:', 'Then, next street:', 'Looking one street ahead:'])} ${f.t(t)}`;
+export const lookHead = (f, v, slot, look) => `${v.pick(`${slot}.lk`, ['And on the', 'Now, on the', 'On the'])} ${f.t(look.street)} that actually came (${f.b(look.card)}):`;
+export const prosText = (f, v, slot, list) => `${v.pick(`${slot}.pro`, ['The good:', 'What it has going for it:', 'Upside:'])} ${f.t(list.join(' '))}`;
+export const consText = (f, v, slot, list) => `${v.pick(`${slot}.con`, ['The catch:', 'The downside:', 'What can go wrong:'])} ${f.t(list.join(' '))}`;

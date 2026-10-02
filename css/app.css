@@ -445,3 +445,4 @@ details.coach-d > summary { cursor: pointer; font-weight: 600; color: var(--blue
 .fb-ask { font-weight: 800; }
 .fb-grid { margin: 6px 0; }
 .fb-grid summary { cursor: pointer; color: var(--blue); font-weight: 700; font-size: 13.5px; }
+.fb-cls { margin: 2px 0 6px 18px; padding: 0; font-size: 13.5px; line-height: 1.45; }

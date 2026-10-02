@@ -1,11 +1,14 @@
 // The coach-voice feedback screen. Same feedback object, same order, same grids, tables and
 // numbers as the plain view (render.js); the words around them are spoken by voice.js.
 // Pure string building (no DOM access).
-import { esc, step, alsoHTML, optionHTML, numbersHTML, classInfoHTML, setRulings, ord, pct } from './render.js';
+import { esc, step, alsoHTML, numbersHTML, classInfoHTML, setRulings, ord, pct, evText } from './render.js';
 import { gridHTML, comboList } from '../ui/grid.js';
-import { CLASS_KEYS, CLASS_LABEL } from '../range/classes.js';
+import { CLASSES, CLASS_KEYS, CLASS_LABEL } from '../range/classes.js';
 import { cardsPretty } from '../engine/cards.js';
-import { voiceFor, HTML, openerText, villainPhrase, rangeQuestion, preflopRangeText, streetRangeText, bucketsText, changeText, whyText, widenText, claimText, versusText } from './voice.js';
+import {
+  voiceFor, HTML, openerText, villainPhrase, rangeQuestion, preflopRangeText, streetRangeText, bucketsText, changeText, whyText, widenText, claimText, versusText,
+  whatIfIntro, optionTitle, optionSummary, classLines, whoDoesWhat, wantCallsText, nextText, lookHead, prosText, consText,
+} from './voice.js';
 import { coachReport } from './coach-report.js';
 import { involvedVillains, effectiveStack, describeAction } from '../engine/coach.js';
 import { typeLabel, styleLabel } from '../villains/model.js';
@@ -50,6 +53,24 @@ function rangeStepVoice(pt, pos, v, slot) {
   return out.join('');
 }
 
+// c) One option, spoken: if you do this, here's what he does, class by class, and what it's worth.
+// The math lines and the strategy numbers are the engine's, unchanged, behind their own taps.
+function optionVoice(o, v, slot, isActual = false) {
+  const f = HTML;
+  const body = [];
+  const cl = classLines(f, o, CLASSES, pct);
+  if (cl.length) body.push(`<div class="fb-line"><b>${esc(whoDoesWhat(v, slot))}</b></div><ul class="fb-cls">${cl.map((x) => `<li>${x}</li>`).join('')}</ul>`);
+  if (o.wantCalls) body.push(line(wantCallsText(f, v, slot, o.wantCalls)));
+  if (o.next) body.push(line(nextText(f, v, slot, o.next)));
+  if (o.look) body.push(`<div class="fb-look">${line(lookHead(f, v, slot, o.look))}${o.look.lines.map((l) => line(esc(l))).join('')}<div class="tag">${esc(o.look.tag)}</div></div>`);
+  if (o.pros?.length) body.push(line(prosText(f, v, slot, o.pros)));
+  if (o.cons?.length) body.push(line(consText(f, v, slot, o.cons)));
+  body.push(`<details class="fb-nums"><summary>${esc(v.pick(`${slot}.math`, ['Show the math', 'The math, step by step', 'How the EV adds up']))}</summary><div class="fb-math">${o.lines.map((l) => `<div>${esc(l)}</div>`).join('')}</div></details>`);
+  if (o.numbers?.length) body.push(`<div class="fb-line muted">His answers come from his strategy for this style:</div>${numbersHTML(o.numbers)}`);
+  body.push('<div class="tag">[OUTSIDE SOURCE] math vs his real range and his real strategy</div>');
+  return `<details class="fb-opt"><summary><span class="ot"><b>${esc(optionTitle(o.title, isActual))}</b><span class="os">${esc(optionSummary(o, pct))}</span></span><span class="ev">EV ${esc(evText(o.ev))}</span></summary>${body.join('')}</details>`;
+}
+
 function preflopSectionHTML(h, fb, v, gradeHTML) {
   const pre = fb.preflop;
   const qs = pre.questions;
@@ -73,12 +94,12 @@ function decisionHTML(pt, h, k, v) {
   const slot = `${pt.street}${k}`;
   const head = k === 0 ? `Your decision${a ? `: you ${esc(a.actual.title.toLowerCase())}` : ''}` : `Then${a ? `: you ${esc(a.actual.title.toLowerCase())}` : ''}`;
   if (!a) return `<div class="fb-dec"><div class="fb-dh">No decision for you on this street</div>${step(1, esc(rangeQuestion(v, `${slot}.q`, pos)), rangeStepVoice(pt, pos, v, slot))}</div>`;
-  const wIf = a.opts.map((o) => optionHTML({ ...o, open: false })).join('');
-  const actualExtra = a.opts.includes(a.actual) ? '' : optionHTML({ ...a.actual, title: `What you did: ${a.actual.title}` });
+  const wIf = a.opts.map((o, n) => optionVoice(o, v, `${slot}.o${n}`)).join('');
+  const actualExtra = a.opts.includes(a.actual) ? '' : optionVoice(a.actual, v, `${slot}.oa`, true);
   const verdictSize = a.verdict.size ? `<div class="fb-line"><b>Size:</b> his range is ${esc(a.verdict.size.why)}. “${esc(a.verdict.size.quote)}” <span class="tag">${esc(a.verdict.size.tag)}</span></div>` : '';
   return `<div class="fb-dec"><div class="fb-dh">${head}</div>
     ${step(1, esc(rangeQuestion(v, `${slot}.q`, pos)), rangeStepVoice(pt, pos, v, slot))}
-    ${step(2, 'What happens if…?', `${a.multiway ? '<div class="fb-line muted">Multiway: his answers treat him as next to act.</div>' : ''}<div class="fb-line">Your equity vs this range: <b>${pct(a.eq.total)}</b> (${a.eq.combos} combos, ${a.eq.exact ? 'exact' : `${a.eq.runouts} sampled runouts`}).</div>${wIf}${actualExtra}`)}
+    ${step(2, 'What happens if…?', `${line(whatIfIntro(HTML, v, slot, { eq: a.eq.total, combos: a.eq.combos, exact: a.eq.exact, runouts: a.eq.runouts, multiway: a.multiway, pct }))}${wIf}${actualExtra}`)}
     ${step(3, 'Your action', `<div class="fb-line">${a.grade.mark} <b>You: ${esc(a.actual.title)}.</b> ${esc(a.grade.text)}</div>`)}
     ${step(4, 'The verdict', `<div class="fb-line"><b>${esc(a.verdict.title)}.</b> ${esc(a.verdict.why)} <span class="tag">${esc(a.verdict.source)}</span></div>${verdictSize}${a.verdict.split ? `<div class="fb-line"><b>Brain lines disagree here</b> (no ⚖ in the playbook), so the math decides: ${a.verdict.split.map((x) => `${esc(x.title)} → ${esc(x.line.toLowerCase())} <span class="tag">${esc(x.tag)}</span>`).join('; ')}.</div>` : ''}${a.verdict.math ? `<div class="fb-line muted">${esc(a.verdict.math)}</div>` : ''}`)}
     ${step(5, 'Something else worth remembering', alsoHTML(a.also))}</div>`;
