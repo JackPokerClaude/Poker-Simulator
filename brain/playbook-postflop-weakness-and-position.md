@@ -152,6 +152,8 @@ The per-villain cheat sheets are in `playbook-villains.md` (2026 videos) and `pl
 ## 5. Out of position, as the preflop caller [08-18]
 Todd's #2 leak (an HHP student, not Joan): too little aggression out of position [09-15]. Marc's flowchart, by what his range looks like (section 1).
 
+**OUT of position as the preflop RAISER, the flop default [undated HHP: start-over]** (cross-reference; section 5 below is the caller's chart). Live cash, about 2/5. Ask: **"Will he over-stab or telegraph with his sizing?"** HHP says "90 plus%" of live recs do. If yes, **check your entire range** and, when he stabs, "big boy check-raise", then pile money in over two streets (K-7-2 after we open the CO with 77 and a rec BTN calls: he can't fold Kx or flush draws to the check-raise). Vs a pro who won't over-stab or telegraph, keep it simple, "not trying to play some complex mixed strategy": **range-bet boards that favor you** (K-7-2, King-high and disconnected) and **range-check boards that favor him** (9-7-6, connected, "slightly better for the opponent").
+
 **Flop, facing a c-bet**
 | Your hand | Vs a STRONG range | Vs a WEAK range |
 |---|---|---|

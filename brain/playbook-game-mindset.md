@@ -18,6 +18,8 @@
 
 *Created 2026-09-28, from 3 approved notes. Last merged 2026-09-29 (batch 12 added). ⚖ = two views side by side (Joan keeps both, no winner).*
 
+*Batch 13 (2026-10-02, one undated HHP note, `[undated HHP: start-over]`) added the weekly plan, bankroll and theory-timing views to sections 5 and 6. Two `⚖ CONFLICT: Joan to decide` items logged here.*
+
 ---
 
 ## 1. Pick the most profitable game, not the biggest
@@ -92,9 +94,13 @@
 | Rule | With 5 buy-ins ($5k), bankroll matters: get a job. Otherwise you're "juggling chainsaws" | "Bankroll doesn't matter" means skill matters much more. Get a job (20-30 hrs), play 30-40 hrs, and save $10-15k. A 10-12bb/hr winner at 2/5 rarely needs to think about it (Marc's claim: downswings under about $5-7k; not computed here). At 3-7bb/hr, expect big swings. Don't jump to 25/50 or 50/100. **[2025-08-19, Marc]** also says don't wait for a bankroll before improving ("you go to the gym to lose the weight"); most top pros barely think about bankroll (edge cases: shot-taking, streams), and it's the small winners and recs who obsess. **[2024-12-24 HHP]** says taking every marginal high-variance +EV spot does not need a bigger roll (see section 5 bullet above) |
 | Where they agree | Both say get a job. And if you need to win to pay rent, you can't think clearly. They differ on how much the roll itself matters. | |
 
+**⚖ CONFLICT: Joan to decide. Bankroll with a small roll: [undated HHP: start-over] (undated) vs [02-10] (2026-02-10).** The undated video says build skills first, not bankroll: start at micro stakes online (1c-2c, 2c-4c) with $50-100 ("the bankroll will come"). HHP lost small bankrolls ($500-1,000) at 1/2 until the skills were there, then turned $10K into $100K+ in his first full-time year at 5/5 with a $1,000 cap in Los Angeles. [02-10] says that with 5 buy-ins ($5k) bankroll matters. It lines up with the "skill matters much more" column above ([2025-08-19], [2024-12-24 HHP]). No winner.
+
 ## 6. Getting better [07-07, 08-04]
 - **The one skill for $100/hr: ranging your opponent.** Drill it with a real deck (details in postflop section 12, in `playbook-postflop-bluffs-and-rivers.md`).
 - **No solver until you're consistently at about $100/hr.** First: ranging, a repeatable thought process, and basic exploits vs your actual opponents.
+  - **⚖ CONFLICT: Joan to decide. When to start solver / theory: [undated HHP: start-over] (undated) vs the line above ([07-07] / [08-04], "about $100/hr").** The undated video says don't go into the solver until your first six figures: low-stakes players deviate so far that equilibrium (a defensive strategy) won't win the most, so ranging, the thought process and the basics come first. It adds that theory helps a lot later ("learn the baseline so you can deviate harder"). The thresholds differ (first $100K earned vs about $100/hr). No winner.
+- **The weekly plan [undated HHP: start-over].** Build a fixed weekly list and "complete it no matter what"; if the week was too hard ease back next week, if too easy add. Set goals you actually want and accept the cost: best-in-the-world means 80-90 hours a week, six figures does not. **Full-time (six figures in a year):** play 32 hours (Tue, Thu, Fri, Sat) and study 8: about 4 hours Monday of timed ranging drills (about 30 seconds a street, preflop through river) and a Wednesday timed thought-process drill (45 seconds a street, then 30, then 15). **Part-time (a car, vacations):** play 16 hours (Fri, Sat) and study 4 on Sunday (thought-process and ranging drills).
 - **Fix ONE leak, not eight small ones [08-04].** Miguel's plan was one leak (sizing vs capped/uncapped ranges) and one filter.
 - **Skip the shiny objects [06-23].** Beating regs is complex and low-yield. Beating fish is where the win rate comes from.
   - **[2025-02-25 HHP, *Want to Lose at Poker?*] (supporting, agrees; added 2026-09-29):** beat fish first: their mistakes are bigger and reliable, while regs' mistakes are smaller and "way less reliable." Do the boring work, skip pre-study routines and excuses ("how do I generate hands?"), and outwork a 9-to-5. "Losing players demand answers, great players ask better questions": before "should I call?" ask the bluff-catch questions (postflop section 7).
