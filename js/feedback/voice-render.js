@@ -1,13 +1,13 @@
 // The coach-voice feedback screen. Same feedback object, same order, same grids, tables and
 // numbers as the plain view (render.js); the words around them are spoken by voice.js.
 // Pure string building (no DOM access).
-import { esc, step, alsoHTML, numbersHTML, classInfoHTML, setRulings, ord, pct, evText } from './render.js';
+import { esc, step, mdHTML, rulingNote, numbersHTML, classInfoHTML, setRulings, ord, pct, evText } from './render.js';
 import { gridHTML, comboList } from '../ui/grid.js';
 import { CLASSES, CLASS_KEYS, CLASS_LABEL } from '../range/classes.js';
 import { cardsPretty } from '../engine/cards.js';
 import {
   voiceFor, HTML, openerText, villainPhrase, rangeQuestion, preflopRangeText, streetRangeText, bucketsText, changeText, whyText, widenText, claimText, versusText,
-  whatIfIntro, gradeText, youDid, verdictText, sizeText, splitText, mathNoteText, quickTakeHead, optionTitle, optionSummary, classLines, whoDoesWhat, wantCallsText, nextText, lookHead, prosText, consText,
+  whatIfIntro, alsoIntro, alsoRuleText, alsoCatalogText, alsoNothing, gradeText, youDid, verdictText, sizeText, splitText, mathNoteText, quickTakeHead, optionTitle, optionSummary, classLines, whoDoesWhat, wantCallsText, nextText, lookHead, prosText, consText,
 } from './voice.js';
 import { coachReport } from './coach-report.js';
 import { preflopMark } from './marks.js';
@@ -72,6 +72,20 @@ function optionVoice(o, v, slot, isActual = false) {
   return `<details class="fb-opt"><summary><span class="ot"><b>${esc(optionTitle(o.title, isActual))}</b><span class="os">${esc(optionSummary(o, pct))}</span></span><span class="ev">EV ${esc(evText(o.ev))}</span></summary>${body.join('')}</details>`;
 }
 
+// f) Something else worth remembering: the other matching brain entries, then any ⚖ / ♣ boxes.
+function alsoVoice(also, v, slot) {
+  const f = HTML;
+  const rules = (also?.rules || []).map((r) => `<div class="fb-also">${alsoRuleText(f, r)}</div>`);
+  if (also?.catalog) rules.push(`<div class="fb-also">${alsoCatalogText(f, also.catalog)}</div>`);
+  const conflicts = (also?.conflicts || []).map((c) => {
+    const body = c.block ? mdHTML(c.block.text) : c.open ? mdHTML(c.open.text) : '';
+    const src = c.block ? `[HHP] ${c.block.file} › ${c.block.section}${c.block.dates?.length ? ` · ${c.block.dates.join(', ')}` : ''}` : c.open ? `[HHP] ${c.open.file} · ♣ OPEN #${c.open.number}` : c.tag;
+    return `<details class="fb-conflict"><summary>${c.kind === 'open' ? '♣ OPEN QUESTION' : '⚖ CONFLICT'} (not graded, both views): ${esc(c.title)}</summary>${rulingNote(c)}${body}<div class="tag">${esc(src)}</div></details>`;
+  });
+  if (!rules.length && !conflicts.length) return line(esc(alsoNothing(v, slot)), 'fb-line muted');
+  return `${rules.length ? line(esc(alsoIntro(v, slot, rules.length))) : ''}${rules.join('')}${conflicts.join('')}`;
+}
+
 function preflopSectionHTML(h, fb, v, gradeHTML) {
   const pre = fb.preflop;
   const qs = pre.questions;
@@ -84,7 +98,7 @@ function preflopSectionHTML(h, fb, v, gradeHTML) {
       ${step(1, pos ? esc(rangeQuestion(v, `pre${k}.q`, pos)) : 'Who is in?', range)}
       ${k === 0 ? step(2, 'The questions to ask here', qHTML) : ''}
       ${step(k === 0 ? 3 : 2, 'Your action', `${conflictNote}${pt.grade ? gradeHTML(pt.grade) : '<div class="fb-line muted">No chart grade for this decision.</div>'}`)}
-      ${k === 0 ? step(4, 'Something else worth remembering', alsoHTML(pre.also)) : ''}</div>`;
+      ${k === 0 ? step(4, 'Something else worth remembering', alsoVoice(pre.also, v, 'pre')) : ''}</div>`;
   }).join('') || '<div class="fb-line muted">No preflop decision.</div>';
   return `<section class="fb-sec"><h3>Preflop${pre.villain != null ? ` · vs ${esc(h.players[pre.villain].pos)}` : ''}</h3>${points}</section>`;
 }
@@ -107,7 +121,7 @@ function decisionHTML(pt, h, k, v) {
     ${step(2, 'What happens if…?', `${line(whatIfIntro(HTML, v, slot, { eq: a.eq.total, combos: a.eq.combos, exact: a.eq.exact, runouts: a.eq.runouts, multiway: a.multiway, pct }))}${wIf}${actualExtra}`)}
     ${step(3, 'Your action', line(gradeText(HTML, v, slot, a, pct), `fb-line fb-grade g-${a.grade.close ? 'close' : a.grade.mark === '⚠️' ? 'warn' : a.grade.mark === '✅' ? 'ok' : a.grade.mark === '❌' ? 'bad' : 'none'}`))}
     ${step(4, 'The verdict', verdict)}
-    ${step(5, 'Something else worth remembering', alsoHTML(a.also))}</div>`;
+    ${step(5, 'Something else worth remembering', alsoVoice(a.also, v, slot))}</div>`;
 }
 
 function endSectionHTML(fb) {

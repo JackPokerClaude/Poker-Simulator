@@ -252,3 +252,11 @@ export const mathNoteText = (f, v, slot, t) => `${v.pick(`${slot}.mn`, ['For the
 export function quickTakeHead(v) {
   return v.pick('qt', ['The short version first:', 'Quick take before we go street by street:', 'Here\'s the bottom line up top:', 'Short version:']);
 }
+
+// ---------------------------------------------------------------- f) something else worth remembering
+export const alsoIntro = (v, slot, n) => (n > 1
+  ? v.pick(`${slot}.ai`, ['A few more things from the brain worth remembering here:', 'Couple more things worth remembering:', 'Other stuff in the brain that fits this spot:'])
+  : v.pick(`${slot}.ai`, ['One more thing worth remembering here:', 'Something else from the brain that fits:', 'Also worth keeping in your back pocket:']));
+export const alsoRuleText = (f, r) => `${f.b(`${r.title}.`)} ${f.q(r.quote)}${f.tag(r.tag)}`;
+export const alsoCatalogText = (f, c) => `${f.b(`Your read on a ${c.name.replace(/\s*\(.*$/, '').toLowerCase()}, ${c.field.toLowerCase()}:`)} ${f.t(c.text)}${f.tag(c.tag)}`;
+export const alsoNothing = (v, slot) => v.pick(`${slot}.an`, ['Nothing else in the brain covers this spot.', 'That\'s it, nothing else in the brain on this one.', 'Nothing more from the brain here.']);
