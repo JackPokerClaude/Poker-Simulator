@@ -7,9 +7,10 @@ import { CLASSES, CLASS_KEYS, CLASS_LABEL } from '../range/classes.js';
 import { cardsPretty } from '../engine/cards.js';
 import {
   voiceFor, HTML, openerText, villainPhrase, rangeQuestion, preflopRangeText, streetRangeText, bucketsText, changeText, whyText, widenText, claimText, versusText,
-  whatIfIntro, gradeText, optionTitle, optionSummary, classLines, whoDoesWhat, wantCallsText, nextText, lookHead, prosText, consText,
+  whatIfIntro, gradeText, youDid, verdictText, sizeText, splitText, mathNoteText, quickTakeHead, optionTitle, optionSummary, classLines, whoDoesWhat, wantCallsText, nextText, lookHead, prosText, consText,
 } from './voice.js';
 import { coachReport } from './coach-report.js';
+import { preflopMark } from './marks.js';
 import { involvedVillains, effectiveStack, describeAction } from '../engine/coach.js';
 import { typeLabel, styleLabel } from '../villains/model.js';
 
@@ -96,12 +97,16 @@ function decisionHTML(pt, h, k, v) {
   if (!a) return `<div class="fb-dec"><div class="fb-dh">No decision for you on this street</div>${step(1, esc(rangeQuestion(v, `${slot}.q`, pos)), rangeStepVoice(pt, pos, v, slot))}</div>`;
   const wIf = a.opts.map((o, n) => optionVoice(o, v, `${slot}.o${n}`)).join('');
   const actualExtra = a.opts.includes(a.actual) ? '' : optionVoice(a.actual, v, `${slot}.oa`, true);
-  const verdictSize = a.verdict.size ? `<div class="fb-line"><b>Size:</b> his range is ${esc(a.verdict.size.why)}. “${esc(a.verdict.size.quote)}” <span class="tag">${esc(a.verdict.size.tag)}</span></div>` : '';
+  const vd = a.verdict;
+  const verdict = line(verdictText(HTML, v, slot, vd), 'fb-line fb-verdict')
+    + (vd.size ? line(sizeText(HTML, v, slot, vd.size)) : '')
+    + (vd.split ? line(splitText(HTML, vd.split)) : '')
+    + (vd.math ? line(mathNoteText(HTML, v, slot, vd.math), 'fb-line muted') : '');
   return `<div class="fb-dec"><div class="fb-dh">${head}</div>
     ${step(1, esc(rangeQuestion(v, `${slot}.q`, pos)), rangeStepVoice(pt, pos, v, slot))}
     ${step(2, 'What happens if…?', `${line(whatIfIntro(HTML, v, slot, { eq: a.eq.total, combos: a.eq.combos, exact: a.eq.exact, runouts: a.eq.runouts, multiway: a.multiway, pct }))}${wIf}${actualExtra}`)}
     ${step(3, 'Your action', line(gradeText(HTML, v, slot, a, pct), `fb-line fb-grade g-${a.grade.close ? 'close' : a.grade.mark === '⚠️' ? 'warn' : a.grade.mark === '✅' ? 'ok' : a.grade.mark === '❌' ? 'bad' : 'none'}`))}
-    ${step(4, 'The verdict', `<div class="fb-line"><b>${esc(a.verdict.title)}.</b> ${esc(a.verdict.why)} <span class="tag">${esc(a.verdict.source)}</span></div>${verdictSize}${a.verdict.split ? `<div class="fb-line"><b>Brain lines disagree here</b> (no ⚖ in the playbook), so the math decides: ${a.verdict.split.map((x) => `${esc(x.title)} → ${esc(x.line.toLowerCase())} <span class="tag">${esc(x.tag)}</span>`).join('; ')}.</div>` : ''}${a.verdict.math ? `<div class="fb-line muted">${esc(a.verdict.math)}</div>` : ''}`)}
+    ${step(4, 'The verdict', verdict)}
     ${step(5, 'Something else worth remembering', alsoHTML(a.also))}</div>`;
 }
 
@@ -116,11 +121,29 @@ function endSectionHTML(fb) {
   </section>`;
 }
 
+// The quick take: one line per decision (grade, what you did, the verdict), so the verdicts are
+// on screen before any scrolling. Everything in it is repeated in full further down.
+export function quickTakeItems(fb) {
+  const out = [];
+  for (const g of fb.preflop.points.map((p) => p.grade).filter(Boolean)) {
+    const m = preflopMark(g);
+    out.push({ street: 'Preflop', mark: fb.preflop.conflicted ? '⚖' : m.mark, did: `${String(g.heroAction || g.action).toLowerCase()}${g.to ? ` $${g.to}` : ''} with ${g.code}`, verdict: fb.preflop.conflicted ? 'not graded (open conflict)' : m.reason });
+  }
+  for (const s of fb.streets) for (const pt of s.points) {
+    const a = pt.analysis;
+    if (!a) continue;
+    out.push({ street: cap(s.street), mark: a.grade.mark, did: youDid(a.actual.title).replace(/^You /, ''), verdict: a.grade.mark === '⚖' ? 'not graded (open conflict)' : a.grade.close ? `${a.verdict.title}, by a hair (math only)` : `${a.verdict.title}${a.grade.mark === '✅' ? '' : ' is the line'}` });
+  }
+  return out;
+}
+
 export function voiceFeedbackHTML(h, fb, { resultLine = '', handsHTML = '', gradeHTML = () => '', rulings = {} } = {}) {
   setRulings(rulings);
   const v = voiceFor(h);
   const streets = fb.streets.map((s) => `<section class="fb-sec"><h3>${esc(`${cap(s.street)} ${cardsPretty(s.board)}`)}</h3>${s.points.map((pt, k) => decisionHTML(pt, h, k, v)).join('')}</section>`).join('');
-  return `<div class="fb-voice"><div class="fb-open">${openerText(HTML, v, openerData(h, fb))}</div><div class="resultbox">${esc(resultLine)}</div>
+  const qt = quickTakeItems(fb);
+  const quick = qt.length ? `<div class="fb-quick"><div class="fb-qh">${esc(quickTakeHead(v))}</div>${qt.map((x) => `<div class="fb-qi"><span class="qs">${esc(x.street)}</span> ${x.mark} you ${esc(x.did)} <span class="qv">→ ${esc(x.verdict)}</span></div>`).join('')}</div>` : '';
+  return `<div class="fb-voice"><div class="fb-open">${openerText(HTML, v, openerData(h, fb))}</div>${quick}<div class="resultbox">${esc(resultLine)}</div>
     <h3>Hands</h3><div class="hands-grid">${handsHTML}</div>
     ${preflopSectionHTML(h, fb, v, gradeHTML)}${streets}${endSectionHTML(fb)}</div>`;
 }

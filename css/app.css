@@ -447,3 +447,9 @@ details.coach-d > summary { cursor: pointer; font-weight: 600; color: var(--blue
 .fb-grid summary { cursor: pointer; color: var(--blue); font-weight: 700; font-size: 13.5px; }
 .fb-cls { margin: 2px 0 6px 18px; padding: 0; font-size: 13.5px; line-height: 1.45; }
 .fb-grade { padding: 6px 8px; border-radius: 8px; background: var(--tint); }
+.fb-quick { background: var(--blue-soft); border-radius: 12px; padding: 8px 10px; margin: 0 0 10px; }
+.fb-qh { font-weight: 800; font-size: 14px; margin-bottom: 4px; }
+.fb-qi { font-size: 13.5px; line-height: 1.45; margin: 2px 0; overflow-wrap: anywhere; }
+.fb-qi .qs { font-weight: 800; color: var(--blue); }
+.fb-qi .qv { font-weight: 700; }
+.fb-verdict { font-size: 14.5px; }

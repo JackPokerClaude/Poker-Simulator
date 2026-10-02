@@ -223,3 +223,32 @@ export function gradeText(f, v, slot, a, pct) {
   if (g.mark === '❌') out.push(v.pick(`${slot}.fx`, ['The verdict right below says why.', 'Here\'s the fix, right below.', 'Look at the verdict below and you\'ll see it.']));
   return out.join(' ');
 }
+
+// ---------------------------------------------------------------- e) the verdict, with its source
+// An [HHP] verdict is "the play" with the brain's words; a math verdict says the math decides.
+export function verdictText(f, v, slot, vd) {
+  const hhp = /^\[HHP\]/.test(vd.source);
+  const lead = hhp
+    ? v.pick(`${slot}.vd`, ['Here\'s what I\'d do:', 'Here\'s the play:', 'The play here:'])
+    : vd.size
+      ? v.pick(`${slot}.vd`, ['The math says bet, and the brain\'s sizing rule picks the size:', 'No HHP line on whether to bet, so the math decides that; the brain\'s sizing rule picks the size:'])
+      : v.pick(`${slot}.vd`, ['No HHP line covers this exact spot, so the math decides:', 'The brain doesn\'t have a line for this exact spot, so this one\'s on the math:', 'No brain rule for this one, so we go with the math:']);
+  const why = hhp
+    ? `${v.pick(`${slot}.bw`, ['The brain says', 'Why? The brain:', 'Straight from the brain:'])} ${f.t(vd.why)}`
+    : `${v.pick(`${slot}.mw`, ['Why?', 'The numbers:', 'Here\'s why:'])} ${f.t(vd.why)}`;
+  return `${lead} ${f.b(`${vd.title}.`)} ${why}${f.tag(vd.source)}`;
+}
+export function sizeText(f, v, slot, sz) {
+  const lead = v.pick(`${slot}.sz`, ['On size:', 'And the size?', 'Now, how big?']);
+  return `${lead} ${lead.endsWith('?') ? 'His' : 'his'} range is ${f.t(sz.why)}. The brain's sizing rule: ${f.q(sz.quote)}${f.tag(sz.tag)}`;
+}
+// Two brain rules pointing different ways (no ⚖ in the playbook): both shown, neither decides.
+export function splitText(f, split) {
+  return `Two brain lines point different ways here (no ⚖ in the playbook), so neither one decides and the math does: ${split.map((x) => `${f.t(x.title)} → ${f.t(x.line.toLowerCase())}${f.tag(x.tag)}`).join('; ')}.`;
+}
+export const mathNoteText = (f, v, slot, t) => `${v.pick(`${slot}.mn`, ['For the record:', 'Side note:', 'Just so you know:'])} ${f.t(lower1(t))}`;
+
+// The quick take at the top: every decision's grade and verdict in one line each.
+export function quickTakeHead(v) {
+  return v.pick('qt', ['The short version first:', 'Quick take before we go street by street:', 'Here\'s the bottom line up top:', 'Short version:']);
+}
