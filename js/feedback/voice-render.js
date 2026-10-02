@@ -7,10 +7,11 @@ import { CLASSES, CLASS_KEYS, CLASS_LABEL } from '../range/classes.js';
 import { cardsPretty } from '../engine/cards.js';
 import {
   voiceFor, HTML, openerText, villainPhrase, rangeQuestion, preflopRangeText, streetRangeText, bucketsText, changeText, whyText, widenText, claimText, versusText,
-  whatIfIntro, knownLeakText, alsoIntro, alsoRuleText, alsoCatalogText, alsoNothing, gradeText, youDid, verdictText, sizeText, splitText, mathNoteText, quickTakeHead, optionTitle, optionSummary, classLines, whoDoesWhat, wantCallsText, nextText, lookHead, prosText, consText,
+  whatIfIntro, preflopReact, preflopYouText, preflopFreqText, preflopSizingText, knownLeakText, alsoIntro, alsoRuleText, alsoCatalogText, alsoNothing, gradeText, youDid, verdictText, sizeText, splitText, mathNoteText, quickTakeHead, optionTitle, optionSummary, classLines, whoDoesWhat, wantCallsText, nextText, lookHead, prosText, consText,
 } from './voice.js';
 import { coachReport } from './coach-report.js';
-import { preflopMark } from './marks.js';
+import { preflopMark, noCoachName } from './marks.js';
+import { VERDICT_LABEL, OUTSIDE_LABEL } from './preflop-card.js';
 import { involvedVillains, effectiveStack, describeAction } from '../engine/coach.js';
 import { typeLabel, styleLabel } from '../villains/model.js';
 
@@ -86,7 +87,25 @@ function alsoVoice(also, v, slot) {
   return `${rules.length ? line(esc(alsoIntro(v, slot, rules.length))) : ''}${rules.join('')}${conflicts.join('')}`;
 }
 
-function preflopSectionHTML(h, fb, v, gradeHTML) {
+// h) The preflop card in the voice: mark + one-line reason first, then what you did, the chart,
+// the chart's message, its mix and the sizing checks (everything the plain card has).
+function preflopCardVoice(d, v, slot) {
+  const f = HTML;
+  const m = preflopMark(d);
+  const chartLine = d.sourceTag ? `<span class="src ${d.source === 'OUTSIDE' ? 'outside' : 'hhp'}">${esc(d.sourceTag)}</span>` : d.chart ? esc(d.chart) : 'No HHP chart';
+  const msg = d.verdict === 'situational' ? `<b>HHP's rule:</b> ${esc(noCoachName(d.message).replace(/^SITUATIONAL \(HHP\):\s*/i, ''))}` : esc(noCoachName(d.message));
+  return `<div class="grade">
+    <div class="row1"><div class="spot">${esc(d.label)}</div><span class="badge ${d.verdict}">${(d.source === 'OUTSIDE' ? OUTSIDE_LABEL : VERDICT_LABEL)[d.verdict]}</span></div>
+    <div class="pmark">${m.mark} ${esc(preflopReact(v, slot, m.mark))} ${esc(m.reason)}</div>
+    <div class="you">${preflopYouText(f, d)}</div>
+    <div class="chart">Chart: ${chartLine}</div>
+    <div class="msg">${msg}</div>
+    ${d.freq && d.verdict !== 'wrong' ? `<div class="freq">${preflopFreqText(f, d.freq)}</div>` : ''}
+    ${(d.sizing || []).map((z) => `<div class="sizing ${z.ok ? 'ok' : 'bad'}"><span>${preflopSizingText(f, z)}</span></div>`).join('')}
+  </div>`;
+}
+
+function preflopSectionHTML(h, fb, v) {
   const pre = fb.preflop;
   const qs = pre.questions;
   const qHTML = `<ol class="fb-q">${qs.list.map((x) => `<li><b>${esc(x.q)}</b> ${esc(x.a || '')}</li>`).join('')}</ol><div class="tag">${esc(qs.tag)}</div>${qs.extra.map((x) => `<div class="fb-line"><b>${esc(x.q)}</b> ${esc(x.a)} <span class="tag">${esc(x.tag)}</span></div>`).join('')}`;
@@ -97,7 +116,7 @@ function preflopSectionHTML(h, fb, v, gradeHTML) {
     return `<div class="fb-dec"><div class="fb-dh">${k === 0 ? 'Your decision' : 'Then'}${pt.grade ? `: you ${esc(String(pt.grade.heroAction || pt.grade.action).toLowerCase())}` : ''}</div>
       ${step(1, pos ? esc(rangeQuestion(v, `pre${k}.q`, pos)) : 'Who is in?', range)}
       ${k === 0 ? step(2, 'The questions to ask here', qHTML) : ''}
-      ${step(k === 0 ? 3 : 2, 'Your action', `${conflictNote}${pt.grade ? gradeHTML(pt.grade) : '<div class="fb-line muted">No chart grade for this decision.</div>'}`)}
+      ${step(k === 0 ? 3 : 2, 'Your action', `${conflictNote}${pt.grade ? preflopCardVoice(pt.grade, v, `pre${k}`) : '<div class="fb-line muted">No chart grade for this decision.</div>'}`)}
       ${k === 0 ? step(4, 'Something else worth remembering', alsoVoice(pre.also, v, 'pre')) : ''}</div>`;
   }).join('') || '<div class="fb-line muted">No preflop decision.</div>';
   return `<section class="fb-sec"><h3>Preflop${pre.villain != null ? ` · vs ${esc(h.players[pre.villain].pos)}` : ''}</h3>${points}</section>`;
@@ -159,7 +178,7 @@ export function voiceFeedbackHTML(h, fb, { resultLine = '', handsHTML = '', grad
   const quick = qt.length ? `<div class="fb-quick"><div class="fb-qh">${esc(quickTakeHead(v))}</div>${qt.map((x) => `<div class="fb-qi"><span class="qs">${esc(x.street)}</span> ${x.mark} you ${esc(x.did)} <span class="qv">→ ${esc(x.verdict)}</span></div>`).join('')}</div>` : '';
   return `<div class="fb-voice"><div class="fb-open">${openerText(HTML, v, openerData(h, fb))}</div>${quick}<div class="resultbox">${esc(resultLine)}</div>
     <h3>Hands</h3><div class="hands-grid">${handsHTML}</div>
-    ${preflopSectionHTML(h, fb, v, gradeHTML)}${streets}${endSectionHTML(h, fb, v)}</div>`;
+    ${preflopSectionHTML(h, fb, v)}${streets}${endSectionHTML(h, fb, v)}</div>`;
 }
 
 // Copy for coach in the voice: the hand data plus the spoken review.

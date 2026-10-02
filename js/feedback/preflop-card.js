@@ -1,7 +1,7 @@
 // The preflop card: ✅/⚠️/❌ with a one-line reason, the chart, your action, the chart message,
 // the mix and the sizing checks. Pure string building, shared by the feedback screen, History
 // and the tests.
-import { preflopMark } from './marks.js';
+import { preflopMark, noCoachName } from './marks.js';
 
 const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 export const VERDICT_LABEL = { correct: '✓ Chart play', mixed: '≈ Mixed', wrong: '✗ Off chart', situational: '⚑ Situational', nochart: '— No chart' };
@@ -13,7 +13,7 @@ export function gradeHTML(d) {
   const chartLine = d.sourceTag
     ? `<span class="src ${d.source === 'OUTSIDE' ? 'outside' : 'hhp'}">${esc(d.sourceTag)}</span>`
     : d.chart ? esc(d.chart) : 'No HHP chart';
-  const msg = d.verdict === 'situational' ? `<b>HHP's rule:</b> ${esc(d.message.replace(/^SITUATIONAL \(Mark\):\s*/i, ''))}` : esc(d.message);
+  const msg = d.verdict === 'situational' ? `<b>HHP's rule:</b> ${esc(noCoachName(d.message).replace(/^SITUATIONAL \(HHP\):\s*/i, ''))}` : esc(noCoachName(d.message));
   return `<div class="grade">
     <div class="row1"><div class="spot">${esc(d.label)}</div><span class="badge ${d.verdict}">${(d.source === 'OUTSIDE' ? OUTSIDE_LABEL : VERDICT_LABEL)[d.verdict]}</span></div>
     <div class="pmark">${preflopMark(d).mark} ${esc(preflopMark(d).reason)}</div>

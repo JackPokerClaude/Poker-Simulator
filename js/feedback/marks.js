@@ -2,6 +2,7 @@
 // Copy for coach.
 const VERB = { raise: 'raises', '3-bet': '3-bets', '4-bet': '4-bets', '5-bet': '5-bets', 'iso-raise': 'iso-raises', squeeze: 'squeezes', call: 'calls', fold: 'folds', overlimp: 'overlimps', limp: 'limps' };
 export function preflopMark(d) {
+  d = { ...d, message: noCoachName(d.message) };
   const parts = String(d.freq || '').split(' · ').map((x) => /^(.*) (\d+)%$/.exec(x)).filter(Boolean).map((m) => ({ act: m[1], p: Number(m[2]) }));
   const top = parts.sort((a, b) => b.p - a.p)[0];
   const chartSays = top ? `Chart ${VERB[top.act.toLowerCase()] || top.act.toLowerCase()} ${d.code} ${top.p}% here` : '';
@@ -14,3 +15,7 @@ export function preflopMark(d) {
     default: return { mark: '—', reason: d.message || 'No chart for this spot.' };
   }
 }
+
+// No coach is named anywhere in the app: a chart note's "(Mark)" shows as "(HHP)". Display only;
+// the CSV and the grading keep their text.
+export const noCoachName = (s) => String(s ?? '').replace(/\((?:Mark|Marc)\)/g, '(HHP)');

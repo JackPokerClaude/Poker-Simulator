@@ -5,7 +5,7 @@
 import { handFacts, streetLine, resultText } from '../engine/coach.js';
 import { CLASS_KEYS, CLASS_LABEL } from '../range/classes.js';
 import { cardsPretty } from '../engine/cards.js';
-import { preflopMark } from './marks.js';
+import { preflopMark, noCoachName } from './marks.js';
 
 const pct = (x) => `${Math.round((x || 0) * 100)}%`;
 const ev = (x) => (Math.abs(x) < 0.05 ? '$0' : `${x < 0 ? '-' : '+'}$${Math.abs(x).toFixed(Math.abs(x) < 10 ? 1 : 0)}`);
@@ -75,7 +75,7 @@ export function coachReport(h, fb, rulings = {}) {
       const m = preflopMark(g);
       out.push(`  Your action: ${m.mark} ${g.heroAction || g.action} with ${g.code}. ${m.reason}`);
       const src = g.sourceTag || g.chart || '';
-      out.push(m.reason === g.message ? `  Source: ${src || 'no HHP chart'}` : `  Verdict: ${g.message} ${src}`.trimEnd());
+      out.push(m.reason === noCoachName(g.message) ? `  Source: ${src || 'no HHP chart'}` : `  Verdict: ${noCoachName(g.message)} ${src}`.trimEnd());
       for (const z of g.sizing || []) out.push(`  Sizing (${z.rule}): ${z.ok ? 'OK' : 'Off'}. ${z.message}`);
     }
   });

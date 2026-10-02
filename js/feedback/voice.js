@@ -267,3 +267,15 @@ export function knownLeakText(f, v, slot, k, stakes) {
   const lead = v.pick(`${slot}.kl`, ['Heads up, this one\'s about you, from your own log:', 'Real talk, from your own session log:', 'Quick heads-up about your pattern (your log, not HHP):']);
   return `${lead} ${f.b(`${k.title}.`)} ${f.t(k.text)}${f.tag(k.tag)} ${v.pick(`${slot}.ks`, ['This hand is at {s}, the stakes your log flags.', 'And this one\'s at {s}.', 'This hand: {s}.']).replace('{s}', f.t(stakes))}`;
 }
+
+// ---------------------------------------------------------------- h) the preflop card
+const PRE_REACT = {
+  '✅': ['Clean.', 'Good.', 'Easy one, and you got it.', 'Nice.', 'Textbook.'],
+  '⚠️': ['Borderline.', 'Gray area.', 'Close one.'],
+  '❌': ['Off chart.', 'Not this one.', 'Nope, chart says otherwise.', 'This is the one to fix preflop.'],
+  '—': ['No chart for this one.'],
+};
+export const preflopReact = (v, slot, mark) => v.pick(`${slot}.pr`, PRE_REACT[mark] || PRE_REACT['—']);
+export const preflopYouText = (f, d) => `Your play: ${f.b(`${String(d.heroAction || d.action).toLowerCase()}${d.to ? ` $${d.to}` : ''}`)} with ${f.b(d.code)}.`;
+export const preflopFreqText = (f, freq) => `The chart's mix: ${f.t(freq)}.`;
+export const preflopSizingText = (f, z) => `${z.ok ? '✓' : '✗'} ${f.b(`On size (${z.rule}):`)} ${f.t(z.message)}`;

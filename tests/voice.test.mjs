@@ -18,14 +18,16 @@ const manifest = JSON.parse(readFileSync(new URL('../config/brain-files.json', i
 const brain = await loadBrain({ manifest, fetchText: async (p) => brainTexts[p.replace('brain/', '')], lastGood: memoryLastGood() });
 const FX = loadFixtures();
 const noCR = (t) => t.replace(/\r/g, '');
+// The one label change since the snapshot: chart notes no longer name a coach ("(Mark)" shows as "(HHP)").
+const relabel = (t) => t.replace(/\((?:Mark|Marc)\)/g, '(HHP)');
 const sameBrain = FX.brainHash === brainHash();
 const varied = FX.varied.map((x) => { const h = rebuildHand(x.replay); return { ...x, h, fb: buildFeedback(h, { model, brain }) }; });
 
 test('fixtures: the plain view and Copy for coach are unchanged from the snapshot (same brain)', { skip: sameBrain ? false : 'brain changed since the snapshot: matched rules may differ' }, () => {
   assert.ok(varied.length >= 15);
   for (const x of varied) {
-    assert.equal(htmlText(feedbackHTML(x.h, x.fb, { gradeHTML })), x.plainText, `${x.why}: plain view changed`);
-    assert.equal(noCR(coachReport(x.h, x.fb)), noCR(x.coachText), `${x.why}: plain coach text changed`);
+    assert.equal(htmlText(feedbackHTML(x.h, x.fb, { gradeHTML })), relabel(x.plainText), `${x.why}: plain view changed`);
+    assert.equal(noCR(coachReport(x.h, x.fb)), relabel(noCR(x.coachText)), `${x.why}: plain coach text changed`);
   }
 });
 
@@ -82,4 +84,10 @@ test('voice: across 40 hands no opening phrase is used for more than 25% of hand
   const [top, n] = Object.entries(firsts).sort((a, b) => b[1] - a[1])[0];
   assert.ok(n / forty.length <= 0.25, `"${top}" opens ${n} of ${forty.length} hands`);
   assert.ok(Object.keys(firsts).length >= 6, 'at least 6 different openers');
+});
+
+test('no coach is named in app-written text (chart notes show "(HHP)")', () => {
+  for (const x of varied) for (const html of [feedbackHTML(x.h, x.fb, { gradeHTML }), voiceFeedbackHTML(x.h, x.fb, { gradeHTML })]) {
+    assert.doesNotMatch(html, /\((?:Mark|Marc)\)|Mark's rule|Marc's/, x.why);
+  }
 });
