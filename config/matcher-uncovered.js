@@ -21,5 +21,6 @@ export const UNCOVERED_REASONS = {
   [`${BR}more live tells, marc's "40+ tells" video [2025-`]: TELLS,
   [`${BR}current answer, how much to trust a tell [02-10]`]: TELLS,
   [`${BR}timing tells vs a rec [2025-01-28 hhp, this poke`]: TELLS,
+  [`${WK}out of position as the preflop raiser, the flop `]: 'New in brain batch 13 (2026-10-02, [undated HHP: start-over]). No matcher rule yet: the voice-layer run (2026-10-02) was told not to touch the matcher. Its check-everything-vs-recs line sits next to the range-bet views already shown as ♣ OPEN #2 and a logged ⚖ CONFLICT. Joan to review.',
   [`${BR}12. how marc says to practice`]: 'Practice advice (how to study), not a table spot.',
 };

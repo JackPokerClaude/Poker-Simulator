@@ -5,6 +5,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { parseCharts, parsePlaybook, parseInstructions, dateTags } from '../js/brain/parse.js';
 import { loadBrain, memoryLastGood, missingCharts } from '../js/brain/loader.js';
 import { CHARTS_USED } from '../js/engine/scenario.js';
@@ -163,7 +164,7 @@ test('every browser file parses (catches errors tests never import, like app.js)
   const { readdirSync, statSync } = await import('node:fs');
   const walk = (dir) => readdirSync(new URL(dir, root)).flatMap((f) => (statSync(new URL(`${dir}/${f}`, root)).isDirectory() ? walk(`${dir}/${f}`) : [`${dir}/${f}`]));
   for (const f of [...walk('js'), ...walk('config'), 'sw.js'].filter((x) => x.endsWith('.js') && !x.includes('vendor'))) {
-    execFileSync(process.execPath, ['--check', new URL(f, root).pathname], { stdio: 'pipe' });
+    execFileSync(process.execPath, ['--check', fileURLToPath(new URL(f, root))], { stdio: 'pipe' });
   }
 });
 
