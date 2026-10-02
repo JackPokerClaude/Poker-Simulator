@@ -102,7 +102,9 @@ Goal: the feedback reads like an HHP hand review. Same content, same grading, ne
 | Step | What | Status | Commit | Tests |
 |---|---|---|---|---|
 | pre | Fix the red deploy left by the batch 13 brain push | Done | b6d31e4 | 63 pass |
-| 0 | Read the code, 15 varied fixture hands + a fixed 40-hand set (tests/fixtures/hands.json) | Done | (this commit) | 64 pass |
+| 0 | Read the code, 15 varied fixture hands + a fixed 40-hand set (tests/fixtures/hands.json) | Done | a14cd88 | 64 pass |
+| 1 | Voice guide docs/hhp-voice.md (brain phrasing + style-only transcript pass) | Done | fdc9c03 | 64 pass |
+| 2 | Voice layer: js/feedback/voice.js (seeded phrase picks, HTML/text formatters) + voice-render.js; Coach / Plain switch (default Coach) | Done | (this commit) | 68 pass |
 
 ## Notes
 

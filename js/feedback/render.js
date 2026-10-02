@@ -3,10 +3,10 @@ import { gridHTML, comboList } from '../ui/grid.js';
 import { CLASSES, CLASS_KEYS, CLASS_LABEL, CLASS_INFO } from '../range/classes.js';
 import { cardsPretty } from '../engine/cards.js';
 
-const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
-const pct = (x) => `${Math.round((x || 0) * 100)}%`;
+export const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+export const pct = (x) => `${Math.round((x || 0) * 100)}%`;
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
-const RESP = { fold: 'Fold', call: 'Call', raise: 'Raise', check: 'Check', bet: 'Bet' };
+export const RESP = { fold: 'Fold', call: 'Call', raise: 'Raise', check: 'Check', bet: 'Bet' };
 
 // Tiny markdown for playbook blocks: tables, bold, italics, bullets.
 export function mdHTML(text) {
@@ -32,16 +32,17 @@ export function mdHTML(text) {
   return out.join('');
 }
 
-const step = (n, title, body) => `<div class="fb-step"><div class="fb-n">${n}</div><div class="fb-b"><div class="fb-t">${title}</div>${body}</div></div>`;
+export const step = (n, title, body) => `<div class="fb-step"><div class="fb-n">${n}</div><div class="fb-b"><div class="fb-t">${title}</div>${body}</div></div>`;
 
 // Your rulings (from the Rulings tab), shown on the conflict boxes. Never applied here.
 let RULINGS = {};
-const rulingNote = (c) => {
+export const setRulings = (r) => { RULINGS = r || {}; };
+export const rulingNote = (c) => {
   const r = RULINGS[c.block?.id] || RULINGS[c.open?.id];
   return r ? `<div class="fb-line"><b>Your ruling:</b> ${esc(r)}. Recorded for your brain session; not applied or graded until the brain says so.</div>` : '';
 };
 
-function alsoHTML(also) {
+export function alsoHTML(also) {
   const items = [];
   for (const r of also?.rules || []) items.push(`<div class="fb-also"><b>${esc(r.title)}:</b> “${esc(r.quote)}” <span class="tag">${esc(r.tag)}</span></div>`);
   if (also?.catalog) items.push(`<div class="fb-also"><b>${esc(also.catalog.name)}, ${esc(also.catalog.field.toLowerCase())}:</b> ${esc(also.catalog.text)} <span class="tag">${esc(also.catalog.tag)}</span></div>`);
@@ -54,7 +55,7 @@ function alsoHTML(also) {
 }
 
 // One summary line per option (his answer + EV); tap to expand the class-by-class breakdown.
-function optionHTML(o) {
+export function optionHTML(o) {
   const mix = o.mix ? Object.entries(o.mix).filter(([, p]) => p > 0.005).sort((a, b) => b[1] - a[1]).map(([r, p]) => `${RESP[r] || r} ${pct(p)}`).join(', ') : '';
   const VERB = { fold: 'folds', call: 'calls', raise: 'raises', check: 'checks', bet: 'bets' };
   const said = o.mix ? Object.entries(o.mix).filter(([, p]) => p > 0.005).sort((a, b) => b[1] - a[1]).map(([r, p]) => `${VERB[r] || r} ${pct(p)}`).join(', ') : '';
@@ -76,11 +77,11 @@ function optionHTML(o) {
     ${o.numbers?.length ? `<div class="fb-line muted">His answers come from his strategy for this style:</div>${numbersHTML(o.numbers)}` : ''}
     <div class="tag">[OUTSIDE SOURCE] math vs his real range and his real strategy</div></details>`;
 }
-const ord = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'}`;
-const evText = (x) => (Math.abs(x) < 0.05 ? '$0' : `${x < 0 ? '−' : '+'}$${Math.abs(x).toFixed(Math.abs(x) < 10 ? 1 : 0)}`);
+export const ord = (n) => `${n}${n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'}`;
+export const evText = (x) => (Math.abs(x) < 0.05 ? '$0' : `${x < 0 ? '−' : '+'}$${Math.abs(x).toFixed(Math.abs(x) < 10 ? 1 : 0)}`);
 
 // ---- his range at a decision: what he did, the grid, the numbers, why
-function changeHTML(c) {
+export function changeHTML(c) {
   const moved = c.before ? CLASS_KEYS.filter((k) => Math.abs((c.after[k] || 0) - (c.before[k] || 0)) >= 0.02) : [];
   const shift = moved.length ? `${moved.map((k) => `${CLASS_LABEL[k]} ${pct(c.before[k])} → ${pct(c.after[k])}`).join(', ')}. ` : '';
   const claims = (c.claims || []).map((x) => (x.ok
@@ -93,18 +94,18 @@ function changeHTML(c) {
 }
 
 // "Where the numbers come from": every strategy number with its own tag, collapsed.
-function numbersHTML(nums) {
+export function numbersHTML(nums) {
   if (!nums?.length) return '';
   return `<details class="fb-nums"><summary>Where the numbers come from</summary>${nums.map((n) => `<div class="fb-num"><b>${esc(n.what)}:</b> ${esc(n.val)} <span class="tag">${esc(n.tag)}</span>${n.quote ? `<div class="muted">“${esc(n.quote)}”</div>` : ''}</div>`).join('')}</details>`;
 }
 
-function classInfoHTML(key) {
+export function classInfoHTML(key) {
   const info = CLASS_INFO[key];
   if (!info) return `<div class="gd-h"><b>${esc(CLASS_LABEL[key] || key)}</b></div>`;
   return `<div class="gd-h"><b>${esc(info.label)}</b></div><div class="fb-line">${esc(info.rule)}</div>${info.quote ? `<div class="fb-line">“${esc(info.quote)}” <span class="tag">${esc(info.tag)}</span></div>` : ''}`;
 }
 
-function rangeStepHTML(pt, pos) {
+export function rangeStepHTML(pt, pos) {
   const g = pt.grid;
   const changes = (pt.changes || []).map(changeHTML).join('');
   const grid = g ? gridHTML(g.cells, { mode: g.mode, shares: g.shares, combosLeft: g.combos, detail: (code) => comboList(code, g.detail), classInfo: classInfoHTML }) : '';

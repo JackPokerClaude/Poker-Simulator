@@ -17,6 +17,7 @@ import { gradeHTML } from './feedback/preflop-card.js';
 import { matcherCoverage } from './brain/coverage.js';
 import { UNCOVERED_REASONS } from '../config/matcher-uncovered.js';
 import { coachReport } from './feedback/coach-report.js';
+import { voiceFeedbackHTML, voiceCoachReport } from './feedback/voice-render.js';
 import { clearGrids, gridDetail, gridClassInfo } from './ui/grid.js';
 
 const $ = (id) => document.getElementById(id);
@@ -26,7 +27,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // ---------- settings (per-device conveniences) ----------
 const SETTINGS_KEY = 'hhp-sim-settings-v1';
 const settings = (() => {
-  const d = { speed: 'normal', fourColor: true, drill: 'random' };
+  const d = { speed: 'normal', fourColor: true, drill: 'random', voice: true };
   try { return { ...d, ...JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}') }; } catch { return d; }
 })();
 const saveSettings = () => { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch { /* private mode */ } };
@@ -386,7 +387,7 @@ function finishHand() {
       // The full review replaces the short hand history for Copy for coach; the short one is
       // kept so hands past the replay limit can drop the long text (storage).
       rec.coachShort = rec.coachText;
-      rec.coachText = coachReport(h, fb, rulingNotes());
+      rec.coachText = coachTextFor(h, fb);
       updateHand(rec.id, { leaks: fb.leaks, coachText: rec.coachText, coachShort: rec.coachShort });
     } catch (e) { console.warn('feedback', e); }
   }, 30);
@@ -532,6 +533,10 @@ function feedbackFor(h, token = handToken) {
   return fb;
 }
 
+// Coach voice (default) or the plain structured view: same feedback object, same content.
+const coachTextFor = (h, fb) => (settings.voice ? voiceCoachReport : coachReport)(h, fb, rulingNotes());
+const viewSwitchHTML = () => `<div class="seg fb-view" role="group" aria-label="Feedback view"><button data-view="voice" class="${settings.voice ? 'on' : ''}">Coach</button><button data-view="plain" class="${settings.voice ? '' : 'on'}">Plain</button></div>`;
+
 // Feedback screen: opens only when "See feedback" is tapped. No won/lost amounts, and only
 // involved players' cards.
 function showFeedback(h = hand, { fromHistory = null } = {}) {
@@ -540,21 +545,28 @@ function showFeedback(h = hand, { fromHistory = null } = {}) {
   clearGrids();
   try {
     fb = fromHistory ? buildFeedback(h, { model, brain, history: loadHistory().filter((x) => x.id !== fromHistory.id).slice(0, 50) }) : feedbackFor(h);
-    body = feedbackHTML(h, fb, { resultLine: winnerLine(h, true), handsHTML: handsGridHTML(h), gradeHTML, rulings: rulingNotes() });
+    body = (settings.voice ? voiceFeedbackHTML : feedbackHTML)(h, fb, { resultLine: winnerLine(h, true), handsHTML: handsGridHTML(h), gradeHTML, rulings: rulingNotes() });
   } catch (e) {
     console.error(e);
     body = `<div class="resultbox">${esc(winnerLine(h, true))}</div><div class="bnote">The feedback engine hit an error on this hand: ${esc(e.message)}. The preflop grades are below.</div>${(h.heroDecisions || []).map(gradeHTML).join('')}`;
   }
   let coach = fromHistory ? fromHistory.coachText : lastRecord?.coachText;
-  try { if (fb) coach = coachReport(h, fb, rulingNotes()); } catch (e) { console.warn('coach text', e); }
+  try { if (fb) coach = coachTextFor(h, fb); } catch (e) { console.warn('coach text', e); }
   openSheet(`
-    <div class="sheet-top"><h2>Hand feedback</h2><button class="close" id="closeBtn" aria-label="Close">✕</button></div>
+    <div class="sheet-top"><h2>Hand feedback</h2>${viewSwitchHTML()}<button class="close" id="closeBtn" aria-label="Close">✕</button></div>
     ${body}
     <div class="sheet-actions">
       <button class="btn secondary" id="copyBtn2">Copy for coach</button>
       ${fromHistory ? '' : '<button class="btn primary" id="nextBtn2">Next hand ▶</button>'}
     </div>`, { full: true });
   $('closeBtn').onclick = closeSheet;
+  document.querySelectorAll('.fb-view button').forEach((b) => (b.onclick = () => {
+    const voice = b.dataset.view === 'voice';
+    if (voice === settings.voice) return;
+    settings.voice = voice;
+    saveSettings();
+    showFeedback(h, { fromHistory });
+  }));
   $('copyBtn2').onclick = () => copyText(coach);
   if ($('nextBtn2')) $('nextBtn2').onclick = () => newHand();
 }
@@ -767,6 +779,7 @@ function showMenu() {
     <h2>Settings</h2>
     <div class="setting"><b>Villain speed</b>${seg('speed', [['normal', 'Normal'], ['fast', 'Fast'], ['instant', 'Instant']])}</div>
     <div class="setting"><b>Deck</b>${seg('fourColor', [['true', '4-color'], ['false', '2-color']])}</div>
+    <div class="setting"><b>Feedback</b>${seg('voice', [['true', 'Coach voice'], ['false', 'Plain']])}</div>
     <h3>How it works</h3>
     <div class="about">
       <p>Every hand is a real 52-card shuffle. You only get dealt hands the HHP chart plays in your spot. Villain types are hidden until the hand ends. The reads are your clues.</p>
@@ -777,7 +790,7 @@ function showMenu() {
     ${brainStatusHTML()}`);
   document.querySelectorAll('.seg button').forEach((b) => (b.onclick = () => {
     const k = b.dataset.k;
-    settings[k] = k === 'fourColor' ? b.dataset.v === 'true' : b.dataset.v;
+    settings[k] = k === 'fourColor' || k === 'voice' ? b.dataset.v === 'true' : b.dataset.v;
     saveSettings();
     applySettings();
     showMenu();
