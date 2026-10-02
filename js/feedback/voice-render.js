@@ -7,7 +7,7 @@ import { CLASSES, CLASS_KEYS, CLASS_LABEL } from '../range/classes.js';
 import { cardsPretty } from '../engine/cards.js';
 import {
   voiceFor, HTML, openerText, villainPhrase, rangeQuestion, preflopRangeText, streetRangeText, bucketsText, changeText, whyText, widenText, claimText, versusText,
-  whatIfIntro, optionTitle, optionSummary, classLines, whoDoesWhat, wantCallsText, nextText, lookHead, prosText, consText,
+  whatIfIntro, gradeText, optionTitle, optionSummary, classLines, whoDoesWhat, wantCallsText, nextText, lookHead, prosText, consText,
 } from './voice.js';
 import { coachReport } from './coach-report.js';
 import { involvedVillains, effectiveStack, describeAction } from '../engine/coach.js';
@@ -100,7 +100,7 @@ function decisionHTML(pt, h, k, v) {
   return `<div class="fb-dec"><div class="fb-dh">${head}</div>
     ${step(1, esc(rangeQuestion(v, `${slot}.q`, pos)), rangeStepVoice(pt, pos, v, slot))}
     ${step(2, 'What happens if…?', `${line(whatIfIntro(HTML, v, slot, { eq: a.eq.total, combos: a.eq.combos, exact: a.eq.exact, runouts: a.eq.runouts, multiway: a.multiway, pct }))}${wIf}${actualExtra}`)}
-    ${step(3, 'Your action', `<div class="fb-line">${a.grade.mark} <b>You: ${esc(a.actual.title)}.</b> ${esc(a.grade.text)}</div>`)}
+    ${step(3, 'Your action', line(gradeText(HTML, v, slot, a, pct), `fb-line fb-grade g-${a.grade.close ? 'close' : a.grade.mark === '⚠️' ? 'warn' : a.grade.mark === '✅' ? 'ok' : a.grade.mark === '❌' ? 'bad' : 'none'}`))}
     ${step(4, 'The verdict', `<div class="fb-line"><b>${esc(a.verdict.title)}.</b> ${esc(a.verdict.why)} <span class="tag">${esc(a.verdict.source)}</span></div>${verdictSize}${a.verdict.split ? `<div class="fb-line"><b>Brain lines disagree here</b> (no ⚖ in the playbook), so the math decides: ${a.verdict.split.map((x) => `${esc(x.title)} → ${esc(x.line.toLowerCase())} <span class="tag">${esc(x.tag)}</span>`).join('; ')}.</div>` : ''}${a.verdict.math ? `<div class="fb-line muted">${esc(a.verdict.math)}</div>` : ''}`)}
     ${step(5, 'Something else worth remembering', alsoHTML(a.also))}</div>`;
 }

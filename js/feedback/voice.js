@@ -189,3 +189,37 @@ export const nextText = (f, v, slot, t) => `${v.pick(`${slot}.nx`, ['Next street
 export const lookHead = (f, v, slot, look) => `${v.pick(`${slot}.lk`, ['And on the', 'Now, on the', 'On the'])} ${f.t(look.street)} that actually came (${f.b(look.card)}):`;
 export const prosText = (f, v, slot, list) => `${v.pick(`${slot}.pro`, ['The good:', 'What it has going for it:', 'Upside:'])} ${f.t(list.join(' '))}`;
 export const consText = (f, v, slot, list) => `${v.pick(`${slot}.con`, ['The catch:', 'The downside:', 'What can go wrong:'])} ${f.t(list.join(' '))}`;
+
+// ---------------------------------------------------------------- d) your action, graded
+const PAST = { call: 'called', fold: 'folded', check: 'checked', raise: 'raised', bet: 'bet' };
+// "Bet small ($194)" → "You bet small ($194)"; "Raise ($39)" → "You raised ($39)".
+export function youDid(title) {
+  const m = /^(\w+)(.*)$/.exec(title || '');
+  if (!m) return `You: ${title}`;
+  const w = m[1].toLowerCase();
+  return `You ${PAST[w] || w}${m[2]}`;
+}
+const REACT = {
+  '✅': ['Love it.', 'That\'s it.', 'Nice.', 'Good. Good.', 'Yes. That\'s the one.', 'Clean.'],
+  close: ['This one\'s close, so don\'t lose sleep over it.', 'This was close, here\'s why.', 'Honestly? Close spot.', 'Not a big deal either way, it\'s close.'],
+  sizing: ['Right idea, wrong size.', 'Love the idea, not the size.', 'Half right.', 'Close, but the size is off.'],
+  '⚠️': ['Close, but not quite.', 'Not bad, but not the line.', 'Hmm, close one.', 'I don\'t hate it, but it\'s not the line.'],
+  '❌': ['Okay, this one hurts a little.', 'We have to talk about this one.', 'Hold on, hold on.', 'I don\'t like it.', 'Yeah, no.', 'This is the one to fix.'],
+  '⚖': ['No grade on this one, on purpose.', 'This one doesn\'t get a grade.', 'No grade here.'],
+};
+// The specific thing that was right, from the verdict's own source.
+function whyRight(v, slot, a) {
+  if (a.verdict.rule) return v.pick(`${slot}.wr`, ['That\'s the brain\'s line for this exact spot.', 'Exactly the line the brain gives here.']);
+  if (a.verdict.size) return v.pick(`${slot}.wr`, ['Right line, and the size the brain\'s sizing rule picks.', 'Line and size both match the brain\'s sizing rule.']);
+  return v.pick(`${slot}.wr`, ['And the math backs it up.', 'The math agrees with you.']);
+}
+// mark + reaction + what you did + the engine's reason (word for word) + what made it right/close.
+export function gradeText(f, v, slot, a, pct) {
+  const g = a.grade;
+  const kind = g.mark === '⚠️' ? (g.close ? 'close' : g.sizing ? 'sizing' : '⚠️') : g.mark;
+  const out = [`${g.mark} ${v.pick(`${slot}.re`, REACT[kind] || REACT['⚠️'])} ${f.b(`${youDid(a.actual.title)}.`)} ${f.t(g.text)}`];
+  if (g.mark === '✅') out.push(whyRight(v, slot, a));
+  if (g.close && a.real < 1) out.push(`And out of position, every EV here already counts only about ${f.t(pct(a.real))} of your equity${f.tag('[OUTSIDE SOURCE]')}.`);
+  if (g.mark === '❌') out.push(v.pick(`${slot}.fx`, ['The verdict right below says why.', 'Here\'s the fix, right below.', 'Look at the verdict below and you\'ll see it.']));
+  return out.join(' ');
+}
