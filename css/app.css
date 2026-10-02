@@ -442,3 +442,6 @@ details.coach-d > summary { cursor: pointer; font-weight: 600; color: var(--blue
 /* Feedback view switch (Coach voice / Plain) */
 .sheet-top .fb-view button { padding: 6px 10px; font-size: 13px; }
 .fb-open { font-size: 15px; line-height: 1.5; margin: 4px 0 10px; }
+.fb-ask { font-weight: 800; }
+.fb-grid { margin: 6px 0; }
+.fb-grid summary { cursor: pointer; color: var(--blue); font-weight: 700; font-size: 13.5px; }

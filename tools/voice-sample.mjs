@@ -1,9 +1,10 @@
-import { model, brainTexts } from './setup.mjs';
+// Prints coach-voice reviews of fixture hands: node tools/voice-sample.mjs [indexes] [line regex] [chars]
+import { model, brainTexts } from '../tests/setup.mjs';
 import { readFileSync } from 'node:fs';
 import { buildFeedback } from '../js/feedback/engine.js';
 import { rebuildHand } from '../js/feedback/replay.js';
 import { loadBrain, memoryLastGood } from '../js/brain/loader.js';
-import { loadFixtures, htmlText } from './fixture-utils.mjs';
+import { loadFixtures, htmlText } from '../tests/fixture-utils.mjs';
 import { voiceFeedbackHTML } from '../js/feedback/voice-render.js';
 import { gradeHTML } from '../js/feedback/preflop-card.js';
 const manifest = JSON.parse(readFileSync(new URL('../config/brain-files.json', import.meta.url), 'utf8'));

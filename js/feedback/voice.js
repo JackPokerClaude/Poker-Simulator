@@ -96,3 +96,63 @@ export function openerText(f, v, { stakes, heroPos, heroCards, effBB, villains, 
   const firstLine = first ? ` ${v.pick('open-first', ['First up:', 'Action starts:', 'Off we go:'])} ${f.t(first)}.` : '';
   return `${v.pick('opener', OPENERS)} ${f.t(stakes)}, you're in the ${f.t(heroPos)} with ${f.b(heroCards)}, ${f.t(effBB)} effective. ${who}${firstLine} ${v.pick('reach', REACH[reach] || REACH.preflop)}`;
 }
+
+// ---------------------------------------------------------------- b) his range at a decision
+// Step 1's title: always the same question, asked a few ways.
+export const RANGE_Q = [
+  'What\'s {pos}\'s range?',
+  'So what\'s {pos}\'s range?',
+  'First question: what\'s {pos}\'s range?',
+  'Okay, what\'s {pos}\'s range?',
+  'Start with him: what\'s {pos}\'s range?',
+];
+const fill = (s, o) => s.replace(/\{(\w+)\}/g, (_, k) => o[k] ?? '');
+export const rangeQuestion = (v, slot, pos) => fill(v.pick(slot, RANGE_Q), { pos });
+
+const classWord = (label) => (/CPFS/.test(label) ? 'can-play-for-stacks hands' : label.toLowerCase());
+const SHORT = { cpfs: 'CPFS', thick: 'thick value', thin: 'thin value', highDraw: 'high-equity draws', lowDraw: 'low-equity draws', sdv: 'showdown value', air: 'air' };
+
+// Preflop: who he is, what HHP says about the type, what his action keeps.
+export function preflopRangeText(f, v, slot, info) {
+  const out = [];
+  const [type, style] = info.label.split(' · ');
+  out.push(`${f.t(info.pos)} is ${an(type)} ${f.t(lower1(type))}${style ? ` (${an(style)} ${f.t(style)} after the flop)` : ''}.`);
+  if (info.typeQuote) out.push(`${v.pick(`${slot}.type`, ['Here\'s how HHP sums up this type:', 'HHP on this type:', 'What HHP says about guys like this:'])} ${f.q(info.typeQuote.quote)}${f.tag(info.typeQuote.tag)}.`);
+  if (info.keep) out.push(`He ${f.t(info.words.join(', then '))}, ${v.pick(`${slot}.keep`, ['and that leaves him about', 'which keeps about', 'so he\'s down to about'])} ${f.t(info.keep.pct)} of all hands (${f.t(`${info.keep.combos} of ${info.keep.full}`)} combos).`);
+  if (info.bigOpen) out.push(`And look at the size, his open was unusually big: ${f.q(info.bigOpen.quote)}${f.tag(info.bigOpen.tag)}.`);
+  out.push(v.pick(`${slot}.grid`, ['The grid is his own strategy replayed, so it\'s the range he\'s actually playing.', 'The grid replays his own strategy, the one he actually plays from.', 'That grid is his real strategy replayed, not a guess.']));
+  return out.join(' ');
+}
+
+// Postflop: what moved when he acted, the two biggest buckets, combos left.
+export function streetRangeText(f, v, slot, info) {
+  const out = [];
+  if (!info.acted) out.push(`He hasn't acted on the ${f.t(info.street)} yet when you decide, so this is still his range from the ${info.street === 'flop' ? 'preflop action' : 'last street'}.`);
+  for (const m of info.moves) out.push(`${v.pick(`${slot}.move`, ['When', 'After'])} ${f.t(m.what)}, the big mover is ${f.t(classWord(m.label))}: ${f.t(`${m.from} → ${m.to}`)}.`);
+  const [a, b] = info.top;
+  out.push(`${v.pick(`${slot}.top`, ['So he\'s mostly', 'Bottom line, he\'s mostly', 'That makes him mostly'])} ${f.t(classWord(a.label))} (${f.t(a.share)}) and ${f.t(classWord(b.label))} (${f.t(b.share)}), with ${f.t(info.combosLeft)} weighted combos left.`);
+  return out.join(' ');
+}
+
+// "Bucket by bucket: 5% CPFS, 91% showdown value, 3% air" (classes at 0.5% or more, HHP's order).
+export function bucketsText(f, v, slot, shares, keys) {
+  const list = keys.filter((k) => shares[k] >= 0.005).map((k) => `${Math.round(shares[k] * 100)}% ${SHORT[k]}`);
+  return list.length ? `${v.pick(`${slot}.buckets`, ['Bucket by bucket:', 'All seven buckets, top to bottom:', 'Bucket by bucket, he\'s'])} ${f.t(list.join(', '))}.` : '';
+}
+
+// One of his actions: combos before → after, the class shifts, why, the brain line behind it.
+export function changeText(f, v, slot, c, moved) {
+  const shift = moved.length ? ` ${v.pick(`${slot}.shift`, ['Watch the buckets move:', 'Here\'s what that does to his buckets:', 'Buckets:'])} ${f.t(moved.join(', '))}.` : '';
+  return `${f.b(`${c.what}.`)} ${v.pick(`${slot}.combos`, ['His range goes', 'That moves him', 'Combos go'])} ${f.t(`${Math.round(c.combos[0])} → ${Math.round(c.combos[1])}`)} combos (${f.t(`${Math.round(c.pctStart * 100)}%`)} of his starting range).${shift}`;
+}
+export function whyText(f, v, slot, reason) {
+  const quote = reason.quote ? ` ${v.pick(`${slot}.bq`, ['The brain backs it:', 'Straight from the brain:', 'The brain:'])} ${f.q(reason.quote)}` : '';
+  return `${v.pick(`${slot}.why`, ['Why?', 'Why does that happen?', 'How come?'])} ${f.t(reason.text)}${quote}${f.tag(reason.tag)}`;
+}
+export const widenText = (f, w) => `Plus, ${f.t(lower1(w.text))}${f.tag(w.tag)}`;
+export function claimText(f, x) {
+  return x.ok
+    ? `That lines up with the brain: ${f.q(x.quote)}${f.tag(x.tag)}`
+    : `⚖ Here the brain and his strategy don't agree, and this review doesn't pick one (not resolved). The brain says ${f.q(x.quote)}${f.tag(x.tag)}; his strategy gives ${f.t(x.got)}.`;
+}
+export const versusText = (f, v, slot, vs, pct) => `${v.pick(`${slot}.vs`, ['Where do you stand right now?', 'And your hand against all that?', 'How does your hand stack up right now?'])} You beat ${f.t(pct(vs.beat))} of his range, lose to ${f.t(pct(vs.lose))}, chop ${f.t(pct(vs.chop))}.`;

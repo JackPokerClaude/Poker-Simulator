@@ -1,9 +1,11 @@
 // The coach-voice feedback screen. Same feedback object, same order, same grids, tables and
 // numbers as the plain view (render.js); the words around them are spoken by voice.js.
 // Pure string building (no DOM access).
-import { esc, step, alsoHTML, optionHTML, rangeStepHTML, setRulings, ord, pct } from './render.js';
+import { esc, step, alsoHTML, optionHTML, numbersHTML, classInfoHTML, setRulings, ord, pct } from './render.js';
+import { gridHTML, comboList } from '../ui/grid.js';
+import { CLASS_KEYS, CLASS_LABEL } from '../range/classes.js';
 import { cardsPretty } from '../engine/cards.js';
-import { voiceFor, HTML, openerText, villainPhrase } from './voice.js';
+import { voiceFor, HTML, openerText, villainPhrase, rangeQuestion, preflopRangeText, streetRangeText, bucketsText, changeText, whyText, widenText, claimText, versusText } from './voice.js';
 import { coachReport } from './coach-report.js';
 import { involvedVillains, effectiveStack, describeAction } from '../engine/coach.js';
 import { typeLabel, styleLabel } from '../villains/model.js';
@@ -24,16 +26,40 @@ export function openerData(h, fb) {
   };
 }
 
+// b) His range at a decision: the question, the read, each thing he did and why, the seven
+// buckets, where you stand; the grid itself is unchanged, one tap away.
+const line = (s, cls = 'fb-line') => (s ? `<div class="${cls}">${s}</div>` : '');
+function rangeStepVoice(pt, pos, v, slot) {
+  const f = HTML;
+  const out = [];
+  if (pt.para && pt.street === 'preflop') out.push(line(preflopRangeText(f, v, slot, pt.para), 'fb-p'));
+  else if (pt.para) out.push(line(streetRangeText(f, v, slot, pt.para), 'fb-p'));
+  else out.push(line(esc(pt.paragraph || ''), 'fb-p'));
+  if (pt.changes?.length) {
+    out.push(`<div class="fb-sub2">${v.pick(`${slot}.chg`, ['What he did, and what it tells you', `How ${esc(pos)}'s range got here`, 'Each move he made'])}</div>`);
+    pt.changes.forEach((c, n) => {
+      const moved = c.before ? CLASS_KEYS.filter((k) => Math.abs((c.after[k] || 0) - (c.before[k] || 0)) >= 0.02).map((k) => `${CLASS_LABEL[k]} ${pct(c.before[k])} → ${pct(c.after[k])}`) : [];
+      const cs = `${slot}.c${n}`;
+      out.push(`<div class="chg"><div>${changeText(f, v, cs, c, moved)}</div><div class="chg-why">${whyText(f, v, cs, c.reason)}</div>${c.reason.widen ? `<div class="chg-why">${widenText(f, c.reason.widen)}</div>` : ''}${numbersHTML(c.reason.numbers)}${(c.claims || []).map((x) => `<div class="${x.ok ? 'chg-ok' : 'chg-bad'}">${claimText(f, x)}</div>`).join('')}${c.note ? `<div class="muted">${esc(c.note)}</div>` : ''}</div>`);
+    });
+  }
+  if (pt.grid?.mode === 'class') out.push(line(bucketsText(f, v, slot, pt.shares, CLASS_KEYS)));
+  if (pt.versus) out.push(line(versusText(f, v, slot, pt.versus, pct)));
+  const g = pt.grid;
+  if (g) out.push(`<details class="fb-grid"><summary>${v.pick(`${slot}.gs`, ['Show his range grid', 'His range, cell by cell', 'Tap for the range grid'])} · ${esc(g.combos)}</summary>${gridHTML(g.cells, { mode: g.mode, shares: g.shares, combosLeft: g.combos, detail: (code) => comboList(code, g.detail), classInfo: classInfoHTML })}</details>`);
+  return out.join('');
+}
+
 function preflopSectionHTML(h, fb, v, gradeHTML) {
   const pre = fb.preflop;
   const qs = pre.questions;
   const qHTML = `<ol class="fb-q">${qs.list.map((x) => `<li><b>${esc(x.q)}</b> ${esc(x.a || '')}</li>`).join('')}</ol><div class="tag">${esc(qs.tag)}</div>${qs.extra.map((x) => `<div class="fb-line"><b>${esc(x.q)}</b> ${esc(x.a)} <span class="tag">${esc(x.tag)}</span></div>`).join('')}`;
   const points = pre.points.map((pt, k) => {
     const pos = pt.vi != null ? h.players[pt.vi].pos : null;
-    const range = pos ? rangeStepHTML(pt, pos) : `<div class="fb-line muted">${esc(pt.paragraph)}</div>`;
+    const range = pos ? rangeStepVoice(pt, pos, v, `pre${k}`) : `<div class="fb-line muted">${esc(v.pick('pre.nobody', ["Nobody's put money in yet, so everyone behind you still has a full range.", 'Nobody has put money in yet: everyone behind you has a full range.']))}</div>`;
     const conflictNote = pre.conflicted ? '<div class="fb-line"><b>⚖ Not graded:</b> this spot is an open conflict in your playbook (below). The chart grade is shown for reference only.</div>' : '';
     return `<div class="fb-dec"><div class="fb-dh">${k === 0 ? 'Your decision' : 'Then'}${pt.grade ? `: you ${esc(String(pt.grade.heroAction || pt.grade.action).toLowerCase())}` : ''}</div>
-      ${step(1, pos ? `What's ${esc(pos)}'s range?` : 'Who is in?', range)}
+      ${step(1, pos ? esc(rangeQuestion(v, `pre${k}.q`, pos)) : 'Who is in?', range)}
       ${k === 0 ? step(2, 'The questions to ask here', qHTML) : ''}
       ${step(k === 0 ? 3 : 2, 'Your action', `${conflictNote}${pt.grade ? gradeHTML(pt.grade) : '<div class="fb-line muted">No chart grade for this decision.</div>'}`)}
       ${k === 0 ? step(4, 'Something else worth remembering', alsoHTML(pre.also)) : ''}</div>`;
@@ -44,13 +70,14 @@ function preflopSectionHTML(h, fb, v, gradeHTML) {
 function decisionHTML(pt, h, k, v) {
   const a = pt.analysis;
   const pos = h.players[pt.vi].pos;
+  const slot = `${pt.street}${k}`;
   const head = k === 0 ? `Your decision${a ? `: you ${esc(a.actual.title.toLowerCase())}` : ''}` : `Then${a ? `: you ${esc(a.actual.title.toLowerCase())}` : ''}`;
-  if (!a) return `<div class="fb-dec"><div class="fb-dh">No decision for you on this street</div>${step(1, `What's ${esc(pos)}'s range?`, rangeStepHTML(pt, pos))}</div>`;
+  if (!a) return `<div class="fb-dec"><div class="fb-dh">No decision for you on this street</div>${step(1, esc(rangeQuestion(v, `${slot}.q`, pos)), rangeStepVoice(pt, pos, v, slot))}</div>`;
   const wIf = a.opts.map((o) => optionHTML({ ...o, open: false })).join('');
   const actualExtra = a.opts.includes(a.actual) ? '' : optionHTML({ ...a.actual, title: `What you did: ${a.actual.title}` });
   const verdictSize = a.verdict.size ? `<div class="fb-line"><b>Size:</b> his range is ${esc(a.verdict.size.why)}. “${esc(a.verdict.size.quote)}” <span class="tag">${esc(a.verdict.size.tag)}</span></div>` : '';
   return `<div class="fb-dec"><div class="fb-dh">${head}</div>
-    ${step(1, `What's ${esc(pos)}'s range?`, rangeStepHTML(pt, pos))}
+    ${step(1, esc(rangeQuestion(v, `${slot}.q`, pos)), rangeStepVoice(pt, pos, v, slot))}
     ${step(2, 'What happens if…?', `${a.multiway ? '<div class="fb-line muted">Multiway: his answers treat him as next to act.</div>' : ''}<div class="fb-line">Your equity vs this range: <b>${pct(a.eq.total)}</b> (${a.eq.combos} combos, ${a.eq.exact ? 'exact' : `${a.eq.runouts} sampled runouts`}).</div>${wIf}${actualExtra}`)}
     ${step(3, 'Your action', `<div class="fb-line">${a.grade.mark} <b>You: ${esc(a.actual.title)}.</b> ${esc(a.grade.text)}</div>`)}
     ${step(4, 'The verdict', `<div class="fb-line"><b>${esc(a.verdict.title)}.</b> ${esc(a.verdict.why)} <span class="tag">${esc(a.verdict.source)}</span></div>${verdictSize}${a.verdict.split ? `<div class="fb-line"><b>Brain lines disagree here</b> (no ⚖ in the playbook), so the math decides: ${a.verdict.split.map((x) => `${esc(x.title)} → ${esc(x.line.toLowerCase())} <span class="tag">${esc(x.tag)}</span>`).join('; ')}.</div>` : ''}${a.verdict.math ? `<div class="fb-line muted">${esc(a.verdict.math)}</div>` : ''}`)}
