@@ -68,3 +68,18 @@ test('voice: every postflop decision keeps the five steps in order', () => {
   }
   assert.ok(decs > 10, `only ${decs} decisions`);
 });
+
+const forty = FX.forty.map((x) => { const h = rebuildHand(x.replay); return { ...x, h, fb: buildFeedback(h, { model, brain }) }; });
+
+test('voice: across 40 hands no opening phrase is used for more than 25% of hands', () => {
+  const firsts = {};
+  for (const x of forty) {
+    const html = voiceFeedbackHTML(x.h, x.fb, { gradeHTML });
+    const open = htmlText(/<div class="fb-open">([\s\S]*?)<\/div>/.exec(html)[1]);
+    const first = open.split(/(?<=[.!?])\s/)[0];
+    firsts[first] = (firsts[first] || 0) + 1;
+  }
+  const [top, n] = Object.entries(firsts).sort((a, b) => b[1] - a[1])[0];
+  assert.ok(n / forty.length <= 0.25, `"${top}" opens ${n} of ${forty.length} hands`);
+  assert.ok(Object.keys(firsts).length >= 6, 'at least 6 different openers');
+});

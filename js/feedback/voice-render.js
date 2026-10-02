@@ -3,10 +3,26 @@
 // Pure string building (no DOM access).
 import { esc, step, alsoHTML, optionHTML, rangeStepHTML, setRulings, ord, pct } from './render.js';
 import { cardsPretty } from '../engine/cards.js';
-import { voiceFor } from './voice.js';
+import { voiceFor, HTML, openerText, villainPhrase } from './voice.js';
 import { coachReport } from './coach-report.js';
+import { involvedVillains, effectiveStack, describeAction } from '../engine/coach.js';
+import { typeLabel, styleLabel } from '../villains/model.js';
 
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
+
+// a) The opener: the scene, read the way a coach starts a hand review.
+export function openerData(h, fb) {
+  const hero = h.players[h.heroIdx];
+  const first = h.log.find((e) => e.street === 'preflop' && !['post', 'deal', 'fold'].includes(e.type) && e.i !== h.heroIdx);
+  const last = fb.streets.length ? fb.streets[fb.streets.length - 1].street : 'preflop';
+  return {
+    stakes: `$${h.stakes.sb}/$${h.stakes.bb}`, heroPos: hero.pos, heroCards: cardsPretty(hero.cards),
+    effBB: `${Math.round(effectiveStack(h) / h.stakes.bb)}bb`,
+    villains: [...involvedVillains(h)].sort((a, b) => (b.i === fb.preflop.villain) - (a.i === fb.preflop.villain)).map((p, k) => villainPhrase(p, typeLabel, styleLabel, { short: k > 0 })),
+    first: first ? describeAction(h, first) : null,
+    reach: last,
+  };
+}
 
 function preflopSectionHTML(h, fb, v, gradeHTML) {
   const pre = fb.preflop;
@@ -56,7 +72,7 @@ export function voiceFeedbackHTML(h, fb, { resultLine = '', handsHTML = '', grad
   setRulings(rulings);
   const v = voiceFor(h);
   const streets = fb.streets.map((s) => `<section class="fb-sec"><h3>${esc(`${cap(s.street)} ${cardsPretty(s.board)}`)}</h3>${s.points.map((pt, k) => decisionHTML(pt, h, k, v)).join('')}</section>`).join('');
-  return `<div class="fb-voice"><div class="resultbox">${esc(resultLine)}</div>
+  return `<div class="fb-voice"><div class="fb-open">${openerText(HTML, v, openerData(h, fb))}</div><div class="resultbox">${esc(resultLine)}</div>
     <h3>Hands</h3><div class="hands-grid">${handsHTML}</div>
     ${preflopSectionHTML(h, fb, v, gradeHTML)}${streets}${endSectionHTML(fb)}</div>`;
 }
