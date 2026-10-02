@@ -556,7 +556,7 @@ function streetParagraph(h, vi, changes, shares, street, combosLeft) {
   return parts.join(' ');
 }
 
-// Marc's six questions, answered for this hand.
+// HHP's six questions, answered for this hand.
 function preflopQuestions(h, model, spot, vi) {
   const rec = model.rec('questions.six');
   const hero = h.players[h.heroIdx];

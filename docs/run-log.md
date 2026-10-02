@@ -90,3 +90,25 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 26. Lookahead plan rule: with 65%+ equity vs his range on the next card, the plan is "bet for value" (or "raise for value" vs his bet); below that, check, and call his bet only with the pot odds. [OUTSIDE SOURCE] in config/outside-source.js, default, Joan to review. The lookahead uses the one card that actually came, not an average over all cards.
 27. Rulings are records, not switches: a ruling made on the phone doesn't change grading or ranges. It shows on the conflict box and goes to your brain session via Copy rulings; once the brain itself is updated, the app follows the brain. Default, Joan to review (the alternative is to apply rulings on the device right away).
 28. View labels on the rulings screen come from each conflict's title ("X vs Y", "A, or B"); where the title doesn't split, the buttons say "View A: the first view in the text" and so on. Default, Joan to review.
+
+---
+
+# Voice-layer run (started 2026-10-02)
+
+Goal: the feedback reads like an HHP hand review. Same content, same grading, new delivery. One step per commit; full suite before every push.
+
+## Status
+
+| Step | What | Status | Commit | Tests |
+|---|---|---|---|---|
+| pre | Fix the red deploy left by the batch 13 brain push | Done | b6d31e4 | 63 pass |
+| 0 | Read the code, 15 varied fixture hands + a fixed 40-hand set (tests/fixtures/hands.json) | Done | (this commit) | 64 pass |
+
+## Notes
+
+- Before starting, the live deploy was red: the batch 13 brain push (47a0c3f) added a postflop topic ("OUT of position as the preflop RAISER, the flop default") with no matcher rule and no reason, so the coverage test failed and the deploy step was skipped (the live site stayed on acb65ce, never broken). Fixed by adding a reason in config/matcher-uncovered.js (no brain/ change, no matcher change). Also fixed a Windows-only path bug in the "every browser file parses" test (it passed on GitHub's Linux runner).
+- Step 0: the preflop card builder moved out of app.js into js/feedback/preflop-card.js (same output) so tests can render it. tools/make-fixtures.mjs plays 2,500 random hands and greedily picks 15 that cover every street, every hero line, ✅/⚠️/❌/⚖, close calls, OOP realization, ⚖ conflicts and ♣ open questions, split brain lines, sized verdicts, lookaheads, the known-leak card and all 7 villain types; plus 40 more for the repetition test. Each is stored as a replay with its plain screen text and Copy for coach text. The snapshot test compares only while the brain hash matches, so a later brain push skips it instead of turning the deploy red.
+
+## Decisions for Joan (voice run)
+
+1. App-written labels no longer name a coach: "Mark's rule" → "HHP's rule" (preflop card, marks, Stats note), done before the snapshot. Brain quotes and source tags that contain a coach's name (e.g. a section title "12. How Marc says to practice", or CSV notes starting "SITUATIONAL (Mark)") are left exactly as the brain has them, because hard rule 6 says tags are copied exactly and the [HHP] test checks quotes against the brain. Joan to review.

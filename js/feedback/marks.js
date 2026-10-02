@@ -9,7 +9,7 @@ export function preflopMark(d) {
   switch (d.verdict) {
     case 'correct': return { mark: '✅', reason: d.source === 'OUTSIDE' ? d.message.replace(/^No HHP chart covers this open \([^)]*\)\.\s*/, '') : `${chartSays}${chartSays ? ': you did too.' : 'Matches the chart.'}` };
     case 'mixed': return d.source === 'OUTSIDE' ? { mark: '⚠️', reason: 'Borderline: one bracket chart plays it, the other folds it.' } : { mark: '✅', reason: `Mixed cell: the chart plays ${d.freq}. Your play is part of the mix.` };
-    case 'situational': return { mark: '⚠️', reason: 'Situational hand: Mark\'s rule decides (below).' };
+    case 'situational': return { mark: '⚠️', reason: 'Situational hand: HHP\'s rule decides (below).' };
     case 'wrong': return { mark: '❌', reason: chartSays || d.message };
     default: return { mark: '—', reason: d.message || 'No chart for this spot.' };
   }

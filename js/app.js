@@ -13,7 +13,7 @@ import { feedbackHTML, mdHTML } from './feedback/render.js';
 import { viewsOf, optionsOf, LETTER } from './brain/views.js';
 import { loadRulings, setRuling, UNDECIDED } from './storage/rulings.js';
 import { rebuildHand } from './feedback/replay.js';
-import { preflopMark } from './feedback/marks.js';
+import { gradeHTML } from './feedback/preflop-card.js';
 import { matcherCoverage } from './brain/coverage.js';
 import { UNCOVERED_REASONS } from '../config/matcher-uncovered.js';
 import { coachReport } from './feedback/coach-report.js';
@@ -487,27 +487,6 @@ function showLog() {
   $('drawerBody').scrollTop = $('drawerBody').scrollHeight;
 }
 
-const VERDICT_LABEL = { correct: '✓ Chart play', mixed: '≈ Mixed', wrong: '✗ Off chart', situational: '⚑ Situational', nochart: '— No chart' };
-const OUTSIDE_LABEL = { correct: '✓ Good', mixed: '≈ Borderline', wrong: '✗ Mistake', situational: '⚑ Situational', nochart: '— No chart' };
-
-// ✅/⚠️/❌ and a one-line reason for a preflop grade ("Chart 3-bets J9s 100% here").
-function gradeHTML(d) {
-  const sizing = (d.sizing || []).map((z) => `<div class="sizing ${z.ok ? 'ok' : 'bad'}"><span class="ic">${z.ok ? '✓' : '✗'}</span><span><b>${esc(z.rule)}:</b> ${esc(z.message)}</span></div>`).join('');
-  const chartLine = d.sourceTag
-    ? `<span class="src ${d.source === 'OUTSIDE' ? 'outside' : 'hhp'}">${esc(d.sourceTag)}</span>`
-    : d.chart ? esc(d.chart) : 'No HHP chart';
-  const msg = d.verdict === 'situational' ? `<b>Mark's rule:</b> ${esc(d.message.replace(/^SITUATIONAL \(Mark\):\s*/i, ''))}` : esc(d.message);
-  return `<div class="grade">
-    <div class="row1"><div class="spot">${esc(d.label)}</div><span class="badge ${d.verdict}">${(d.source === 'OUTSIDE' ? OUTSIDE_LABEL : VERDICT_LABEL)[d.verdict]}</span></div>
-    <div class="pmark">${preflopMark(d).mark} ${esc(preflopMark(d).reason)}</div>
-    <div class="chart">${chartLine}</div>
-    <div class="you">You: <b>${esc(d.heroAction || d.action)}${d.to ? ` $${d.to}` : ''}</b> with <b>${esc(d.code)}</b></div>
-    <div class="msg">${msg}</div>
-    ${d.freq && d.verdict !== 'wrong' ? `<div class="freq">Chart: ${esc(d.freq)}</div>` : ''}
-    ${sizing}
-  </div>`;
-}
-
 // Feedback screen: opens only when "See feedback" is tapped. No won/lost amounts, and only
 // involved players' cards.
 // Tap a grid cell for its combos, or a legend class for its definition.
@@ -662,7 +641,7 @@ function showStats() {
     ${kinds || '<div class="empty">Play some hands first.</div>'}
     <h3>Most-missed spots</h3>
     ${missed || '<div class="empty">Nothing missed yet. Nice.</div>'}
-    <div class="about" style="margin-top:12px">Mixed-frequency plays count as correct. Situational hands (Mark's rule) are not counted either way.${st.outside ? ` ${st.outside} decision${st.outside > 1 ? 's' : ''} in spots no HHP chart covers ${st.outside > 1 ? 'were' : 'was'} graded [OUTSIDE SOURCE] and ${st.outside > 1 ? 'are' : 'is'} not counted.` : ''}</div>`);
+    <div class="about" style="margin-top:12px">Mixed-frequency plays count as correct. Situational hands (HHP's rule) are not counted either way.${st.outside ? ` ${st.outside} decision${st.outside > 1 ? 's' : ''} in spots no HHP chart covers ${st.outside > 1 ? 'were' : 'was'} graded [OUTSIDE SOURCE] and ${st.outside > 1 ? 'are' : 'is'} not counted.` : ''}</div>`);
 }
 
 // Brain status: what loaded, from where, and anything that needs you.
