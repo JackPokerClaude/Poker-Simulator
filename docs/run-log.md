@@ -93,24 +93,121 @@ Autonomous run (started 2026-09-30). One item per commit; tests + phone/laptop b
 
 ---
 
-# Voice-layer run (started 2026-10-02)
+# Voice-layer run (2026-10-02)
 
-Goal: the feedback reads like an HHP hand review. Same content, same grading, new delivery. One step per commit; full suite before every push.
+Goal: the feedback reads like an HHP hand review. Same content, same grading, new delivery. One step per commit; full suite before every push; every push deployed green.
 
-## Status
+## Checklist
 
-| Step | What | Status | Commit | Tests |
+| Step | What | Status | Commit(s) | Tests |
 |---|---|---|---|---|
 | pre | Fix the red deploy left by the batch 13 brain push | Done | b6d31e4 | 63 pass |
-| 0 | Read the code, 15 varied fixture hands + a fixed 40-hand set (tests/fixtures/hands.json) | Done | a14cd88 | 64 pass |
-| 1 | Voice guide docs/hhp-voice.md (brain phrasing + style-only transcript pass) | Done | fdc9c03 | 64 pass |
-| 2 | Voice layer: js/feedback/voice.js (seeded phrase picks, HTML/text formatters) + voice-render.js; Coach / Plain switch (default Coach) | Done | (this commit) | 68 pass |
+| 0 | Read the code; 15 varied fixture hands + a fixed 40-hand set with "before" snapshots (tests/fixtures/hands.json) | Done | a14cd88 | 64 pass |
+| 1 | Voice guide docs/hhp-voice.md (brain phrasing + a style-only transcript pass) | Done | fdc9c03 (examples refreshed in e60e120) | 64 pass |
+| 2 | Voice layer (js/feedback/voice.js + voice-render.js), seeded phrase picks, Coach / Plain switch (default Coach) | Done | 682d275 | 68 pass |
+| 3a | Hand opener | Done | 006c8e8 | 69 pass |
+| 3b | His range at each decision, through the seven buckets | Done | f17d74e | 69 pass |
+| 3c | What-ifs, option by option, each class's response | Done | 8422a9c | 69 pass |
+| 3d | Your action graded (close calls + the 80% OOP note) | Done | b0bd49b | 69 pass |
+| 3e | Sourced verdict + a quick take of every grade up top | Done | 95ca52c | 69 pass |
+| 3f | Also from the brain → "something else worth remembering" | Done | ba5ba54 | 69 pass |
+| 3g | Known-leak card, [YOUR LOG] | Done | 3d8e26c | 69 pass |
+| 3h | Preflop card | Done | fd7b34e | 70 pass |
+| 3i | Conflict displays: neutral, every view, dates, no winner | Done | 84e6aab | 72 pass |
+| 3j | End-of-hand takeaway + leak tags | Done | 3e52a8f | 72 pass |
+| 3k | Copy for coach in the voice, with the hand data | Done | 8a657dd | 73 pass |
+| 4 | Tests (content, conflict, tag, repetition) + phone-size pass | Done | 682d275 … 8a657dd, f07e589 | 73 pass |
+| 5 | Polish pass (10+ reviews read end to end) | Done | e60e120 | 74 pass |
+
+Grading, math, range narrowing, the matcher and rulings were not touched. brain/, preflop-ranges.csv and config/brain-files.json were not touched. No transcripts were read in this session or stored in the repo (a subagent read a few and returned a ~500-word paraphrased style description).
+
+## How it's built
+
+- **js/feedback/voice.js**: phrase pools and sentence builders. Each builder gets the engine's data and passes every number, size, %, date, mark and tag through unchanged; glue phrases carry no strategy. Picks are seeded by the deal (same hand, same words; a History rebuild reads the same).
+- **js/feedback/voice-render.js**: the coach-voice screen and Copy for coach, built from the same feedback object as the plain view. Grids, class tables, option math and "where the numbers come from" are the same pieces, one tap away.
+- **Plain view** = the old structured format, unchanged (a snapshot test proves it while the brain is the same). Switch: Coach / Plain at the top of the feedback sheet, or Menu → Settings → Feedback. Copy for coach follows the switch.
+- Engine change (additive only): the two range paragraphs also expose their parts (`pt.para`); `LINE_LABEL` is exported. The plain strings are byte-identical.
+- New tests (tests/voice.test.mjs, 11): plain view + plain coach text unchanged vs snapshot; every $, %, bb, date, ✅/⚠️/❌/⚖/♣ and source tag of the plain view is in the voice view (count-strict) and the same for Copy for coach; determinism; five steps in order; ≤25% for any opener over the fixed 40 hands (and ≥6 different openers); every ⚖/♣ box lists every view + the dated playbook text and its own words name no winner; [YOUR LOG] never becomes [HHP] and [OUTSIDE SOURCE] counts never drop; the voice coach text has the per-decision structure; no coach named in app text; a ⚖ spot never gets "the play" in its verdict.
+- Dev tools: `node tools/voice-sample.mjs 0,3,6 [--plain] [--coach] [--forty]` prints reviews; `tools/phone-check.html?n=40&view=voice` (served locally) is the phone-size pass; `node tools/make-fixtures.mjs` rebuilds the fixtures.
+
+## Phone-size pass (375×812)
+
+40 random hands per run (Random, Big pots, Blinds, Limpers, 3-bet, Multiway), every collapsed section opened, checked for sideways scroll, ellipsis cut-offs, elements sticking out, undefined/NaN/null text and [HHP] tags without a source. Coach voice: 0 problems in each of 3 runs (the final one after the polish). Plain: 0 problems. The quick take (every verdict) ended at most 532px down, so it's always on the first screen. Render time: median 50-99ms, 90th percentile 161-204ms, worst 269ms. Also played a real hand in the app at phone size and switched Coach ↔ Plain: no console errors.
 
 ## Notes
 
-- Before starting, the live deploy was red: the batch 13 brain push (47a0c3f) added a postflop topic ("OUT of position as the preflop RAISER, the flop default") with no matcher rule and no reason, so the coverage test failed and the deploy step was skipped (the live site stayed on acb65ce, never broken). Fixed by adding a reason in config/matcher-uncovered.js (no brain/ change, no matcher change). Also fixed a Windows-only path bug in the "every browser file parses" test (it passed on GitHub's Linux runner).
-- Step 0: the preflop card builder moved out of app.js into js/feedback/preflop-card.js (same output) so tests can render it. tools/make-fixtures.mjs plays 2,500 random hands and greedily picks 15 that cover every street, every hero line, ✅/⚠️/❌/⚖, close calls, OOP realization, ⚖ conflicts and ♣ open questions, split brain lines, sized verdicts, lookaheads, the known-leak card and all 7 villain types; plus 40 more for the repetition test. Each is stored as a replay with its plain screen text and Copy for coach text. The snapshot test compares only while the brain hash matches, so a later brain push skips it instead of turning the deploy red.
+- Before starting, the live deploy was red: the batch 13 brain push (47a0c3f) added a postflop topic ("OUT of position as the preflop RAISER, the flop default") with no matcher rule and no reason, so the coverage test failed and the deploy was skipped (the live site stayed on acb65ce; never broken). Fixed with a reason in config/matcher-uncovered.js (no brain/ change, no matcher change). Also fixed a Windows-only path bug in the "every browser file parses" test.
+- Step 0: the preflop card builder moved from app.js into js/feedback/preflop-card.js (same output). tools/make-fixtures.mjs played 2,500 hands and greedily picked 15 covering every street, every hero line, ✅/⚠️/❌/⚖, close calls, OOP realization, ⚖ conflicts and ♣ open questions, split brain lines, sized verdicts, lookaheads, the known-leak card and all 7 villain types; plus 40 more. The snapshot test only compares while the brain hash matches, so a brain push skips it instead of turning the deploy red; the plain-vs-voice content tests always run.
+- The content test caught one of my own polish edits (I had de-duplicated "Raise to $35. Raise to $35 has the best EV", which dropped one "$35"). Reverted: content wins over smoothness.
 
 ## Decisions for Joan (voice run)
 
-1. App-written labels no longer name a coach: "Mark's rule" → "HHP's rule" (preflop card, marks, Stats note), done before the snapshot. Brain quotes and source tags that contain a coach's name (e.g. a section title "12. How Marc says to practice", or CSV notes starting "SITUATIONAL (Mark)") are left exactly as the brain has them, because hard rule 6 says tags are copied exactly and the [HHP] test checks quotes against the brain. Joan to review.
+1. **No coach names in app text.** "Mark's rule" → "HHP's rule" everywhere the app writes it, and the CSV chart notes' "SITUATIONAL (Mark)" now *display* as "SITUATIONAL (HHP)" in both views and Copy for coach (the CSV is unchanged; the snapshot test allows exactly that relabel). Brain quotes and source tags that contain a name (e.g. a villains tag "(Marc, *Exploit Any Player…*)", section "12. How Marc says to practice") are left exactly as the brain has them, because rule 6 says tags are copied exactly. Joan to review.
+2. **Default is Coach voice**; the switch is remembered per device. Copy for coach follows the switch, so with Coach on, the copied text is the voice review plus all the hand data and the labeled lines (His range / Options weighed / Your action / Verdict / Leak tags). Joan to review.
+3. **Collapsed by default in the coach view:** range grids, option details (class by class, math), "where the numbers come from", conflict boxes, whole-hand villain notes. The plain view is unchanged. Joan to review.
+4. **Quick take at the top** (one line per decision: grade, what you did, the verdict) so every verdict is visible without scrolling. It repeats what the steps say. A math-only close call shows "X, by a hair (math only)". Joan to review.
+5. **Who says "I"**: "Here's what I'd do / Here's the play" only on [HHP] verdicts. Math verdicts say the math decides; when the math picks betting and the brain's sizing rule picks the size, it says exactly that. On ⚖ spots the verdict line is "for reference only (the ⚖ below is still open)". Joan to review.
+6. **Reactions** ("Love it.", "Hold on, hold on.", "I don't like it.", "Yeah, no.", "We have to talk about this one.") are paraphrased style, never in quote marks, never tied to a video. The ✅ follow-up names what was right from the verdict's source ("Exactly the line the brain gives here" / "Line and size both match the brain's sizing rule" / "The math agrees with you"). Joan to review.
+7. **The 80% OOP note** is added to a close-call grade only when the engine actually applied the realization (out of position before the river). Joan to review.
+8. **Conflict boxes** list the views as View A / B / C read from the conflict's title (the same parser as the Rulings screen; generic labels where the title doesn't split), then the playbook's full text with its dates. Joan to review.
+9. **Known-leak card** adds one line from the hand itself ("This hand is at $1/$3, the stakes your log flags"). Joan to review.
+10. **Opener**: the "main guy" is the preflop villain; everyone else in the pot gets a short "(type)". Joan to review.
+11. History → hand detail (the old preflop-only cards) stays in the plain card format. Joan to review.
+12. The batch 13 topic got an "uncovered" reason instead of a matcher rule, because this run couldn't touch the matcher. A future matcher run could add it. Joan to review.
+13. The content test is count-strict for $, %, bb, dates, marks and source tags (an altered duplicate fails), set-only for bare numbers. Joan to review.
+
+## Things that read a little off, or I wasn't sure about
+
+- Math verdicts repeat the title ("Raise to $35. The numbers: Raise to $35 has the best EV: $51."), because every number of the plain view must survive exactly. A little redundant, kept on purpose.
+- Engine sentences kept word for word sometimes read mechanical inside the voice ("Bet an in-between size is close (about $2.8 worse), but check is the line").
+- The engine still computes a verdict on ⚖ spots; the voice now labels it reference only, but it's still on screen (same as the plain view).
+- "(some numbers are [OUTSIDE SOURCE] defaults, listed below)": "below" is the collapsed "Where the numbers come from".
+- One fixture hand grades a turn raise ⚠️ with "Fold is the line" while the raise's own EV is higher (a brain rule decides). That's grading, not voice, so untouched; worth a look in a rulings session.
+- The coach view is longer: about 1.7× the plain text when every section is expanded (median 33k vs 19k characters in one run). Collapsed, the first screen is the opener + quick take.
+- The engine's existing takeaways carry the jokes ("Free cards are for charity", "Hero call, zero hero"); the voice adds light glue humor only, never in the advice.
+
+## Before / after (3 samples)
+
+**1. Fixture #7, flop K♣ K♠ 8♠, quads, you call an $11 bet (❌)**
+
+Before (plain):
+> What is SB's range? … SB bet big $11 (69% pot): Showdown value 29% → 91%. Mostly showdown value (91%) and cpfs (5%); 26 weighted combos left.
+> ❌ You: Call. Call costs about $24 vs raise.
+> Verdict: Raise to $35. Raise to $35 has the best EV: $51. [OUTSIDE SOURCE] math vs his real range (one-street EV)
+> Also from the brain: Nothing else in the brain covers this spot.
+
+After (coach voice):
+> What's SB's range? After SB bet big $11 (69% pot), the big mover is showdown value: 29% → 91%. Bottom line, he's mostly showdown value (91%) and can-play-for-stacks hands (5%), with 26 weighted combos left. … Bucket by bucket, he's 5% CPFS, 1% high-equity draws, 91% showdown value, 3% air. Where do you stand right now? You beat 100% of his range, lose to 0%, chop 0%.
+> Okay, let's play it out. … If you raise to $35: he calls 96%, folds 3%, raises 1%. EV +$51. Upside: The hands that call are worse: you have 100% vs them.
+> ❌ We have to talk about this one. You called. Call costs about $24 vs raise. The verdict right below says why.
+> The verdict: No brain rule for this one, so we go with the math: Raise to $35. The numbers: Raise to $35 has the best EV: $51. [OUTSIDE SOURCE] math vs his real range (one-street EV)
+> Something else worth remembering: Nothing more from the brain here.
+
+**2. Fixture #9, flop 5♥ Q♣ 3♣, A♦A♣, you bet $59 into $99 (⚠️ sizing)**
+
+Before (plain):
+> ⚠️ You: Bet an in-between size ($59). Right idea (bet), wrong size: bet small here. In-between sizes are the worst of both.
+> Verdict: Bet small ($35, 35% pot). Betting beats checking: best bet $111 vs check $78. [OUTSIDE SOURCE] math vs his real range (one-street EV)
+> Size: his range is uncapped (16% of his range is strong value). "Uncapped: go small, with value AND bluffs, or just call." [HHP] playbook-postflop.md › 2. Bet sizing: small or big, never in between · 2026-08-04
+> The math alone would pick bet big ($75, 76% pot) ($111 vs $96) [OUTSIDE SOURCE]; the brain decides.
+
+After (coach voice):
+> ⚠️ Close, but the size is off. You bet an in-between size ($59). Right idea (bet), wrong size: bet small here. In-between sizes are the worst of both.
+> The verdict: The math says bet, and the brain's sizing rule picks the size: Bet small ($35, 35% pot). The numbers: Betting beats checking: best bet $111 vs check $78. [OUTSIDE SOURCE] math vs his real range (one-street EV)
+> And the size? His range is uncapped (16% of his range is strong value). The brain's sizing rule: "Uncapped: go small, with value AND bluffs, or just call." [HHP] playbook-postflop.md › 2. Bet sizing: small or big, never in between · 2026-08-04
+> For the record: the math alone would pick bet big ($75, 76% pot) ($111 vs $96) [OUTSIDE SOURCE]; the brain decides.
+> Also worth keeping in your back pocket: Small or big, never in between. "In-between is the worst of both: better hands call and your targets fold." [HHP] playbook-postflop.md › 2. Bet sizing: small or big, never in between
+
+**3. Fixture #2, flop 9♥ 7♥ 6♣ multiway, you check (⚖ not graded)**
+
+Before (plain):
+> ⚖ You: Check. Not graded: this spot is an open ⚖ conflict / ♣ question in your playbook. Both views are below.
+> Verdict: Check. "He over-calls: under-bluff." [HHP] playbook-postflop-bluffs-and-rivers.md › 9. Adjust by player type
+> ⚖ CONFLICT (not graded, both views): Likely-stabbed flop as the raiser: bet thick value, or check it all?
+
+After (coach voice):
+> ⚖ This one doesn't get a grade. You checked. Not graded: this spot is an open ⚖ conflict / ♣ question in your playbook. Both views are below.
+> The verdict: No grade, and the ⚖ below stays open. For reference only, the verdict line: Check. The brain says "He over-calls: under-bluff." [HHP] playbook-postflop-bluffs-and-rivers.md › 9. Adjust by player type
+> ⚖ The playbook keeps two views here, side by side (not graded): Likely-stabbed flop as the raiser: bet thick value, or check it all?
+> Both views, side by side: View A: [2025-04-01 HHP] is on the right-hand ("check the ENTIRE range") side of the table above,… / View B: [2025-08-12] in a multiway SRP
+> The playbook's own text, dated 2025-04-01, 2025-08-12: (the full ⚖ CONFLICT text follows, unchanged)
