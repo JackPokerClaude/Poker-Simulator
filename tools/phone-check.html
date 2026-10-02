@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Phone check</title>
+  <link rel="stylesheet" href="../css/app.css">
+</head>
+<body class="sheet-open">
+  <!-- Dev tool, not deployed: renders N hands' feedback in the real feedback sheet at phone size
+       and checks layout + text. Open at 375px wide: tools/phone-check.html?n=40&view=voice -->
+  <div class="sheet full" id="sheet" role="dialog">
+    <div class="sheet-body" id="sheetBody"></div>
+  </div>
+  <script src="../js/vendor/pokersolver.js"></script>
+  <script type="module" src="phone-check.mjs"></script>
+</body>
+</html>
