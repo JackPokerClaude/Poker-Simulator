@@ -7,7 +7,7 @@ import { CLASSES, CLASS_KEYS, CLASS_LABEL } from '../range/classes.js';
 import { cardsPretty } from '../engine/cards.js';
 import {
   voiceFor, HTML, openerText, villainPhrase, rangeQuestion, preflopRangeText, streetRangeText, bucketsText, changeText, whyText, widenText, claimText, versusText,
-  whatIfIntro, conflictSummary, conflictViewsHead, conflictBodyHead, preflopConflictNote, preflopReact, preflopYouText, preflopFreqText, preflopSizingText, knownLeakText, alsoIntro, alsoRuleText, alsoCatalogText, alsoNothing, gradeText, youDid, verdictText, sizeText, splitText, mathNoteText, quickTakeHead, optionTitle, optionSummary, classLines, whoDoesWhat, wantCallsText, nextText, lookHead, prosText, consText,
+  whatIfIntro, takeawayLead, leaksLead, noLeaks, wholeHandLead, conflictSummary, conflictViewsHead, conflictBodyHead, preflopConflictNote, preflopReact, preflopYouText, preflopFreqText, preflopSizingText, knownLeakText, alsoIntro, alsoRuleText, alsoCatalogText, alsoNothing, gradeText, youDid, verdictText, sizeText, splitText, mathNoteText, quickTakeHead, optionTitle, optionSummary, classLines, whoDoesWhat, wantCallsText, nextText, lookHead, prosText, consText,
 } from './voice.js';
 import { coachReport } from './coach-report.js';
 import { preflopMark, noCoachName } from './marks.js';
@@ -148,12 +148,13 @@ function decisionHTML(pt, h, k, v) {
 
 function endSectionHTML(h, fb, v) {
   const e = fb.end;
-  const leakHTML = e.leaks.length ? e.leaks.map((l) => `<span class="leak">${esc(l.tag)}${l.repeats ? ` <b>🔁 ${ord(l.repeats + 1)} time in your last 50 hands</b>` : ''}</span>`).join('') : '<span class="muted">No leaks this hand.</span>';
+  const leakHTML = e.leaks.length ? e.leaks.map((l) => `<span class="leak">${esc(l.tag)}${l.repeats ? ` <b>🔁 ${ord(l.repeats + 1)} time in your last 50 hands</b>` : ''}</span>`).join('') : `<span class="muted">${esc(noLeaks(v))}</span>`;
   return `<section class="fb-sec fb-end"><h3>End of hand</h3>
+    <div class="fb-line muted">${esc(takeawayLead(v))}</div>
     <div class="fb-take">${esc(e.takeaway)}</div>
-    <div class="fb-line"><b>Leak tags:</b> ${leakHTML}</div>
+    <div class="fb-line"><b>${esc(leaksLead(v, e.leaks.length))}</b> ${leakHTML}</div>
     ${e.known.map((k, n) => `<div class="fb-line fb-known">${knownLeakText(HTML, v, `end.k${n}`, k, `$${h.stakes.sb}/$${h.stakes.bb}`)}</div>`).join('')}
-    ${e.whole.map((x) => `<details class="fb-more"><summary><b>For the whole hand:</b> ${esc(x.title)}</summary>${x.fields.map((f) => `<div class="fb-line"><b>${esc(f.name)}:</b> ${esc(f.text)}</div>`).join('')}<div class="tag">${esc(x.tag)}</div></details>`).join('')}
+    ${e.whole.map((x) => `<details class="fb-more"><summary><b>${esc(wholeHandLead(v))}</b> ${esc(x.title)}</summary>${x.fields.map((f) => `<div class="fb-line"><b>${esc(f.name)}:</b> ${esc(f.text)}</div>`).join('')}<div class="tag">${esc(x.tag)}</div></details>`).join('')}
   </section>`;
 }
 

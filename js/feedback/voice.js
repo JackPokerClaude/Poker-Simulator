@@ -290,3 +290,9 @@ export const conflictSummary = (v, slot, c, n = 2) => (c.kind === 'open'
 export const conflictViewsHead = (c, n = 2) => (c.kind === 'open' ? 'The options, as the playbook lists them:' : n > 2 ? `All ${n} views, side by side:` : 'Both views, side by side:');
 export const conflictBodyHead = (dates) => `The playbook's own text${dates?.length ? `, dated ${dates.join(', ')}` : ''}:`;
 export const preflopConflictNote = '⚖ No grade here: this spot is an open conflict in your playbook, so both views are shown below and neither one is applied. The chart grade is shown for reference only.';
+
+// ---------------------------------------------------------------- j) end of hand
+export const takeawayLead = (v) => v.pick('end.tk', ['If you take one thing home from this hand:', 'The one thing to remember:', 'Takeaway:', 'If you only remember one thing:']);
+export const leaksLead = (v, n) => (n ? v.pick('end.lk', ['Tags for your leak log:', 'Leak tags:', 'What goes in your leak log:']) : v.pick('end.lk', ['Leak tags:', 'Your leak log:']));
+export const noLeaks = (v) => v.pick('end.nl', ['No leaks this hand. Love that.', 'No leaks this hand.', 'No leaks this hand. Keep stacking these.']);
+export const wholeHandLead = (v) => v.pick('end.wh', ['For the whole hand:', 'Big picture:', 'Zooming out, for the whole hand:']);
