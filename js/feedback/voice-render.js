@@ -6,14 +6,13 @@ import { gridHTML, comboList } from '../ui/grid.js';
 import { CLASSES, CLASS_KEYS, CLASS_LABEL } from '../range/classes.js';
 import { cardsPretty } from '../engine/cards.js';
 import {
-  voiceFor, HTML, openerText, villainPhrase, rangeQuestion, preflopRangeText, streetRangeText, bucketsText, changeText, whyText, widenText, claimText, versusText,
+  voiceFor, HTML, TEXT, openerText, villainPhrase, rangeQuestion, preflopRangeText, streetRangeText, bucketsText, changeText, whyText, widenText, claimText, versusText,
   whatIfIntro, takeawayLead, leaksLead, noLeaks, wholeHandLead, conflictSummary, conflictViewsHead, conflictBodyHead, preflopConflictNote, preflopReact, preflopYouText, preflopFreqText, preflopSizingText, knownLeakText, alsoIntro, alsoRuleText, alsoCatalogText, alsoNothing, gradeText, youDid, verdictText, sizeText, splitText, mathNoteText, quickTakeHead, optionTitle, optionSummary, classLines, whoDoesWhat, wantCallsText, nextText, lookHead, prosText, consText,
 } from './voice.js';
-import { coachReport } from './coach-report.js';
 import { preflopMark, noCoachName } from './marks.js';
 import { viewsOf, optionsOf, LETTER } from '../brain/views.js';
 import { VERDICT_LABEL, OUTSIDE_LABEL } from './preflop-card.js';
-import { involvedVillains, effectiveStack, describeAction } from '../engine/coach.js';
+import { involvedVillains, effectiveStack, describeAction, handFacts, streetLine, resultText } from '../engine/coach.js';
 import { typeLabel, styleLabel } from '../villains/model.js';
 
 const cap = (s) => s[0].toUpperCase() + s.slice(1);
@@ -185,7 +184,104 @@ export function voiceFeedbackHTML(h, fb, { resultLine = '', handsHTML = '', grad
     ${preflopSectionHTML(h, fb, v)}${streets}${endSectionHTML(h, fb, v)}</div>`;
 }
 
-// Copy for coach in the voice: the hand data plus the spoken review.
+// k) Copy for coach in the voice: the hand facts and the action line of every street (data),
+// then the same spoken review as the screen, decision by decision, with the labels the coach
+// session reads (His range / Options weighed / Your action / Verdict / Leak tags). Every number
+// and source tag of the plain coach text is in it (a test checks).
+const evC = (x) => (Math.abs(x) < 0.05 ? '$0' : `${x < 0 ? '-' : '+'}$${Math.abs(x).toFixed(Math.abs(x) < 10 ? 1 : 0)}`);
+const SHORTC = { cpfs: 'CPFS', thick: 'Thick', thin: 'Thin', highDraw: 'Hi-draw', lowDraw: 'Lo-draw', sdv: 'SDV', air: 'Air' };
+const sharesC = (sh) => CLASS_KEYS.filter((k) => sh[k] >= 0.005).map((k) => `${SHORTC[k]} ${pct(sh[k])}`).join(', ') || 'empty';
+const movedOf = (c) => (c.before ? CLASS_KEYS.filter((k) => Math.abs((c.after[k] || 0) - (c.before[k] || 0)) >= 0.02).map((k) => `${CLASS_LABEL[k]} ${pct(c.before[k])} → ${pct(c.after[k])}`) : []);
+
 export function voiceCoachReport(h, fb, rulings = {}) {
-  return coachReport(h, fb, rulings);
+  const f = TEXT;
+  const v = voiceFor(h);
+  const ruled = (c) => { const r = rulings[c.block?.id] || rulings[c.open?.id]; return r ? ` (your ruling: ${r}; not applied)` : ''; };
+  const out = [...handFacts(h), ''];
+  out.push('REVIEW (in the HHP coach voice; every number, grade and source tag is the app\'s own)');
+  out.push(openerText(f, v, openerData(h, fb)));
+  const qt = quickTakeItems(fb);
+  if (qt.length) { out.push(quickTakeHead(v)); for (const x of qt) out.push(`  ${x.street}: ${x.mark} you ${x.did} → ${x.verdict}`); }
+
+  const pre = fb.preflop;
+  out.push('', `PREFLOP${pre.villain != null ? ` (vs ${h.players[pre.villain].pos})` : ''}`);
+  out.push(`Action: ${streetLine(h, 'preflop')}`);
+  pre.points.forEach((pt, k) => {
+    const g = pt.grade;
+    const slot = `pre${k}`;
+    out.push(`${k === 0 ? 'Decision' : 'Then'}${g ? `: you ${String(g.heroAction || g.action).toLowerCase()}${g.to ? ` $${g.to}` : ''}` : ''}`);
+    if (pt.vi != null) out.push(`  His range: ${pt.para ? preflopRangeText(f, v, slot, pt.para) : pt.paragraph}`);
+    (pt.changes || []).forEach((c, n) => {
+      out.push(`  ${changeText(f, v, `${slot}.c${n}`, c, movedOf(c))}`);
+      out.push(`    ${whyText(f, v, `${slot}.c${n}`, c.reason)}`);
+      if (c.reason.widen) out.push(`    ${widenText(f, c.reason.widen)}`);
+    });
+    if (g) {
+      const m = preflopMark(g);
+      out.push(`  Your action: ${m.mark} ${preflopReact(v, slot, m.mark)} ${m.reason} ${preflopYouText(f, g)}`);
+      const src = g.sourceTag || g.chart || '';
+      out.push(m.reason === noCoachName(g.message) ? `  Chart: ${src || 'no HHP chart'}` : `  Verdict: ${noCoachName(g.message)} ${src}`.trimEnd());
+      if (g.freq && g.verdict !== 'wrong') out.push(`  ${preflopFreqText(f, g.freq)}`);
+      for (const z of g.sizing || []) out.push(`  ${preflopSizingText(f, z)} (${z.ok ? 'OK' : 'Off'})`);
+    }
+  });
+  if (pre.conflicted) {
+    out.push(`  ${preflopConflictNote}`);
+    (pre.also?.conflicts || []).forEach((c, n) => out.push(`  ${conflictSummary(v, `pre.x${n}`, c, (c.kind === 'open' ? (c.open ? optionsOf(c.open) : []) : viewsOf(c.block || c)).length)}${ruled(c)}`));
+  }
+  out.push(`Leak tags: ${pre.leaks.length ? pre.leaks.join(', ') : 'none'}`);
+
+  const seen = new Set(fb.streets.map((s) => s.street));
+  for (const s of fb.streets) {
+    const deal = h.log.find((e) => e.type === 'deal' && e.street === s.street);
+    out.push('', `${s.street.toUpperCase()} ${cardsPretty(s.board)}${deal ? ` (pot $${deal.pot})` : ''}`);
+    out.push(`Action: ${streetLine(h, s.street) || 'no betting (all-in)'}`);
+    s.points.forEach((pt, k) => {
+      const a = pt.analysis;
+      const slot = `${pt.street}${k}`;
+      const pos = h.players[pt.vi].pos;
+      out.push(`${k === 0 ? 'Decision' : 'Then'}${a ? `: ${youDid(a.actual.title).replace(/^You /, 'you ')}` : ' (no decision for you)'} (vs ${pos})`);
+      const first = (pt.changes || []).find((c) => c.before);
+      if (k === 0 && pt.changes?.length) out.push(`  His range at the start of the street: ${sharesC(first ? first.before : pt.shares)}`);
+      out.push(`  His range: ${rangeQuestion(v, `${slot}.q`, pos)} ${pt.para ? streetRangeText(f, v, slot, pt.para) : pt.paragraph}`);
+      (pt.changes || []).forEach((c, n) => {
+        out.push(`  ${changeText(f, v, `${slot}.c${n}`, c, movedOf(c))}`);
+        out.push(`    ${whyText(f, v, `${slot}.c${n}`, c.reason)}`);
+        for (const x of c.claims || []) if (!x.ok) out.push(`    ${claimText(f, x)}`);
+      });
+      out.push(`  ${bucketsText(f, v, slot, pt.shares, CLASS_KEYS)} (${sharesC(pt.shares)}${pt.grid?.combos ? `; ${pt.grid.combos}` : ''})`);
+      if (pt.versus) out.push(`  ${versusText(f, v, slot, pt.versus, pct)}`);
+      if (!a) return;
+      out.push(`  Options weighed: ${whatIfIntro(f, v, slot, { eq: a.eq.total, combos: a.eq.combos, exact: a.eq.exact, runouts: a.eq.runouts, multiway: a.multiway, pct })}${a.real < 1 ? ` Out of position the math realizes ${pct(a.real)} of it [OUTSIDE SOURCE].` : ''}`);
+      const opt = (o, isActual) => {
+        out.push(`    - ${optionTitle(o.title, isActual)}: ${optionSummary(o, pct)}, EV ${evC(o.ev)}`);
+        if (o.look) out.push(`      ${lookHead(f, v, `${slot}.o`, o.look)} ${o.look.lines.join(' ')}`);
+      };
+      a.opts.forEach((o) => opt(o, false));
+      if (!a.opts.includes(a.actual)) opt(a.actual, true);
+      out.push(`  Your action: ${gradeText(f, v, slot, a, pct)}`);
+      out.push(`  Verdict: ${verdictText(f, v, slot, a.verdict)}`);
+      if (a.verdict.size) out.push(`  ${sizeText(f, v, slot, a.verdict.size)}`);
+      if (a.verdict.split) out.push(`  ${splitText(f, a.verdict.split)}`);
+      if (a.verdict.math) out.push(`  ${mathNoteText(f, v, slot, a.verdict.math)}`);
+      (a.also?.conflicts || []).forEach((c, n) => out.push(`  ${conflictSummary(v, `${slot}.x${n}`, c, (c.kind === 'open' ? (c.open ? optionsOf(c.open) : []) : viewsOf(c.block || c)).length)}${ruled(c)}`));
+      out.push(`  Leak tags: ${a.leaks.length ? a.leaks.join(', ') : 'none'}`);
+    });
+  }
+  const unreached = [];
+  for (const st of ['flop', 'turn', 'river']) {
+    if (seen.has(st)) continue;
+    const deal = h.log.find((x) => x.type === 'deal' && x.street === st);
+    if (deal) out.push('', `${st.toUpperCase()} ${cardsPretty(deal.board)}: no betting (all-in)`);
+    else unreached.push(st);
+  }
+  if (unreached.length) out.push('', `${unreached.map(cap).join(', ')}: not reached`);
+
+  const e = fb.end;
+  out.push('', `Result: ${resultText(h)}`);
+  out.push(`Takeaway: ${takeawayLead(v)} ${e.takeaway}`);
+  out.push(`Leak tags (hand): ${e.leaks.length ? e.leaks.map((l) => `${l.tag}${l.repeats ? ` (${l.repeats + 1}x in last 50)` : ''}`).join(', ') : 'none'}`);
+  e.known.forEach((k, n) => out.push(`Known leak: ${knownLeakText(f, v, `end.k${n}`, k, `$${h.stakes.sb}/$${h.stakes.bb}`)}`));
+  out.push('My question: Review every decision street by street.');
+  return out.join('\n');
 }

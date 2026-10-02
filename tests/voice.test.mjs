@@ -127,3 +127,20 @@ test('voice: [YOUR LOG] never turns into [HHP], and [OUTSIDE SOURCE] items keep 
     assert.ok(n(t, /\[YOUR LOG\]/g) === n(p, /\[YOUR LOG\]/g), `${x.why}: [YOUR LOG] count changed`);
   }
 });
+
+test('voice Copy for coach: hand facts, then per decision his range, options, your action, verdict (with source), leak tags', () => {
+  for (const x of [...varied, ...forty.slice(0, 10)]) {
+    const t = voiceCoachReport(x.h, x.fb);
+    assert.ok(t.startsWith('Stakes / venue:') && t.includes('PREFLOP') && t.includes('Takeaway: ') && t.includes('Result: '), x.why);
+    for (const st of x.fb.streets) {
+      const at = t.indexOf(`\n${st.street.toUpperCase()} `);
+      assert.ok(at > 0, `${x.why}: ${st.street} missing`);
+      const block = t.slice(at, t.indexOf('\n\n', at + 1) >>> 0);
+      for (const pt of st.points) {
+        if (!pt.analysis) continue;
+        for (const re of [/His range/, /Options weighed/, /Your action: /, /Verdict: /, /Leak tags: /]) assert.match(block, re, `${x.why} ${st.street}: ${re}`);
+        assert.ok(block.includes(pt.analysis.verdict.source), 'verdict carries its source');
+      }
+    }
+  }
+});
