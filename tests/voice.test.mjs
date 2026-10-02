@@ -6,7 +6,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { model, brainTexts } from './setup.mjs';
 import { buildFeedback } from '../js/feedback/engine.js';
-import { feedbackHTML } from '../js/feedback/render.js';
+import { feedbackHTML, mdHTML } from '../js/feedback/render.js';
 import { coachReport } from '../js/feedback/coach-report.js';
 import { gradeHTML } from '../js/feedback/preflop-card.js';
 import { rebuildHand } from '../js/feedback/replay.js';
@@ -89,5 +89,41 @@ test('voice: across 40 hands no opening phrase is used for more than 25% of hand
 test('no coach is named in app-written text (chart notes show "(HHP)")', () => {
   for (const x of varied) for (const html of [feedbackHTML(x.h, x.fb, { gradeHTML }), voiceFeedbackHTML(x.h, x.fb, { gradeHTML })]) {
     assert.doesNotMatch(html, /\((?:Mark|Marc)\)|Mark's rule|Marc's/, x.why);
+  }
+});
+
+const WINNER = /\b(wins?|winner|winning view|better (one|view|line)|the right (one|view)|go with|prefer|stronger (one|view)|is correct|is wrong|should follow|trust (this|that|the first|the second)|but\b)/i;
+test('voice: every ⚖ / ♣ box shows both views and the dated playbook text, and its own words pick no winner', () => {
+  let boxes = 0;
+  for (const x of varied) {
+    const html = voiceFeedbackHTML(x.h, x.fb, { gradeHTML });
+    const shown = [...html.matchAll(/<details class="fb-conflict">([\s\S]*?)<\/details>/g)].map((m) => m[1]);
+    const cs = [...(x.fb.preflop.also?.conflicts || []), ...x.fb.streets.flatMap((s) => s.points.flatMap((p) => p.analysis?.also.conflicts || []))];
+    assert.equal(shown.length, cs.length, `${x.why}: one box per conflict`);
+    cs.forEach((c, k) => {
+      boxes++;
+      const box = shown[k];
+      assert.ok((box.match(/class="fb-view"/g) || []).length >= 2, `${x.why}: both views listed`);
+      const src = c.block || c.open;
+      if (src) assert.ok(htmlText(box).includes(htmlText(mdHTML(src.text))), `${x.why}: the playbook text in full`);
+      for (const d of src?.dates || []) assert.ok(box.includes(d), `${x.why}: date ${d}`);
+      const glue = htmlText(box.replace(/<div class="fb-cbody">[\s\S]*?<\/div><div class="tag">/, '<div class="tag">').replace(/<li class="fb-view">[\s\S]*?<\/li>/g, '').replace(/<div class="tag">[\s\S]*?<\/div>/g, '').replace(/<summary>[\s\S]*?\(not graded\):/, '<summary>'));
+      assert.doesNotMatch(glue.split(c.title).join(''), WINNER, `${x.why}: the voice leans: ${glue}`);
+    });
+  }
+  assert.ok(boxes >= 5, `only ${boxes} conflict boxes in the fixtures`);
+});
+
+test('voice: [YOUR LOG] never turns into [HHP], and [OUTSIDE SOURCE] items keep their label', () => {
+  for (const x of varied) {
+    const t = htmlText(voiceFeedbackHTML(x.h, x.fb, { gradeHTML }));
+    for (const k of x.fb.end.known) {
+      assert.ok(t.includes(k.tag) && k.tag.startsWith('[YOUR LOG]'), x.why);
+      assert.ok(!t.includes(k.tag.replace('[YOUR LOG]', '[HHP]')), `${x.why}: known leak relabeled`);
+    }
+    const p = htmlText(feedbackHTML(x.h, x.fb, { gradeHTML }));
+    const n = (s, re) => (s.match(re) || []).length;
+    assert.ok(n(t, /\[OUTSIDE SOURCE\]/g) >= n(p, /\[OUTSIDE SOURCE\]/g), `${x.why}: an [OUTSIDE SOURCE] label went missing`);
+    assert.ok(n(t, /\[YOUR LOG\]/g) === n(p, /\[YOUR LOG\]/g), `${x.why}: [YOUR LOG] count changed`);
   }
 });

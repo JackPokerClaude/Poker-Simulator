@@ -279,3 +279,14 @@ export const preflopReact = (v, slot, mark) => v.pick(`${slot}.pr`, PRE_REACT[ma
 export const preflopYouText = (f, d) => `Your play: ${f.b(`${String(d.heroAction || d.action).toLowerCase()}${d.to ? ` $${d.to}` : ''}`)} with ${f.b(d.code)}.`;
 export const preflopFreqText = (f, freq) => `The chart's mix: ${f.t(freq)}.`;
 export const preflopSizingText = (f, z) => `${z.ok ? '✓' : '✗'} ${f.b(`On size (${z.rule}):`)} ${f.t(z.message)}`;
+
+// ---------------------------------------------------------------- i) conflicts: both views, no winner
+// Neutral on purpose: no lean, no synthesis, no "but". The playbook's own text follows in full.
+export const conflictSummary = (v, slot, c, n = 2) => (c.kind === 'open'
+  ? `♣ ${v.pick(`${slot}.cs`, ['Open question, no ruling yet, here are the options', 'Still an open question, so here are the options'])} (not graded): ${c.title}`
+  : n > 2
+    ? `⚖ ${v.pick(`${slot}.cs`, [`The videos split ${n} ways on this, here are all ${n}`, `${n} views on this one, here they all are`])} (not graded): ${c.title}`
+    : `⚖ ${v.pick(`${slot}.cs`, ['The videos split on this, here are both', 'Two views on this one, here are both', 'The playbook keeps two views here, side by side'])} (not graded): ${c.title}`);
+export const conflictViewsHead = (c, n = 2) => (c.kind === 'open' ? 'The options, as the playbook lists them:' : n > 2 ? `All ${n} views, side by side:` : 'Both views, side by side:');
+export const conflictBodyHead = (dates) => `The playbook's own text${dates?.length ? `, dated ${dates.join(', ')}` : ''}:`;
+export const preflopConflictNote = '⚖ No grade here: this spot is an open conflict in your playbook, so both views are shown below and neither one is applied. The chart grade is shown for reference only.';

@@ -7,10 +7,11 @@ import { CLASSES, CLASS_KEYS, CLASS_LABEL } from '../range/classes.js';
 import { cardsPretty } from '../engine/cards.js';
 import {
   voiceFor, HTML, openerText, villainPhrase, rangeQuestion, preflopRangeText, streetRangeText, bucketsText, changeText, whyText, widenText, claimText, versusText,
-  whatIfIntro, preflopReact, preflopYouText, preflopFreqText, preflopSizingText, knownLeakText, alsoIntro, alsoRuleText, alsoCatalogText, alsoNothing, gradeText, youDid, verdictText, sizeText, splitText, mathNoteText, quickTakeHead, optionTitle, optionSummary, classLines, whoDoesWhat, wantCallsText, nextText, lookHead, prosText, consText,
+  whatIfIntro, conflictSummary, conflictViewsHead, conflictBodyHead, preflopConflictNote, preflopReact, preflopYouText, preflopFreqText, preflopSizingText, knownLeakText, alsoIntro, alsoRuleText, alsoCatalogText, alsoNothing, gradeText, youDid, verdictText, sizeText, splitText, mathNoteText, quickTakeHead, optionTitle, optionSummary, classLines, whoDoesWhat, wantCallsText, nextText, lookHead, prosText, consText,
 } from './voice.js';
 import { coachReport } from './coach-report.js';
 import { preflopMark, noCoachName } from './marks.js';
+import { viewsOf, optionsOf, LETTER } from '../brain/views.js';
 import { VERDICT_LABEL, OUTSIDE_LABEL } from './preflop-card.js';
 import { involvedVillains, effectiveStack, describeAction } from '../engine/coach.js';
 import { typeLabel, styleLabel } from '../villains/model.js';
@@ -78,10 +79,12 @@ function alsoVoice(also, v, slot) {
   const f = HTML;
   const rules = (also?.rules || []).map((r) => `<div class="fb-also">${alsoRuleText(f, r)}</div>`);
   if (also?.catalog) rules.push(`<div class="fb-also">${alsoCatalogText(f, also.catalog)}</div>`);
-  const conflicts = (also?.conflicts || []).map((c) => {
+  const conflicts = (also?.conflicts || []).map((c, n) => {
     const body = c.block ? mdHTML(c.block.text) : c.open ? mdHTML(c.open.text) : '';
     const src = c.block ? `[HHP] ${c.block.file} › ${c.block.section}${c.block.dates?.length ? ` · ${c.block.dates.join(', ')}` : ''}` : c.open ? `[HHP] ${c.open.file} · ♣ OPEN #${c.open.number}` : c.tag;
-    return `<details class="fb-conflict"><summary>${c.kind === 'open' ? '♣ OPEN QUESTION' : '⚖ CONFLICT'} (not graded, both views): ${esc(c.title)}</summary>${rulingNote(c)}${body}<div class="tag">${esc(src)}</div></details>`;
+    const views = c.kind === 'open' ? (c.open ? optionsOf(c.open) : []) : viewsOf(c.block || c);
+    const viewsHTML = views.length ? `<div class="fb-line"><b>${esc(conflictViewsHead(c, views.length))}</b></div><ul class="fb-cls">${views.map((x, k) => `<li class="fb-view">${c.kind === 'open' ? `(${String.fromCharCode(97 + k)})` : `View ${LETTER(k)}:`} ${esc(x)}</li>`).join('')}</ul>` : '';
+    return `<details class="fb-conflict"><summary>${esc(conflictSummary(v, `${slot}.x${n}`, c, views.length))}</summary>${rulingNote(c)}${viewsHTML}<div class="fb-line"><b>${esc(conflictBodyHead(c.block?.dates || c.open?.dates))}</b></div><div class="fb-cbody">${body}</div><div class="tag">${esc(src)}</div></details>`;
   });
   if (!rules.length && !conflicts.length) return line(esc(alsoNothing(v, slot)), 'fb-line muted');
   return `${rules.length ? line(esc(alsoIntro(v, slot, rules.length))) : ''}${rules.join('')}${conflicts.join('')}`;
@@ -112,7 +115,7 @@ function preflopSectionHTML(h, fb, v) {
   const points = pre.points.map((pt, k) => {
     const pos = pt.vi != null ? h.players[pt.vi].pos : null;
     const range = pos ? rangeStepVoice(pt, pos, v, `pre${k}`) : `<div class="fb-line muted">${esc(v.pick('pre.nobody', ["Nobody's put money in yet, so everyone behind you still has a full range.", 'Nobody has put money in yet: everyone behind you has a full range.']))}</div>`;
-    const conflictNote = pre.conflicted ? '<div class="fb-line"><b>⚖ Not graded:</b> this spot is an open conflict in your playbook (below). The chart grade is shown for reference only.</div>' : '';
+    const conflictNote = pre.conflicted ? line(esc(preflopConflictNote)) : '';
     return `<div class="fb-dec"><div class="fb-dh">${k === 0 ? 'Your decision' : 'Then'}${pt.grade ? `: you ${esc(String(pt.grade.heroAction || pt.grade.action).toLowerCase())}` : ''}</div>
       ${step(1, pos ? esc(rangeQuestion(v, `pre${k}.q`, pos)) : 'Who is in?', range)}
       ${k === 0 ? step(2, 'The questions to ask here', qHTML) : ''}
